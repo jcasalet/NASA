@@ -810,7 +810,7 @@ def main():
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
         print('not training!')
-        gen = tf.keras.models.load(options.model)
+        gen = tf.keras.models.load_model(options.model)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
     print('x-gen shape = ' + str(x_gen.shape))
     print('x shape = ' + str(x.shape))
