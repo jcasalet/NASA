@@ -806,7 +806,8 @@ def main():
 
     gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
-    print(x_gen)
+    print('x-gen shape = ' + str(x_gen.shape))
+    print('x shape = ' + str(x.shape))
     pca = PCA(n_components=2)
     #real_pca = pd.DataFrame(data = pca.fit_transform(expr_df.transpose()), columns = ['PC 1', 'PC 2'])
     #x = np.log(1+x)
