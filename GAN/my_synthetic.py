@@ -774,7 +774,7 @@ def pcaPlot(pca, df, info_df, variable, title):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--train', help='boolean train or not', default=True)
+    parser.add_argument('-t', '--train', help='boolean train or not', default='True')
     parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
     parser.add_argument('-g', '--gpu', help='number of gpus', default=0)
     parser.add_argument('-e', '--epochs', help='epochs', default=100)
