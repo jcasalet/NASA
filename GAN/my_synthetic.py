@@ -751,11 +751,19 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
     print('Gamma(Dx, Dz): {:.2f}'.format(score))
 
-def pcaPlot(pca, df, variable, title):
+
+def pcaPlot(pca, df, info_df, variable, title):
+    pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
+    pcaDF.index = info_df.index
+    pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['libPrep']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
 
-    ax = sns.scatterplot(x=df['PC 1'], y=df['PC 2'], hue=df[variable], s=100)
+    ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=df[variable], s=100)
 
     ax.set_xlabel('PC 1 ' + '(' + str(round(pca.explained_variance_ratio_[0]*100, 1)) + '% variance)', fontsize=15)
     ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
@@ -815,34 +823,18 @@ def main():
     print('x-gen shape = ' + str(x_gen.shape))
     print('x shape = ' + str(x.shape))
     pca = PCA(n_components=2)
-    #real_pca = pd.DataFrame(data = pca.fit_transform(expr_df.transpose()), columns = ['PC 1', 'PC 2'])
-    #x = np.log(1+x)
-    real_pca = pd.DataFrame(data = pca.fit_transform(x), columns = ['PC 1', 'PC 2'])
-    #real_pca = pd.DataFrame(data = pca.fit_transform(x), columns = ['PC 1', 'PC 2'])
-    real_pca.index = info_df.index
-    real_pca = pd.concat([real_pca, info_df[['condition']]], axis=1)
-    real_pca = pd.concat([real_pca, info_df[['dataset']]], axis=1)
-    real_pca = pd.concat([real_pca, info_df[['libPrep']]], axis=1)
-    real_pca = pd.concat([real_pca, info_df[['mission']]], axis=1)
-    real_pca = pd.concat([real_pca, info_df[['seqFacility']]], axis=1)
-    pcaPlot(pca, real_pca, 'condition', 'Condition_Real_Dataset')
-    pcaPlot(pca, real_pca, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
-    pcaPlot(pca, real_pca, 'dataset', 'GLDS_Dataset_Real_Dataset')
-    pcaPlot(pca, real_pca, 'libPrep', 'Library_Prep_Real_Dataset')
-    pcaPlot(pca, real_pca, 'mission', 'Mission_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
     
-    fake_pca = pd.DataFrame(data = pca.fit_transform(x_gen), columns = ['PC 1', 'PC 2'])
-    fake_pca.index = info_df.index
-    fake_pca = pd.concat([fake_pca, info_df[['condition']]], axis=1)
-    fake_pca = pd.concat([fake_pca, info_df[['dataset']]], axis=1)
-    fake_pca = pd.concat([fake_pca, info_df[['libPrep']]], axis=1)
-    fake_pca = pd.concat([fake_pca, info_df[['mission']]], axis=1)
-    fake_pca = pd.concat([fake_pca, info_df[['seqFacility']]], axis=1)
-    pcaPlot(pca, fake_pca, 'condition', 'Condition_Fake_Dataset')
-    pcaPlot(pca, fake_pca, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
-    pcaPlot(pca, fake_pca, 'dataset', 'GLDS_Dataset_Fake_Dataset')
-    pcaPlot(pca, fake_pca, 'libPrep', 'Library_Prep_Fake_Dataset')
-    pcaPlot(pca, fake_pca, 'mission', 'Mission_Fake_Dataset')
+
+    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
                     
 
 if __name__ == "__main__":
