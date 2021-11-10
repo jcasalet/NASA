@@ -803,7 +803,7 @@ def main():
 
     print('train option = ' + str(options.train))
     print('model file = ' + str(options.model))
-    if bool(options.train):
+    if eval(options.train):
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train)
