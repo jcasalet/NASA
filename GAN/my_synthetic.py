@@ -808,7 +808,7 @@ def main():
     expr_df = (expr_df-expr_df.mean())/expr_df.std()
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-            x_train, colNames, rowNames = my_prep_data(int(options.num_genes), expr_df, info_df)
+            x_train = my_prep_data(int(options.num_genes), expr_df, info_df)
 
 
     if eval(options.train):
@@ -820,8 +820,10 @@ def main():
         print('not training!')
         gen = tf.keras.models.load_model(options.model)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
-    x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
-    x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
+
+    if not options.gendf_file is None:
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
+        x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
 
     pca = PCA(n_components=2)
