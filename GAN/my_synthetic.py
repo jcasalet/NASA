@@ -766,6 +766,8 @@ def pcaPlot(pca, df, variable, title):
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--train', help='boolean train or not', default=True)
+    parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
     parser.add_argument('-g', '--gpu', help='number of gpus', default=0)
     parser.add_argument('-e', '--epochs', help='epochs', default=100)
     parser.add_argument('-ld', '--latent_dim', help='number of latent dimensions', default=16)
@@ -799,12 +801,12 @@ def main():
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
             x_train = my_prep_data(int(options.num_genes), expr_df, info_df)
 
-    my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
+    if options.train:
+        my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train)
-
-
-
-    gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
+        gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
+    else:
+        gen = tf.keras.models.load(model_file)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
     print('x-gen shape = ' + str(x_gen.shape))
     print('x shape = ' + str(x.shape))
