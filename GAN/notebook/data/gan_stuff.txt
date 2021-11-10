@@ -1,0 +1,38 @@
+vocab_dicts = [
+{None: 0, 'CASIS': 1, 'RR-3': 2, 'RR1': 3},
+{None: 0, 'Basal': 1, 'Flight': 2, 'Ground': 3, 'Vivarium': 4},
+{None: 0, 'Frozen carcass': 1, 'Immediate': 2},
+{None: 0, 'BALB/cT': 1, 'C47BL/6T': 2},
+{None: 0, 'polyA':1, 'ribo-depleted': 2}
+]
+ 
+vocab_sizes = [4, 5, 3, 3, 3]
+
+conditions = np.array([np.array([2, 3, 1, 1, 2]), np.array([2, 3, 1, 1, 2]), np.array([2, 3, 1, 1, 2]), np.array([2, 3, 1, 1, 2]), np.array([2, 3, 1, 1, 2]), np.array([2, 3, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 2, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([2, 1, 1, 1, 2]), np.array([1, 3, 2, 2, 1]), np.array([1, 3, 2, 2, 1]), np.array([1, 3, 2, 2, 1]), np.array([1, 2, 2, 2, 1]), np.array([1, 2, 2, 2, 1]), np.array([1, 2, 2, 2, 1]), np.array([1, 1, 2, 2, 1]), np.array([1, 1, 2, 2, 1]), np.array([1, 1, 2, 2, 1]), np.array([3, 1, 1, 2, 2]), np.array([3, 1, 1, 2, 2]), np.array([3, 1, 1, 2, 2]), np.array([3, 1, 1, 2, 2]), np.array([3, 1, 1, 2, 2]), np.array([3, 4, 1, 2, 2]), np.array([3, 4, 1, 2, 2]), np.array([3, 4, 1, 2, 2]), np.array([3, 4, 1, 2, 2]), np.array([3, 4, 1, 2, 2]), np.array([3, 3, 1, 2, 1]), np.array([3, 3, 1, 2, 1]), np.array([3, 3, 1, 2, 1]), np.array([3, 3, 1, 2, 1]), np.array([3, 3, 1, 2, 1]), np.array([3, 3, 2, 2, 1]), np.array([3, 3, 2, 2, 1]), np.array([3, 2, 1, 2, 1]), np.array([3, 2, 1, 2, 1]), np.array([3, 2, 1, 2, 1]), np.array([3, 2, 1, 2, 1]), np.array([3, 2, 1, 2, 1]), np.array([3, 2, 2, 2, 1]), np.array([3, 2, 2, 2, 1])])
+
+ndarray(51,5)
+ndarray(907,7)
+encoded_conditions_ecoli = [[0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], [0 0 1 0 1 0 1], 
+
+ndarray(51,19891,51)
+ndarray(907,1076)
+expr_ecoli = [[ 7.20924  7.21535  7.9327  ...  8.83255  7.67662  9.99811], [ 7.08695  7.14312  7.86983 ...  8.73602  7.64234  9.9675 ], [ 7.07071  7.19478  7.90374 ...  8.93539  7.69357  9.87467], ..., [ 7.4359   7.2257   8.32707 ...  9.11487  8.21646  9.8756 ], [ 7.2637   7.10532  8.11676 ...  8.87417  8.2839  10.587  ], [ 7.54661  7.48223  8.17506 ...  9.17646  8.33306 10.3295 ]]
+
+ndarray(1076,)
+gene_symbols = ['aaea' 'aaeb' 'aaer' 'aaex' 'acea' 'aceb' 'acee' 'acef' 'acek' 'acka', 'acna' 'acnb' 'acra' 'acrb' 'acre' 'acrf' 'acs' 'actp' 'add' 'adhe' 'aer', 'agaa' 'agav' 'agaw' 'agp' 'ahpc' 'ahpf' 'aidb' 'alda' 'aldb' 'ampc', 'ampd' 'ampe' 'amtb' 'ansb' 'apag' 'apah' 'appa' 'appb' 'appc' 'appy', 'araa' 'arab' 'arac' 'arad' 'arae' 'araf' 'arag' 'arah' 'araj' 'arca', 'argg' 'argo' 'argu' 'argw' 'argx' 'aroa' 'ascb' 'ascf' 'aslb' 'asna', 'asnb' 'asnc' 'aspa' 'aspc' 'avta' 'bcsb' 'bcsz' 'beta' 'betb' 'beti', 'bett' 'bglb' 'bglf' 'bglg' 'bglj' 'bhsa' 'bola' 'btub' 'cada' 'cadb', 'cadc' 'caia' 'caib' 'caic' 'caid' 'caie' 'caif' 'cait' 'cara' 'carb', 'cbpa' 'cbpm' 'ccma' 'ccmb' 'ccmc' 'ccmd' 'ccme' 'ccmf' 'ccmg']
+
+ndarray(907,1)
+sample_names = ['dinI_U_N0025_r1' 'dinI_U_N0025_r2' 'dinI_U_N0025_r3' 'dinP_U_N0025_r1', 'dinP_U_N0025_r2' 'dinP_U_N0025_r3' 'lexA_U_N0025_r1' 'lexA_U_N0025_r2', 'lexA_U_N0025_r3' 'lon_U_N0025_r1' 'lon_U_N0025_r2' 'lon_U_N0025_r3', 'luc_U_N0025_r1' 'luc_U_N0025_r2' 'luc_U_N0025_r3' 'mazF_U_N0025_r1', 'mazF_U_N0025_r2' 'mazF_U_N0025_r3' 'recA_U_N0025_r1' 'recA_U_N0025_r2', 'recA_U_N0025_r3' 'relA_U_N0025_r1' 'relA_U_N0025_r2' 'relA_U_N0025_r3', 'ruvA_U_N0025_r1' 'ruvA_U_N0025_r2' 'ruvA_U_N0025_r3' 'sulA_U_N0025_r1', 'sulA_U_N0025_r2' 'sulA_U_N0025_r3' 'umuD_U_N0025_r1' 'umuD_U_N0025_r2', 'umuD_U_N0025_r3' 'uvrA_U_N0025_r1' 'uvrA_U_N0025_r2' 'uvrA_U_N0025_r3', 'yebF_U_N0075_r1' 'yebF_U_N0075_r2' 'yebF_U_N0075_r3' 'luc_U_N0075_r1', 'luc_U_N0075_r2' 'luc_U_N0075_r3' 'zipA_U_N0075_r1' 'zipA_U_N0075_r2', 'zipA_U_N0075_r3' 'luc_U_N0000_r1' 'luc_U_N0000_r2' 'luc_U_N0000_r3', 'b2618_U_N0075_r1' 'b2618_U_N0075_r2' 'b2618_U_N0075_r3' 'bcp_U_N0075_r1', 'bcp_U_N0075_r2' 'bcp_U_N0075_r3' 'cpxR_U_N0075_r1' 'cpxR_U_...]
+
+x={ndarray:(32,1076)}: [[-0.2164052  -0.03769957  0.33749646 ...  0.30330053 -0.54697937,   0.19308966], [-0.560885    0.74008715 -0.09177946 ... -0.04866095 -0.41845828,   0.3563516 ], [-0.09879331 -0.43252996  0.20353165 ... -0.39788952 -0.48267052,   0.11251348], ..., [-1.289
+
+num_cvs = {ndarray: (680,1)} [[0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.
+
+
+x_gen:  Tensor("add:0", shape=(32, 51), dtype=float32)
+x_gen type:  <class 'tensorflow.python.framework.ops.Tensor'>
+x type:  <class 'tensorflow.python.framework.ops.Tensor'>
+augs type:  <class 'numpy.ndarray'>
+np.random.normal type:  <class 'numpy.ndarray'>
+
+

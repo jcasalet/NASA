@@ -1,0 +1,52 @@
+sample,Study,Group,oro,Dissection,strain,duration,library,GLDS
+Mmus_BAL-TAL_LVR_GC_Rep1_G1,RR-3,Ground,9.65,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_GC_Rep2_G2,RR-3,Ground,6.68,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_GC_Rep3_G3,RR-3,Ground,21.84,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_GC_Rep6_G7,RR-3,Ground,13.86,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_GC_Rep4_G5,RR-3,Ground,3.82,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_GC_Rep5_G6,RR-3,Ground,12.98,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep1_F1,RR-3,Flight,21.68,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep2_F2,RR-3,Flight,21.92,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep3_F3,RR-3,Flight,21.94,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep4_F4,RR-3,Flight,13.62,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep5_F5,RR-3,Flight,13.52,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_FLT_Rep6_F6,RR-3,Flight,15.6,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep1_B1,RR-3,Basal,22.18,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep2_B2,RR-3,Basal,22.13,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep3_B3,RR-3,Basal,15.03,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep4_B4,RR-3,Basal,18.58,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep5_B6,RR-3,Basal,7.61,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_BAL-TAL_LVR_BSL_Rep6_B7,RR-3,Basal,18.7,Frozen carcass,BALB/cT,42,ribo-depleted,GLDS-137
+Mmus_C57-6T_LVR_GC_Rep1_G2,CASIS,Ground,14.49,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_GC_Rep2_G3,CASIS,Ground,13.96,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_GC_Rep3_G5,CASIS,Ground,17.35,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_FLT_Rep1_F1,CASIS,Flight,23.56,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_FLT_Rep2_F2,CASIS,Flight,25.56,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_FLT_Rep3_F4,CASIS,Flight,16.28,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_BSL_Rep1_B1,CASIS,Basal,23.8,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_BSL_Rep2_B2,CASIS,Basal,19.79,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6T_LVR_BSL_Rep3_B3,CASIS,Basal,17.44,Immediate,C57BL/6T,21,polyA,GLDS-47
+Mmus_C57-6J_LVR_RR1_BSL_noERCC_Rep1_M4,RR1,Basal,10.41,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_BSL_noERCC_Rep2_M5,RR1,Basal,22.29,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_BSL_noERCC_Rep3_M7,RR1,Basal,2.09,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_BSL_noERCC_Rep4_M8,RR1,Basal,8.36,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_BSL_noERCC_Rep5_M10,RR1,Basal,3.3,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_VIV_noERCC_Rep1_M16,RR1,Vivarium,16.97,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_VIV_noERCC_Rep2_M17,RR1,Vivarium,14.98,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_VIV_noERCC_Rep3_M18,RR1,Vivarium,13.07,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_VIV_noERCC_Rep4_M19,RR1,Vivarium,1.44,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_RR1_VIV_noERCC_Rep5_M20,RR1,Vivarium,7.89,Frozen carcass,C57BL/6T,37,ribo-depleted,GLDS-168
+Mmus_C57-6J_LVR_GC_C_Rep1_M36,RR1,Ground,3.82,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_C_Rep2_M37,RR1,Ground,4.79,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_C_Rep3_M38,RR1,Ground,11.66,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_C_Rep4_M39,RR1,Ground,5.35,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_C_Rep5_M40,RR1,Ground,10.57,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_I_Rep1_M31,RR1,Ground,1.34,Immediate,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_GC_I_Rep2_M32,RR1,Ground,0.91,Immediate,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_C_Rep1_M25,RR1,Flight,7.11,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_C_Rep2_M26,RR1,Flight,6.68,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_C_Rep3_M27,RR1,Flight,13.45,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_C_Rep4_M28,RR1,Flight,26.94,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_C_Rep5_M30,RR1,Flight,23.72,Frozen carcass,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_I_Rep1_M21,RR1,Flight,14.4,Immediate,C57BL/6T,37,polyA,GLDS-48
+Mmus_C57-6J_LVR_FLT_I_Rep2_M22,RR1,Flight,24.7,Immediate,C57BL/6T,37,polyA,GLDS-48
