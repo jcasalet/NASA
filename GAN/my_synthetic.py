@@ -804,10 +804,12 @@ def main():
     print('train option = ' + str(options.train))
     print('model file = ' + str(options.model))
     if bool(options.train):
+        print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
+        print('not training!')
         gen = tf.keras.models.load(options.model)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
     print('x-gen shape = ' + str(x_gen.shape))
