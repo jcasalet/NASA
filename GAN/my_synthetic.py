@@ -805,7 +805,7 @@ def main():
     info_df = pd.read_csv(data_dir+'/all_metadata_Proj2.csv', index_col=0)
     
     #standardize expression data
-    expr_df = (expr_df-expr_df.mean())/expr_df.std()
+    #expr_df = (expr_df-expr_df.mean())/expr_df.std()
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
             x_train = my_prep_data(int(options.num_genes), expr_df, info_df)
