@@ -805,9 +805,9 @@ def main():
     info_df = pd.read_csv(data_dir+'/all_metadata_Proj2.csv', index_col=0)
     
     #standardize expression data
-    #expr_df = (expr_df-expr_df.mean())/expr_df.std()
+    expr_df = (expr_df-expr_df.mean())/expr_df.std()
     # normalize expression data
-    expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
+    #expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
 
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
