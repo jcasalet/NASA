@@ -776,6 +776,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--train', help='boolean train or not', default='True')
     parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
+    parser.add_argument('-gdf', '--gendf_file', help='output file to store generated df', default=None)
     parser.add_argument('-g', '--gpu', help='number of gpus', default=0)
     parser.add_argument('-e', '--epochs', help='epochs', default=100)
     parser.add_argument('-ld', '--latent_dim', help='number of latent dimensions', default=16)
@@ -807,10 +808,9 @@ def main():
     expr_df = (expr_df-expr_df.mean())/expr_df.std()
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-            x_train = my_prep_data(int(options.num_genes), expr_df, info_df)
+            x_train, colNames, rowNames = my_prep_data(int(options.num_genes), expr_df, info_df)
 
-    print('train option = ' + str(options.train))
-    print('model file = ' + str(options.model))
+
     if eval(options.train):
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
@@ -820,8 +820,10 @@ def main():
         print('not training!')
         gen = tf.keras.models.load_model(options.model)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
-    print('x-gen shape = ' + str(x_gen.shape))
-    print('x shape = ' + str(x.shape))
+    x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
+    x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
+
+
     pca = PCA(n_components=2)
     pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
     pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
