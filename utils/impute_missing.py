@@ -29,7 +29,7 @@ imputedArray = imputer.fit_transform(inputArray)
 imputedDF = pd.DataFrame(data=imputedArray,  columns=nonNullColumns)
 
 # write df to file
-imputedDF.to_csv(outputFile, index=False, sep=',')
+imputedDF.to_csv(outputFile, index=False, sep='\t')
 
 
 

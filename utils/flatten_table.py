@@ -18,11 +18,15 @@ inputTable = sys.argv[1]
 fieldDelimiter = sys.argv[2]
 identifierField = sys.argv[3]
 pivotColumn = sys.argv[4]
+noFlattenColumns = eval(sys.argv[5])
 
 # converters={'SID': str,'MONTH':str}
 inputDF = pd.read_csv(inputTable, sep=fieldDelimiter, header=0, skip_blank_lines=True).sort_values('SID')
 inputDF.dropna(how="all", inplace=True)
 inputDF = inputDF.astype({'SID': 'int', 'MONTH': 'str'})
+#inputDF = pd.to_numeric(inputDF[identifierField], downcast='integer')
+# columns to not flatten: RADTYPE, DOSE, COHORT
+
 
 columnPrefixes = inputDF.columns.drop([identifierField, pivotColumn])
 
@@ -42,14 +46,14 @@ while i < total:
         if not '0.' in pc:
             pc = str(int(float(pc)))
         for col in columnPrefixes:
-            flattenedDict[id][str(col) + '_' + pc] = idSubset.iloc[j][col]
+            if col in noFlattenColumns and not col in flattenedDict[id]:
+                flattenedDict[id][col] = idSubset.iloc[j][col]
+            elif not col in noFlattenColumns:
+                flattenedDict[id][str(col) + '_' + pc] = idSubset.iloc[j][col]
     i += numRows
 
 flatDF = pd.DataFrame.from_dict(flattenedDict).T.reset_index()
 flatDF=flatDF.fillna('NaN')
-print('shape before: ' + str(flatDF.shape))
 flatDF = flatDF.dropna(axis=1, how='all')
-print('shape after: ' + str(flatDF.shape))
 flatDF.to_csv(inputTable.replace('.csv', '.tsv'), sep='\t', index=False)
-print('cols = ' + str(flatDF.columns))
 
