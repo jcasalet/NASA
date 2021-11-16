@@ -673,8 +673,8 @@ def my_prep_data(n, expr_df, info_df):
     # Normalise data
     x_mean = np.mean(x_train, axis=0)
     x_std = np.std(x_train, axis=0)
-    x_train = standardize(x_train, mean=x_mean, std=x_std)
-    x_test = standardize(x_test, mean=x_mean, std=x_std)
+    #x_train = standardize(x_train, mean=x_mean, std=x_std)
+    #x_test = standardize(x_test, mean=x_mean, std=x_std)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
