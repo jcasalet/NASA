@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import ast
 import numpy
 import statistics as s
+import sys
 
-inputFile='hyper_perf_data.txt'
+inputFile=sys.argv[1]
 with open(inputFile, 'r') as f:
     data = f.read()
 f.close()
