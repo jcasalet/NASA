@@ -828,7 +828,18 @@ def main():
 
     if not options.gendf_file is None:
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
-        x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
+        theMin=0
+        for i in range(len(x_gen_df)):
+            for j in x_gen_df.columns:
+                val = x_gen_df.iloc[i][j]
+                if not isinstance(val, float):
+                    continue
+                if val < theMin:
+                    theMin = val
+
+
+        #x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
+        x_gen_df = x_gen_df * expr_df_sd + theMin
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
 
