@@ -826,7 +826,7 @@ def main():
         gen = tf.keras.models.load_model(options.model)
     x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
 
-    if not options.gendf_file is None:
+    '''if not options.gendf_file is None:
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
         theMin=0
         for i in range(len(x_gen_df)):
@@ -836,7 +836,7 @@ def main():
                     print(val)
                     continue
                 if val < theMin:
-                    theMin = val
+                    theMin = val'''
 
         print('min = ' + str(theMin))
         #x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
