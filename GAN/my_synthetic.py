@@ -833,6 +833,7 @@ def main():
             for j in x_gen_df.columns:
                 val = x_gen_df.iloc[i][j]
                 if not isinstance(val, float):
+                    print(val)
                     continue
                 if val < theMin:
                     theMin = val
