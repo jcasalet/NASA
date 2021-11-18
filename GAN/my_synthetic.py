@@ -840,7 +840,7 @@ def main():
 
         print('min = ' + str(theMin))
         #x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
-        x_gen_df = x_gen_df + abs(theMin)
+        #x_gen_df = x_gen_df + abs(theMin)
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
 
