@@ -26,7 +26,6 @@ import argparse
 
 tfk = tf.keras
 tfkl = tf.keras.layers
-CHECKPOINTS_DIR = 'checkpoints/'
 
 
 # ------------------
@@ -472,8 +471,8 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
-          gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir='./checkpoints/cpkt',
-          log_dir='./logs/', patience=10, p_aug=0, norm_scale=0.5):
+          gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
@@ -679,7 +678,7 @@ def my_prep_data(n, expr_df, info_df):
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
 
-def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train):
+def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train, checkpoint_dir):
     # Train on GL liver...
 
     # Script that trains the model
@@ -688,7 +687,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 
     #tf.config.run_functions_eagerly(True)  # LMS added to avoid variable creation error https://stackoverflow.com/questions/58352326/running-the-tensorflow-2-0-code-gives-valueerror-tf-function-decorated-functio
 
-    MODELS_DIR = 'checkpoints/models/'
+    MODELS_DIR = checkpoint_dir + '/models/'
 
     # GPU limit
     limit_gpu(CONFIG['gpu'])
@@ -732,7 +731,9 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 #     config = wandb.config
 #     # wandb.run.name = '{}'.format(wandb.run.name)
 #     wandb.run.save()
-
+# (dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
+    #           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
+    #           log_dir=None, patience=10, p_aug=0, norm_scale=0.5)
     train(dataset=x_train,
           cat_covs=cat_covs_train,
           num_covs=num_covs_train,
@@ -745,7 +746,9 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
           gen_opt=gen_opt,
           disc_opt=disc_opt,
           score_fn=score_fn(x_test, cat_covs_test, num_covs_test),
-          save_fn=save_fn)
+          save_fn=save_fn,
+          log_dir=checkpoint_dir + '/logs',
+          checkpoint_dir=checkpoint_dir)
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
@@ -775,6 +778,10 @@ def pcaPlot(pca, df, info_df, variable, title):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--train', help='boolean train or not', default='True')
+    parser.add_argument('-ie', '--input_expr', help='input expression data', default=None)
+    parser.add_argument('-im', '--input_meta', help='input meta data', default=None)
+    parser.add_argument('-cd', '--checkpoint_dir', help='checkpoint directory', default=None)
+    parser.add_argument('-gf', '--genes_file', help='input genelist data', default=None)
     parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
     parser.add_argument('-gdf', '--gendf_file', help='output file to store generated df', default=None)
     parser.add_argument('-g', '--gpu', help='number of gpus', default=0)
@@ -793,16 +800,17 @@ def main():
     CONFIG = {'gpu': int(options.gpu), 'epochs': int(options.epochs), 'latent_dim': int(options.latent_dim),
               'batch_size': int(options.batch_size), 'nb_layers': int(options.nb_layers), 'hdim': int(options.hdim),
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
-    data_dir = '.'
-    genes_file = open("top-liver-genes.txt", "r")
-    genes = genes_file. readlines()
+
+    checkpoint_dir = options.checkpoint_dir
+    genes_file = open(options.genes_file, "r")
+    genes = genes_file.readlines()
     genes_list=list()
     for g in genes:
         genes_list.append(g.strip())
-    expr_df = pd.read_csv(data_dir+'/Proj2_Normalized_Counts.csv', index_col=0)
-    #df = pd.read_csv(data_dir+'/Normalized.CRISP.Liver.Symbol.Filtered.Subset.log2plus1.051721.csv', index_col=0).T
+    expr_df = pd.read_csv(options.input_expr, index_col=0)
+    #df = pd.read_csv(options.input_expr, index_col=0).T
     #expr_df = df[df.columns.intersection(genes_list)].T
-    info_df = pd.read_csv(data_dir+'/all_metadata_Proj2.csv', index_col=0)
+    info_df = pd.read_csv(options.input_meta, index_col=0)
     
     #standardize expression data
     expr_df_mean = expr_df.mean()
@@ -819,7 +827,7 @@ def main():
     if eval(options.train):
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train)
+             x_test, x_train, checkpoint_dir)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
         print('not training!')
