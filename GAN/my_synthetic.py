@@ -809,6 +809,7 @@ def main():
     min_max_scaler = preprocessing.MinMaxScaler()
     x_scaled = min_max_scaler.fit_transform(x)
     expr_df = pd.DataFrame(x_scaled)
+    print(expr_df)
 
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
