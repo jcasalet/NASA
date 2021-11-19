@@ -1,28 +1,15 @@
 import tensorflow as tf
 import datetime
-
-from utils import *
-from tf_utils import *
-from collections import Counter
-import pandas as pd
 import numpy as np
-import umap
-import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import operator
 import os
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.manifold import TSNE
-from scipy.cluster.hierarchy import linkage, cophenet, dendrogram
-import pickle
 import random
-from statsmodels.stats.multitest import multipletests
-from matplotlib.collections import EllipseCollection
-import scipy
-import sys
 import argparse
+import pandas as pd
+from sklearn import preprocessing
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -817,7 +804,11 @@ def main():
     #expr_df_sd = expr_df.std()
     #expr_df = (expr_df - expr_df_mean)/expr_df_sd
     # normalize expression data
-    expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
+    #expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
+    x = expr_df.values  # returns a numpy array
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_scaled = min_max_scaler.fit_transform(x)
+    expr_df = pd.DataFrame(x_scaled)
 
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
