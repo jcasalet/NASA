@@ -143,10 +143,10 @@ def pearson_correlation(x, y):
         return (a - a_off) / a_std
 
     assert x.shape[0] == y.shape[0]
-    #x_ = standardize(x)
-    #y_ = standardize(y)
-    x_ = x
-    y_ = y
+    x_ = standardize(x)
+    y_ = standardize(y)
+    #x_ = x
+    #y_ = y
     return np.dot(x_.T, y_) / x.shape[0]
 
 
