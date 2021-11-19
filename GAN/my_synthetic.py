@@ -813,11 +813,11 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
     
     #standardize expression data
-    expr_df_mean = expr_df.mean()
-    expr_df_sd = expr_df.std()
-    expr_df = (expr_df - expr_df_mean)/expr_df_sd
+    #expr_df_mean = expr_df.mean()
+    #expr_df_sd = expr_df.std()
+    #expr_df = (expr_df - expr_df_mean)/expr_df_sd
     # normalize expression data
-    #expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
+    expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
 
     
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
