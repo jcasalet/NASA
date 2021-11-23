@@ -143,10 +143,10 @@ def pearson_correlation(x, y):
         return (a - a_off) / a_std
 
     assert x.shape[0] == y.shape[0]
-    #x_ = standardize(x)
-    #y_ = standardize(y)
-    x_ = x
-    y_ = y
+    x_ = standardize(x)
+    y_ = standardize(y)
+    #x_ = x
+    #y_ = y
     return np.dot(x_.T, y_) / x.shape[0]
 
 
@@ -667,7 +667,8 @@ def my_prep_data(n, expr_df, info_df):
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
 
-def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train, checkpoint_dir):
+def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
+             x_test, x_train, checkpoint_dir, gamma_list):
     # Train on GL liver...
 
     # Script that trains the model
@@ -741,6 +742,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
+    gamma_list.append(score)
     print('Gamma(Dx, Dz): {:.2f}'.format(score))
 
 
@@ -763,6 +765,26 @@ def pcaPlot(pca, df, info_df, variable, title):
     #plt.show()
     plt.savefig('./' + title, dpi=300)
     plt.close()
+
+def plotPCA(x, x_gen, info_df):
+    pca = PCA(n_components=2)
+    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
+
+    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+
+def plot_gamma(gamma_list):
+    fig, ax = plt.subplots(1)
+    fig.suptitle('gamma scores over iterations')
+    ax.scatter(range(len(gamma_list)), gamma_list, color='black', marker='o', s=10)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -813,15 +835,17 @@ def main():
     expr_df = pd.DataFrame(x_scaled)
     print(expr_df)'''
 
-    
+
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
             x_train,  = my_prep_data(int(options.num_genes), expr_df, info_df)
 
 
     if eval(options.train):
+        gamma_list = list()
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir)
+             x_test, x_train, checkpoint_dir, gamma_list)
+        plot_gamma(gamma_list)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
         print('not training!')
@@ -845,20 +869,7 @@ def main():
         #x_gen_df = x_gen_df + abs(theMin)
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
-
-    pca = PCA(n_components=2)
-    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
-    
-
-    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+    plotPCA(x, x_gen, info_df)
                     
 
 if __name__ == "__main__":
