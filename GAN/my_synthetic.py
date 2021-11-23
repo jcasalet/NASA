@@ -48,7 +48,7 @@ def split_train_test(x, train_rate=0.75, seed=0):
     return x_train, x_test
 
 
-def split_train_test_v2(x, sampl_ids, train_rate=0.75):
+def split_train_test_v2(x, sampl_ids, train_rate=0.75, seed=0):
     """
     Avoids patient leak between train/test set
     Split data into a train and a test sets
@@ -594,7 +594,7 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF
 
-def my_prep_data(n, expr_df, info_df):
+def my_prep_data(n, expr_df, info_df, seed):
     # Load dataset
     #expr_df, info_df = rnaseqdb_load()
     x = expr_df.values.T
@@ -647,7 +647,7 @@ def my_prep_data(n, expr_df, info_df):
     print('Num covs: ', num_covs.shape)
 
     # Train/test split
-    np.random.seed(0)
+    np.random.seed(seed)
     idx = np.arange(x.shape[0])
     np.random.shuffle(idx)
     x = x[idx, :]
@@ -655,9 +655,9 @@ def my_prep_data(n, expr_df, info_df):
     cat_covs = cat_covs[idx, :]
 
 
-    x_train, x_test = split_train_test(x)
-    num_covs_train, num_covs_test = split_train_test(num_covs)
-    cat_covs_train, cat_covs_test = split_train_test(cat_covs)
+    x_train, x_test = split_train_test(x=x, seed=seed)
+    num_covs_train, num_covs_test = split_train_test(x=num_covs, seed=seed)
+    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, seed=seed)
     # Normalise data
     x_mean = np.mean(x_train, axis=0)
     x_std = np.std(x_train, axis=0)
@@ -790,6 +790,7 @@ def plot_gamma(gamma_list):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--train', help='boolean train or not', default='True')
+    parser.add_argument('-s', '--seed', help='integer rng seed', default=0)
     parser.add_argument('-ie', '--input_expr', help='input expression data', default='Proj2_Normalized_Counts.csv')
     parser.add_argument('-im', '--input_meta', help='input meta data', default='all_metadata_Proj2.csv')
     parser.add_argument('-cd', '--checkpoint_dir', help='checkpoint directory', default='checkpoints')
@@ -838,7 +839,7 @@ def main():
 
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-            x_train,  = my_prep_data(int(options.num_genes), expr_df, info_df)
+            x_train,  = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
 
     if eval(options.train):
