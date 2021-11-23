@@ -782,9 +782,8 @@ def plotPCA(x, x_gen, info_df):
     pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
 
 def plot_gamma(gamma_list):
-    fig, ax = plt.subplots(1)
-    fig.suptitle('gamma scores over iterations')
-    ax.scatter(list(range(len(gamma_list))), gamma_list, color='black', marker='o', s=10)
+
+    plt.plot(list(range(len(gamma_list))), gamma_list, color='black', marker='o', s=10)
     plt.savefig('./' + 'gamma_scores', dpi=300)
 
 
