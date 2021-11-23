@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 
 inputFile=sys.argv[1]
+outputFile=sys.argv[2]
 sep='\t'
 
 # removing leading comma in csv
@@ -48,4 +49,4 @@ df['dose_binary'] = df['sample'].map(dose_dict)
 # save df to file
 #df.to_pickle('cardio_env-RADTYPE_target-dose_bin.pkl')
 df=df.set_index('sample')
-df.to_csv('cardio_RADTYPE_dosebin.csv', sep=',', index=False)
+df.to_csv(outputFile, sep=',', index=False)

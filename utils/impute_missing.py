@@ -20,7 +20,8 @@ nonNullColumns = nonNullDF.columns
 inputArray = nonNullDF.to_numpy()
 
 # impute missing values
-imputer = KNNImputer(n_neighbors=3, weights='uniform')
+#imputer = KNNImputer(n_neighbors=2, weights='uniform')
+imputer = KNNImputer(n_neighbors=2, weights='distance')
 #imputer = SimpleImputer(missing_values=np.NaN, strategy='median', verbose=100)
 #imputer = SimpleImputer(missing_values=np.NaN, strategy='constant', verbose=100)
 imputedArray = imputer.fit_transform(inputArray)
