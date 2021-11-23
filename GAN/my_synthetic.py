@@ -461,7 +461,7 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list):
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
