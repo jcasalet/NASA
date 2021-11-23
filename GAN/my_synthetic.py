@@ -784,6 +784,7 @@ def plot_gamma(gamma_list):
     fig, ax = plt.subplots(1)
     fig.suptitle('gamma scores over iterations')
     ax.scatter(range(len(gamma_list)), gamma_list, color='black', marker='o', s=10)
+    plt.savefig('./' + 'gamma_scores', dpi=300)
 
 
 def parse_args():
