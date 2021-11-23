@@ -461,7 +461,7 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-          log_dir=None, patience=10, p_aug=0, norm_scale=0.5):
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
@@ -523,7 +523,8 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             z = tf.random.normal([x.shape[0], z_dim])
             gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
             gen_losses(gen_loss)
-
+        score = score_fn(gen)
+        gamma_list.append(score)
         # Logs
         with disc_summary_writer.as_default():
             tf.summary.scalar('loss', disc_losses.result(), step=epoch)
@@ -738,11 +739,11 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
           score_fn=score_fn(x_test, cat_covs_test, num_covs_test),
           save_fn=save_fn,
           log_dir=checkpoint_dir + '/logs',
-          checkpoint_dir=checkpoint_dir)
+          checkpoint_dir=checkpoint_dir,
+          gamma_list=gamma_list)
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
-    gamma_list.append(score)
     print('Gamma(Dx, Dz): {:.2f}'.format(score))
 
 
