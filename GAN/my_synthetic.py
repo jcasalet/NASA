@@ -783,7 +783,7 @@ def plotPCA(x, x_gen, info_df):
 
 def plot_gamma(gamma_list):
 
-    plt.plot(list(range(len(gamma_list))), gamma_list, color='black', marker='o', s=10)
+    plt.plot(list(range(len(gamma_list))), gamma_list, color='black', marker='o')
     plt.savefig('./' + 'gamma_scores', dpi=300)
 
 
