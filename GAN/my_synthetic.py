@@ -848,7 +848,7 @@ def main():
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train, checkpoint_dir, gamma_list)
-        plot_gamma(gamma_list)
+        #(gamma_list)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
         print('not training!')
