@@ -603,14 +603,17 @@ def my_prep_data(n, expr_df, info_df, seed):
     mission = info_df['mission']
     seqfac = info_df['seqFacility']
 
-    # transpose matrix
-    x = expr_df.values.T
-    # find n most varied genes
-    x = my_find_mostvaried(x, n)
     # standardize expression data
-    x = (x - x.mean()) / x.sd()
+    x = (expr_df - expr_df.mean()) / x.sd()
+
     # normalize expression data
     # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
+
+    # transpose matrix
+    x = x.values.T
+    # find n most varied genes
+    x = my_find_mostvaried(x, n)
+
 
     # Log-transform data
     x = np.log(1 + x)
