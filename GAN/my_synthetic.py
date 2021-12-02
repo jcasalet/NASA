@@ -596,21 +596,21 @@ def my_find_mostvaried(df, n):
     return slicedDF
 
 def my_prep_data(n, expr_df, info_df, seed):
-    # Load dataset
-    #expr_df, info_df = rnaseqdb_load()
-    x = expr_df.values.T
-    x = my_find_mostvaried(x, n)
-    #symbols = expr_df.index.levels[0].values
-    symbols = expr_df.index.values
-    sampl_ids = expr_df.columns.values
-    #     tissues = info_df['TISSUE_GTEX'].values
-    #     datasets = info_df['DATASET'].values
-    # sample,study,dissection,strain,libprep
+
     tissues = info_df['condition'] # not renaming the tissues variable for convenience LMS
     datasets = info_df['dataset']
     lib = info_df['libPrep']
     mission = info_df['mission']
     seqfac = info_df['seqFacility']
+
+    # transpose matrix
+    x = expr_df.values.T
+    # find n most varied genes
+    x = my_find_mostvaried(x, n)
+    # standardize expression data
+    x = (x - x.mean()) / x.sd()
+    # normalize expression data
+    # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
 
     # Log-transform data
     x = np.log(1 + x)
@@ -808,6 +808,7 @@ def parse_args():
     parser.add_argument('-nb', '--nb_critic', help='number of critic batches per gen batch', default=5)
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
+    parser.add_argument('-os', '--over_sample', help='boolean over sample', default=False)
     return parser.parse_args() 
     
 def main():
@@ -826,18 +827,10 @@ def main():
     #df = pd.read_csv(options.input_expr, index_col=0).T
     #expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
+
+
     
-    #standardize expression data
-    expr_df_mean = expr_df.mean()
-    expr_df_sd = expr_df.std()
-    expr_df = (expr_df - expr_df_mean)/expr_df_sd
-    # normalize expression data
-    #expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
-    '''x = expr_df.values  # returns a numpy array
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    expr_df = pd.DataFrame(x_scaled)
-    print(expr_df)'''
+
 
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
