@@ -604,7 +604,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     seqfac = info_df['seqFacility']
 
     # standardize expression data
-    x = (expr_df - expr_df.mean()) / x.sd()
+    x = (expr_df - expr_df.mean()) / expr_df.sd()
 
     # normalize expression data
     # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
