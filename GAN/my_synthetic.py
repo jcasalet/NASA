@@ -807,7 +807,7 @@ def parse_args():
     parser.add_argument('-lr', '--lr', help='learning rate', default=5e-04)
     parser.add_argument('-nb', '--nb_critic', help='number of critic batches per gen batch', default=5)
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
-    parser.add_argument('pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
+    parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     return parser.parse_args() 
     
 def main():
