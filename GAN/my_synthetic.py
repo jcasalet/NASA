@@ -807,6 +807,7 @@ def parse_args():
     parser.add_argument('-lr', '--lr', help='learning rate', default=5e-04)
     parser.add_argument('-nb', '--nb_critic', help='number of critic batches per gen batch', default=5)
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
+    parser.add_argument('pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     return parser.parse_args() 
     
 def main():
@@ -844,7 +845,10 @@ def main():
 
 
     if eval(options.train):
-        gamma_list = list()
+        if options.plot_gamma:
+            gamma_list = list()
+        else:
+            gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train, checkpoint_dir, gamma_list)
