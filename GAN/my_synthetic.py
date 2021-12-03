@@ -792,14 +792,15 @@ def plot_gamma(gamma_list):
 
 def over_sample(expr_df, info_df, n):
     # delta = np.random.normal(mu, sigma, num)
-    new_sample_df = pd.DataFrame(np.nan, index=[i for i in range(n)], columns=expr_df.columns)
+    df = expr_df.T
+    new_sample_df = pd.DataFrame(np.nan, index=[i for i in range(n)], columns=df.columns)
     for i in range(len(new_sample_df)):
-        for j in range(len(expr_df.iloc[i])):
-            x = expr_df.iloc[i][j]
+        for j in range(len(df.iloc[i])):
+            x = df.iloc[i][j]
             noise = np.random.normal(x, 0.1, 1)
             new_sample_df.iloc[i][j] = x + noise
             new_sample_df.iloc[i]['sample'] = 'sample_' + str(i)
-    return expr_df.append(new_sample_df, ignore_index=True)
+    return df.append(new_sample_df, ignore_index=True).T
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -842,7 +843,7 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     print('shape before: ' + str(expr_df.shape))
-    expr_df = over_sample(expr_df, info_df, 10)
+    expr_df = over_sample(expr_df, info_df, 1000)
     print('shape after: ' + str(expr_df.shape))
 
 
