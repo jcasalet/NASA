@@ -794,7 +794,7 @@ def over_sample(expr_df, info_df, n):
     # delta = np.random.normal(mu, sigma, num)
     new_sample_df = pd.DataFrame(np.nan, index=[i for i in range(n)], columns=expr_df.columns)
     for i in range(len(expr_df)):
-        for j in range(expr_df.iloc[i]):
+        for j in range(len(expr_df.iloc[i])):
             x = expr_df.iloc[i][j]
             noise = np.random.normal(x, 0.1, 1)
             new_sample_df.iloc[i][j] = x + noise
