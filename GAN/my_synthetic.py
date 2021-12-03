@@ -790,6 +790,16 @@ def plot_gamma(gamma_list):
     plt.ylim([0, 1])
     plt.savefig('./' + 'gamma_scores', dpi=300)
 
+def over_sample(expr_df, info_df, n):
+    # delta = np.random.normal(mu, sigma, num)
+    new_sample_df = pd.DataFrame(np.nan, index=[i for i in range(n)], columns=expr_df.columns)
+    for i in range(len(expr_df)):
+        for j in range(expr_df.iloc[i]):
+            x = expr_df.iloc[i][j]
+            noise = np.random.normal(x, 0.1, 1)
+            new_sample_df.iloc[i][j] = x + noise
+            new_sample_df.iloc[i]['sample'] = 'sample_' + str(i)
+    return expr_df.concat(new_sample_df, ignore_index=True)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -811,7 +821,7 @@ def parse_args():
     parser.add_argument('-nb', '--nb_critic', help='number of critic batches per gen batch', default=5)
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
-    parser.add_argument('-os', '--over_sample', help='boolean over sample', default=False)
+    parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
     return parser.parse_args() 
     
 def main():
@@ -831,9 +841,9 @@ def main():
     #expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
-
-    
-
+    print('shape before: ' + str(expr_df.shape))
+    expr_df = over_sample(expr_df, info_df, 10)
+    print('shape after: ' + str(expr_df.shape))
 
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
@@ -868,7 +878,7 @@ def main():
                     theMin = val
 
         print('min = ' + str(theMin))'''
-        x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
+        #x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
         #x_gen_df = x_gen_df + abs(theMin)
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
