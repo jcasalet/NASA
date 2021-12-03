@@ -799,7 +799,7 @@ def over_sample(expr_df, info_df, n):
             noise = np.random.normal(x, 0.1, 1)
             new_sample_df.iloc[i][j] = x + noise
             new_sample_df.iloc[i]['sample'] = 'sample_' + str(i)
-    return expr_df.concat(new_sample_df, ignore_index=True)
+    return expr_df.append(new_sample_df, ignore_index=True)
 
 def parse_args():
     parser = argparse.ArgumentParser()
