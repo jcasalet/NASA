@@ -843,7 +843,7 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     print('shape before: ' + str(expr_df.shape))
-    expr_df = over_sample(expr_df, info_df, 1000)
+    expr_df = over_sample(expr_df, info_df, 10)
     print('shape after: ' + str(expr_df.shape))
 
 
