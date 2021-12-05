@@ -790,17 +790,9 @@ def plot_gamma(gamma_list):
     plt.ylim([0, 1])
     plt.savefig('./' + 'gamma_scores', dpi=300)
 
-def over_sample(expr_df, info_df, n):
-    # delta = np.random.normal(mu, sigma, num)
-    df = expr_df.T
-    new_sample_df = pd.DataFrame(np.nan, index=[i for i in range(n)], columns=df.columns)
-    for i in range(len(new_sample_df)):
-        for j in range(len(df.iloc[i])):
-            x = df.iloc[i][j]
-            noise = np.random.normal(x, 0.1, 1)
-            new_sample_df.iloc[i][j] = x + noise
-            new_sample_df.iloc[i]['sample'] = 'sample_' + str(i)
-    return df.append(new_sample_df, ignore_index=True).T
+
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -841,10 +833,6 @@ def main():
     #df = pd.read_csv(options.input_expr, index_col=0).T
     #expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
-
-    print('shape before: ' + str(expr_df.shape))
-    expr_df = over_sample(expr_df, info_df, 10)
-    print('shape after: ' + str(expr_df.shape))
 
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
