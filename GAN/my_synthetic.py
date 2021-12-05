@@ -859,7 +859,7 @@ def main():
     x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
 
     if not options.gendf_file is None:
-        x_gen_df = pd.DataFrame(data=x_gen.T[0:num_samples], index=expr_df[0:num_samples].index, columns=expr_df.columns)
+        x_gen_df = pd.DataFrame(data=x_gen.T[0:num_samples], index=expr_df.index, columns=expr_df.columns)
         '''theMin=0
         for i in range(len(x_gen_df)):
             for j in x_gen_df.columns:
