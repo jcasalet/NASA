@@ -815,6 +815,7 @@ def parse_args():
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
+    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
     return parser.parse_args() 
     
 def main():
@@ -852,7 +853,10 @@ def main():
     else:
         print('not training!')
         gen = tf.keras.models.load_model(options.model)
-    x_gen = predict(cc=cat_covs, nc=num_covs, gen=gen)
+
+    # reduce (down-sample) number of samples
+    num_samples = int(options.ns)
+    x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
 
     if not options.gendf_file is None:
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
