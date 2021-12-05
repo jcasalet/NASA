@@ -855,7 +855,7 @@ def main():
         gen = tf.keras.models.load_model(options.model)
 
     # reduce (down-sample) number of samples
-    num_samples = int(options.ns)
+    num_samples = int(options.num_samples)
     x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
 
     if not options.gendf_file is None:
