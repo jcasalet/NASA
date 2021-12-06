@@ -523,8 +523,9 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             z = tf.random.normal([x.shape[0], z_dim])
             gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
             gen_losses(gen_loss)
-        score = score_fn(gen)
-        gamma_list.append(score)
+        if not gamma_list is None:
+            score = score_fn(gen)
+            gamma_list.append(score)
         # Logs
         with disc_summary_writer.as_default():
             tf.summary.scalar('loss', disc_losses.result(), step=epoch)
