@@ -721,14 +721,6 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     gen_opt = tfk.optimizers.RMSprop(CONFIG['lr'])
     disc_opt = tfk.optimizers.RMSprop(CONFIG['lr'])
 
-    ## Come back to this LMS (do I need a project name?)
-#     run = wandb.init(project='adversarial_gene_expr', config=CONFIG)
-#     config = wandb.config
-#     # wandb.run.name = '{}'.format(wandb.run.name)
-#     wandb.run.save()
-# (dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
-    #           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-    #           log_dir=None, patience=10, p_aug=0, norm_scale=0.5)
     train(dataset=x_train,
           cat_covs=cat_covs_train,
           num_covs=num_covs_train,
@@ -748,7 +740,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
-    print('Gamma(Dx, Dz): {:.2f}'.format(score))
+    print('Gamma(Dx, Dz): {:.4f}'.format(score))
 
 
 def pcaPlot(pca, df, info_df, variable, title):
@@ -790,10 +782,6 @@ def plot_gamma(gamma_list):
     plt.plot(list(range(len(gamma_list))), gamma_list)
     plt.ylim([0, 1])
     plt.savefig('./' + 'gamma_scores', dpi=300)
-
-
-
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -861,7 +849,7 @@ def main():
 
     if not options.gendf_file is None:
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
-        x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
+        x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
     plotPCA(x, x_gen, info_df)
