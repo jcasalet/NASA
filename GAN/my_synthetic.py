@@ -825,11 +825,11 @@ def main():
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
 
     checkpoint_dir = options.checkpoint_dir
-    genes_file = open(options.genes_file, "r")
+    '''genes_file = open(options.genes_file, "r")
     genes = genes_file.readlines()
     genes_list=list()
     for g in genes:
-        genes_list.append(g.strip())
+        genes_list.append(g.strip())'''
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     #df = pd.read_csv(options.input_expr, index_col=0).T
     #expr_df = df[df.columns.intersection(genes_list)].T
@@ -859,20 +859,8 @@ def main():
     x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
 
     if not options.gendf_file is None:
-        x_gen_df = pd.DataFrame(data=x_gen.T[0:num_samples], index=expr_df.index, columns=expr_df.columns)
-        '''theMin=0
-        for i in range(len(x_gen_df)):
-            for j in x_gen_df.columns:
-                val = float(x_gen_df.iloc[i][j])
-                if not isinstance(val, float):
-                    print(val)
-                    continue
-                if val < theMin:
-                    theMin = val
-
-        print('min = ' + str(theMin))'''
-        #x_gen_df = x_gen_df * expr_df_sd + expr_df_mean
-        #x_gen_df = x_gen_df + abs(theMin)
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
+        x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
     plotPCA(x, x_gen, info_df)
