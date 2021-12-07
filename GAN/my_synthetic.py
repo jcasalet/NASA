@@ -774,10 +774,10 @@ def main():
     num_samples = int(options.num_samples)
     x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
 
-    if not options.gendf_file is None:
+    if not options.gen_dir is None:
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
-        x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
-        x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
+        #x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
+        x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
     # plotPCA(x, x_gen, info_df)
                     
