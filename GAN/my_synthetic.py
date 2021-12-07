@@ -692,6 +692,9 @@ def pcaPlot(pca, df, info_df, variable, title):
 
 def plotPCA(x, x_gen, info_df):
     pca = PCA(n_components=2)
+    x = (x - x.mean()) / x.std()
+    x = np.log(1 + x)
+    x = np.float32(x)
     pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
     pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
     pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
@@ -712,19 +715,23 @@ def plot_gamma(gamma_list):
 
 def calculate_norms(A, B):
     N = A - B
-    frobenius_norm = LA.norm(N, ord='fro', axis=1)
-    l1_norm = LA.norm(N, ord=1, axis=1)
-    l2_norm = LA.norm(N, ord=2, axis=1)
-    print('frobeninus norm = ' + str(frobenius_norm))
+    #frobenius_norm = LA.norm(N, ord='fro', axis=1)
+    l1_norm = LA.norm(LA.norm(N, ord=1, axis=1))
+    l2_norm = LA.norm(LA.norm(N, ord=2, axis=1))
     print('L1 norm = ' + str(l1_norm))
     print('L2 norm = ' + str(l2_norm))
 
 def calculate_close(A, B, delta):
     N = A - B
+    shape = N.shape
+    size = shape[0] * shape[1]
+    avgDelta = np.sum(N, axis=None) / size
+    print('avg delta = ' + str(avgDelta))
     N[N<delta] = 1
     N[N>delta] = 0
     arraySum = np.sum(N, axis=None)
     print('num close = ' + str(arraySum))
+    print('num far = ' + str(size - arraySum))
 
 
 def parse_args():
@@ -791,17 +798,17 @@ def main():
     cc = cat_covs[0:num_samples]
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
-    calculate_norms(x_gen, expr_df.to_numpy())
-    calculate_close(x_gen, expr_df.to_numpy())
+    calculate_norms(x_gen.T, expr_df.to_numpy())
+    calculate_close(x_gen.T, expr_df.to_numpy(), 1)
 
     if not options.gen_dir is None:
-        expr_df_index = expr_df.index[0:num_samples]
-        expr_df_columns = expr_df.columns[0:num_samples]
-        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_index, columns=expr_df_columns)
+        expr_df_samples = expr_df.T.index[0:num_samples]
+        expr_df_genes = expr_df.index
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         #x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
-    # plotPCA(x, x_gen, info_df)
+    plotPCA(x, x_gen, info_df)
                     
 
 if __name__ == "__main__":
