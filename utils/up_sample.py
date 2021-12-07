@@ -18,8 +18,10 @@ df_np = expr_df_T_np[1:]
 orig_df_np = expr_df_T_np[1:]
 orig_info_df = info_df.copy(deep=True)
 for i in range(0, n):
-    noise = abs(np.random.normal(0, var, orig_df_np.shape))
+    noise = np.random.normal(0, var, orig_df_np.shape)
     noised_np = orig_df_np + noise
+    # make any negative values 0
+    noised_np[noised_np<0] = 0
     new_samples = ['sample_' + str(i) + '_' + str(j) for j in range(len(expr_df.columns)-1)]
     orig_info_df['sample'] = new_samples
     info_df = info_df.append(orig_info_df, ignore_index=True)
