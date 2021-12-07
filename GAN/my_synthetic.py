@@ -48,77 +48,6 @@ def split_train_test(x, train_rate=0.75, seed=0):
     return x_train, x_test
 
 
-def split_train_test_v2(x, sampl_ids, train_rate=0.75, seed=0):
-    """
-    Avoids patient leak between train/test set
-    Split data into a train and a test sets
-    :param train_rate: percentage of training samples
-    :return: x_train, x_test
-    """
-    nb_samples = x.shape[0]
-    sample_ids_rev = np.array([s[::-1] for s in sampl_ids])
-    split_point = int(train_rate * nb_samples)
-    idxs = np.argsort(sample_ids_rev)
-    sample_ids_rev_sorted = sample_ids_rev[idxs]
-
-    p = split_point
-    while p == nb_samples and sample_ids_rev_sorted[p - 1] == sample_ids_rev_sorted[p - 2]:
-        p += 1
-    if p == nb_samples:
-        raise Exception('Error: Cannot split samples into train and test sets')
-
-    x_train = x[idxs[:p]]
-    x_test = x[idxs[p:]]
-    sample_ids_train = sampl_ids[idxs[:p]]
-    sample_ids_test = sampl_ids[idxs[p:]]
-
-    return x_train, x_test, sample_ids_train, sample_ids_test
-
-
-def split_train_test_v3(sample_names, train_rate=0.75, seed=0):
-    """
-    Split data into a train and a test sets keeping replicates within the same set
-    :param sample_names: list of sample names
-    :param train_rate: percentage of training samples
-    :param seed: random seed
-    :return: lists of train and test sample indices
-    """
-    # Set random seed
-    random.seed(seed)
-
-    # Find replicate segments
-    replicate_ranges = {}
-    for i, name in enumerate(sample_names):
-        repl_nb = int(name.split('_')[-1][1:])
-        n = len(replicate_ranges)
-        if repl_nb == 1:  # First replicate sample
-            replicate_ranges[n] = {'start': i, 'end': i}
-        else:
-            replicate_ranges[n - 1]['end'] = i
-
-    # Permute unique samples
-    unique_sample_idxs = list(replicate_ranges.keys())
-    random.shuffle(unique_sample_idxs)
-
-    # Split data
-    nb_unique = len(unique_sample_idxs)
-    split_point = int(train_rate * nb_unique)
-    unique_train = unique_sample_idxs[:split_point]
-
-    # Recover replicates
-    train_idxs = []
-    test_idxs = []
-    for i in range(nb_unique):
-        for j in range(replicate_ranges[i]['start'], replicate_ranges[i]['end'] + 1):
-            if i in unique_train:
-                train_idxs.append(j)
-            else:
-                test_idxs.append(j)
-
-    assert len(set(train_idxs + test_idxs)) == len(sample_names)
-    return train_idxs, test_idxs
-
-
 # ------------------
 # E. coli M3D
 # ------------------
@@ -654,7 +583,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # Train/test split
     np.random.seed(seed)
     idx = np.arange(x.shape[0])
-    np.random.shuffle(idx)
+    np.random.shuffle(idx, seed=seed)
     x = x[idx, :]
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
@@ -663,11 +592,10 @@ def my_prep_data(n, expr_df, info_df, seed):
     x_train, x_test = split_train_test(x=x, seed=seed)
     num_covs_train, num_covs_test = split_train_test(x=num_covs, seed=seed)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, seed=seed)
+
     # Normalise data
-    x_mean = np.mean(x_train, axis=0)
-    x_std = np.std(x_train, axis=0)
-    #x_train = standardize(x_train, mean=x_mean, std=x_std)
-    #x_test = standardize(x_test, mean=x_mean, std=x_std)
+    #x_mean = np.mean(x_train, axis=0)
+    #x_std = np.std(x_train, axis=0)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
@@ -852,7 +780,7 @@ def main():
         x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gendf_file, sep=',', header=True, index=True)
 
-    plotPCA(x, x_gen, info_df)
+    # plotPCA(x, x_gen, info_df)
                     
 
 if __name__ == "__main__":
