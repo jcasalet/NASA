@@ -11,19 +11,18 @@ expr_df = pd.read_csv(expr_df_file, header=0, sep=',')
 info_df = pd.read_csv(info_df_file, header=0, sep=',')
 # need to randomize the selection of samples?!
 
-all_samples = list(info_df['sample'])
 genes = expr_df['gene']
 expr_df_T = expr_df.T
 expr_df_T_np = expr_df_T.to_numpy()
 df_np = expr_df_T_np[1:]
 orig_df_np = expr_df_T_np[1:]
-orig_info_df = info_df
-for i in range(n):
-    noise = np.random.normal(0, var, orig_df_np.shape)
+orig_info_df = info_df.copy(deep=True)
+for i in range(0, n):
+    noise = abs(np.random.normal(0, var, orig_df_np.shape))
     noised_np = orig_df_np + noise
     new_samples = ['sample_' + str(i) + '_' + str(j) for j in range(len(expr_df.columns)-1)]
     orig_info_df['sample'] = new_samples
-    info_df = info_df.append(orig_info_df)
+    info_df = info_df.append(orig_info_df, ignore_index=True)
     df_np = np.concatenate([df_np, noised_np])
 
 expanded_expr_df = pd.DataFrame(data=df_np, index=info_df['sample'], columns=genes).T
