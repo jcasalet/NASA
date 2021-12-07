@@ -798,6 +798,7 @@ def main():
     cc = cat_covs[0:num_samples]
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
+    x_gen = np.clip(x_gen, expr_df.min(), expr_df.max())
     calculate_norms(x_gen.T, expr_df.to_numpy())
     calculate_close(x_gen.T, expr_df.to_numpy(), 1)
 
@@ -805,7 +806,7 @@ def main():
         expr_df_samples = expr_df.T.index[0:num_samples]
         expr_df_genes = expr_df.index
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
-        #x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
+        x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
     plotPCA(x, x_gen, info_df)
