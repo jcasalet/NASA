@@ -527,7 +527,7 @@ def my_find_mostvaried(df, n):
 
 def my_prep_data(n, expr_df, info_df, seed):
 
-    tissues = info_df['condition'] # not renaming the tissues variable for convenience LMS
+    conditions = info_df['condition']
     datasets = info_df['dataset']
     lib = info_df['libPrep']
     mission = info_df['mission']
@@ -559,14 +559,14 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    tissues, tissues_dict_inv = cat(tissues)
+    conditions, conditions_dict_inv = cat(conditions)
     datasets, datasets_dict_inv = cat(datasets)
     lib, lib_dict_inv = cat(lib)
     mission, mission_dict_inv = cat(mission)
     seqfac, seqfac_dict_inv = cat(seqfac)
 
     ## Final concatenation
-    cat_covs = np.concatenate((tissues[:, None],
+    cat_covs = np.concatenate((conditions[:, None],
                                datasets[:, None],
                               lib[:, None],
                                 mission[:, None],
