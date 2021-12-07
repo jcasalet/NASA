@@ -718,7 +718,7 @@ def parse_args():
     parser.add_argument('-cd', '--checkpoint_dir', help='checkpoint directory', default='checkpoints')
     parser.add_argument('-gf', '--genes_file', help='input genelist data', default='top-liver-genes.txt')
     parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
-    parser.add_argument('-gdf', '--gendf_file', help='output file to store generated df', default=None)
+    parser.add_argument('-gd', '--gen_dir', help='output dir to store generated df', default=None)
     parser.add_argument('-g', '--gpu', help='number of gpus', default=0)
     parser.add_argument('-e', '--epochs', help='epochs', default=100)
     parser.add_argument('-ld', '--latent_dim', help='number of latent dimensions', default=16)
