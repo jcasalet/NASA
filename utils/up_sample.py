@@ -20,14 +20,13 @@ orig_info_df = info_df.copy(deep=True)
 for i in range(0, n):
     noise = np.random.normal(0, var, orig_df_np.shape)
     noised_np = orig_df_np + noise
-    # make any negative values 0
     noised_np[noised_np<0] = 0
     new_samples = ['sample_' + str(i) + '_' + str(j) for j in range(len(expr_df.columns)-1)]
-    orig_info_df['sample'] = new_samples
-    info_df = info_df.append(orig_info_df, ignore_index=True)
+    orig_info_df['Sample'] = new_samples
+    info_df = info_df.append(orig_info_df)
     df_np = np.concatenate([df_np, noised_np])
 
-expanded_expr_df = pd.DataFrame(data=df_np, index=info_df['sample'], columns=genes).T
+expanded_expr_df = pd.DataFrame(data=df_np, index=info_df['Sample'], columns=genes).T
 
 expanded_expr_df.to_csv('expanded_expr_df.csv')
 info_df.to_csv('expanded_info_df.csv', index=None)

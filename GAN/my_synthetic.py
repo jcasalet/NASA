@@ -10,6 +10,7 @@ import random
 import argparse
 import pandas as pd
 from sklearn import preprocessing
+from numpy import linalg as LA
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -709,6 +710,23 @@ def plot_gamma(gamma_list):
     plt.ylim([0, 1])
     plt.savefig('./' + 'gamma_scores', dpi=300)
 
+def calculate_norms(A, B):
+    N = A - B
+    frobenius_norm = LA.norm(N, ord='fro', axis=1)
+    l1_norm = LA.norm(N, ord=1, axis=1)
+    l2_norm = LA.norm(N, ord=2, axis=1)
+    print('frobeninus norm = ' + str(frobenius_norm))
+    print('L1 norm = ' + str(l1_norm))
+    print('L2 norm = ' + str(l2_norm))
+
+def calculate_close(A, B, delta):
+    N = A - B
+    N[N<delta] = 1
+    N[N>delta] = 0
+    arraySum = np.sum(N, axis=None)
+    print('num close = ' + str(arraySum))
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--train', help='boolean train or not', default='True')
@@ -746,15 +764,13 @@ def main():
     for g in genes:
         genes_list.append(g.strip())'''
     expr_df = pd.read_csv(options.input_expr, index_col=0)
-    #df = pd.read_csv(options.input_expr, index_col=0).T
-    #expr_df = df[df.columns.intersection(genes_list)].T
+    # df = pd.read_csv(options.input_expr, index_col=0).T
+    # expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
+    cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
+    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
     np.random.seed(int(options.seed))
-
-    cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-            x_train,  = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
-
 
     if eval(options.train):
         if options.plot_gamma:
@@ -772,10 +788,16 @@ def main():
 
     # reduce (down-sample) number of samples
     num_samples = int(options.num_samples)
-    x_gen = predict(cc=cat_covs[0:num_samples], nc=num_covs[0:num_samples], gen=gen)
+    cc = cat_covs[0:num_samples]
+    nc = num_covs[0:num_samples]
+    x_gen = predict(cc=cc, nc=nc, gen=gen)
+    calculate_norms(x_gen, expr_df.to_numpy())
+    calculate_close(x_gen, expr_df.to_numpy())
 
     if not options.gen_dir is None:
-        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.columns)
+        expr_df_index = expr_df.index[0:num_samples]
+        expr_df_columns = expr_df.columns[0:num_samples]
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_index, columns=expr_df_columns)
         #x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
