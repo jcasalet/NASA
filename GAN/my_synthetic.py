@@ -40,7 +40,6 @@ def split_train_test(x, train_rate=0.75, seed=0):
     :param train_rate: percentage of training samples
     :return: x_train, x_test
     """
-    random.seed(seed)
     nb_samples = x.shape[0]
     split_point = int(train_rate * nb_samples)
     x_train = x[:split_point]
@@ -581,17 +580,16 @@ def my_prep_data(n, expr_df, info_df, seed):
     print('Num covs: ', num_covs.shape)
 
     # Train/test split
-    np.random.seed(seed)
     idx = np.arange(x.shape[0])
-    np.random.shuffle(idx, seed=seed)
+    np.random.shuffle(idx)
     x = x[idx, :]
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
 
 
-    x_train, x_test = split_train_test(x=x, seed=seed)
-    num_covs_train, num_covs_test = split_train_test(x=num_covs, seed=seed)
-    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, seed=seed)
+    x_train, x_test = split_train_test(x=x)
+    num_covs_train, num_covs_test = split_train_test(x=num_covs)
+    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
 
     # Normalise data
     #x_mean = np.mean(x_train, axis=0)
@@ -752,6 +750,7 @@ def main():
     #expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
+    np.random.seed(int(options.seed))
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
             x_train,  = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
