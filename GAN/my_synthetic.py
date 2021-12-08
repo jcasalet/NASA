@@ -527,11 +527,11 @@ def my_find_mostvaried(df, n):
 
 def my_prep_data(n, expr_df, info_df, seed):
 
-    conditions = info_df['condition']
-    datasets = info_df['dataset']
+    #conditions = info_df['condition']
+    #datasets = info_df['dataset']
     lib = info_df['libPrep']
-    mission = info_df['mission']
-    seqfac = info_df['seqFacility']
+    #mission = info_df['mission']
+    #seqfac = info_df['seqFacility']
 
     # standardize expression data
     x = (expr_df - expr_df.mean()) / expr_df.std()
@@ -559,19 +559,15 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    conditions, conditions_dict_inv = cat(conditions)
-    datasets, datasets_dict_inv = cat(datasets)
+    #conditions, conditions_dict_inv = cat(conditions)
+    #datasets, datasets_dict_inv = cat(datasets)
     lib, lib_dict_inv = cat(lib)
-    mission, mission_dict_inv = cat(mission)
-    seqfac, seqfac_dict_inv = cat(seqfac)
+    #mission, mission_dict_inv = cat(mission)
+    #seqfac, seqfac_dict_inv = cat(seqfac)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None],
-                               datasets[:, None],
-                              lib[:, None],
-                                mission[:, None],
-                                seqfac[:, None]),
-                              axis=-1)
+    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], lib[:, None],mission[:, None],seqfac[:, None]), axis=-1)
+    cat_covs = np.concatenate((lib[:, None]), axis=-1)
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
@@ -673,11 +669,11 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 def pcaPlot(pca, df, info_df, variable, title):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
+    #pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
+    #pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
     pcaDF = pd.concat([pcaDF, info_df[['libPrep']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
+    #pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
+    #pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
 
@@ -695,17 +691,17 @@ def plotPCA(x, x_gen, info_df):
     x = (x - x.mean()) / x.std()
     x = np.log(1 + x)
     x = np.float32(x)
-    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
+    #pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
+    #pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
+    #pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
     pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
+    #pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
 
-    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
+    #pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
+    #pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
+    #pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
     pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+    #pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
 
 def plot_gamma(gamma_list):
 
