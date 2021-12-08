@@ -567,7 +567,8 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     ## Final concatenation
     #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], lib[:, None],mission[:, None],seqfac[:, None]), axis=-1)
-    cat_covs = np.concatenate((lib[:, None]), axis=-1)
+    #cat_covs = np.concatenate((lib[:, None]), axis=-1)
+    cat_covs = lib[:, None]
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
