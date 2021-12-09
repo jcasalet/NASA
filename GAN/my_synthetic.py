@@ -11,6 +11,7 @@ import argparse
 import pandas as pd
 from sklearn import preprocessing
 from numpy import linalg as LA
+import sys
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -751,7 +752,7 @@ def parse_args():
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
-    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
+    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None, required=True)
     return parser.parse_args() 
     
 def main():
@@ -770,6 +771,15 @@ def main():
     # df = pd.read_csv(options.input_expr, index_col=0).T
     # expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
+
+    # check num_samples against expr_df and info_df shapes
+    if len(expr_df.T) != len(info_df):
+        print('expression matrix columns and metadata matrix rows must match')
+        sys.exit(1)
+    elif len(expr_df.T) < int(options.num_samples):
+        print('number of samples output must be smaller than input')
+        sys.exit(1)
+
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
