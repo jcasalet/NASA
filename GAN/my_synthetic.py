@@ -818,7 +818,7 @@ def main():
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    plotPCA(x, x_gen, info_df[0:num_samples])
+    plotPCA(x[0:num_samples], x_gen, info_df[0:num_samples])
                     
 
 if __name__ == "__main__":
