@@ -529,7 +529,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     #conditions = info_df['condition']
     #datasets = info_df['dataset']
-    lib = info_df['libPrep']
+    libPrep = info_df['libPrep']
     #mission = info_df['mission']
     #seqfac = info_df['seqFacility']
 
@@ -561,14 +561,13 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     #conditions, conditions_dict_inv = cat(conditions)
     #datasets, datasets_dict_inv = cat(datasets)
-    lib, lib_dict_inv = cat(lib)
+    libPrep, libPrep_dict_inv = cat(libPrep)
     #mission, mission_dict_inv = cat(mission)
     #seqfac, seqfac_dict_inv = cat(seqfac)
 
     ## Final concatenation
     #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], lib[:, None],mission[:, None],seqfac[:, None]), axis=-1)
-    #cat_covs = np.concatenate((lib[:, None]), axis=-1)
-    cat_covs = lib[:, None]
+    cat_covs = libPrep[:, None]
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
@@ -806,7 +805,7 @@ def main():
         x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
-    plotPCA(x, x_gen, info_df)
+    plotPCA(x, x_gen, info_df[0:num_samples])
                     
 
 if __name__ == "__main__":
