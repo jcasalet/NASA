@@ -805,6 +805,9 @@ def main():
         x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
+    print('x.shape = ', x.shape)
+    print('x_gen.shape = ', x_gen.shape)
+    print('info_df.shape = ', info_df.shape)
     plotPCA(x, x_gen, info_df[0:num_samples])
                     
 
