@@ -534,6 +534,10 @@ def my_prep_data(n, expr_df, info_df, seed):
     #mission = info_df['mission']
     #seqfac = info_df['seqFacility']
 
+    # Log-transform data
+    x = np.log(1 + x)
+    x = np.float32(x)
+
     # standardize expression data
     x = (expr_df - expr_df.mean()) / expr_df.std()
 
@@ -546,9 +550,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     x = my_find_mostvaried(x, n)
 
 
-    # Log-transform data
-    x = np.log(1 + x)
-    x = np.float32(x)
+
 
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
