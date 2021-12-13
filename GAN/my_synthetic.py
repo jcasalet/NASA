@@ -545,7 +545,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
 
     # transpose matrix
-    x = x.values.T
+    x = x.T
     # find n most varied genes
     x = my_find_mostvaried(x, n)
 
