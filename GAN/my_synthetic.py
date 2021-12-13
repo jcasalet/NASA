@@ -535,11 +535,11 @@ def my_prep_data(n, expr_df, info_df, seed):
     #seqfac = info_df['seqFacility']
 
     # Log-transform data
-    x = np.log(1 + x)
+    x = np.log(1 + expr_df)
     x = np.float32(x)
 
     # standardize expression data
-    x = (expr_df - expr_df.mean()) / expr_df.std()
+    x = (x - x.mean()) / x.std()
 
     # normalize expression data
     # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
