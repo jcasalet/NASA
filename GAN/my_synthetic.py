@@ -561,8 +561,8 @@ def my_prep_data(n, expr_df, info_df, seed):
     print('Num covs: ', num_covs.shape)
 
     # Log-transform data
-    #x = np.log(1 + expr_df)
-    x = np.float32(expr_df)
+    x = np.log(1 + expr_df)
+    x = np.float32(x)
 
     # standardize expression data
     x = (x - x.mean()) / x.std()
@@ -684,9 +684,10 @@ def pcaPlot(pca, df, info_df, variable, title):
 
 def plotPCA(x, x_gen, info_df):
     pca = PCA(n_components=2)
-    x = (x - x.mean()) / x.std()
     x = np.log(1 + x)
     x = np.float32(x)
+    x = (x - x.mean()) / x.std()
+
     #pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
     #pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
     #pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
