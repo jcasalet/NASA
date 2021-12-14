@@ -528,30 +528,11 @@ def my_find_mostvaried(df, n):
 
 def my_prep_data(n, expr_df, info_df, seed):
 
-    #conditions = info_df['condition']
-    #datasets = info_df['dataset']
+    conditions = info_df['condition']
+    datasets = info_df['dataset']
     libPrep = info_df['libPrep']
-    #mission = info_df['mission']
-    #seqfac = info_df['seqFacility']
-
-    # Log-transform data
-    x = np.log(1 + expr_df)
-    x = np.float32(x)
-
-    # standardize expression data
-    x = (x - x.mean()) / x.std()
-
-    # normalize expression data
-    # expr_df = (expr_df - expr_df.min()) / (expr_df.max()-expr_df.min())
-
-    # transpose matrix
-    x = x.T
-    # find n most varied genes
-    x = my_find_mostvaried(x, n)
-
-
-
-
+    mission = info_df['mission']
+    seqfac = info_df['seqFacility']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -562,22 +543,39 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    #conditions, conditions_dict_inv = cat(conditions)
-    #datasets, datasets_dict_inv = cat(datasets)
+    conditions, conditions_dict_inv = cat(conditions)
+    datasets, datasets_dict_inv = cat(datasets)
     libPrep, libPrep_dict_inv = cat(libPrep)
-    #mission, mission_dict_inv = cat(mission)
-    #seqfac, seqfac_dict_inv = cat(seqfac)
+    mission, mission_dict_inv = cat(mission)
+    seqfac, seqfac_dict_inv = cat(seqfac)
 
     ## Final concatenation
-    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], lib[:, None],mission[:, None],seqfac[:, None]), axis=-1)
-    cat_covs = libPrep[:, None]
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPrep[:, None],mission[:, None],seqfac[:, None]), axis=-1)
+    #cat_covs = libPrep[:, None]
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
-    num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)  
+    num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
 
     print('Num covs: ', num_covs.shape)
+
+    # Log-transform data
+    x = np.log(1 + expr_df)
+    x = np.float32(x)
+
+    # standardize expression data
+    #x = (x - x.mean()) / x.std()
+
+    # normalize expression data
+    expr_df_max = x.max()
+    expr_df_min = x.min()
+    x = (x - expr_df_min) / (expr_df_max - expr_df_min)
+
+    # transpose matrix
+    x = x.T
+    # find n most varied genes
+    x = my_find_mostvaried(x, n)
 
     # Train/test split
     idx = np.arange(x.shape[0])
@@ -586,14 +584,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
 
-
     x_train, x_test = split_train_test(x=x)
     num_covs_train, num_covs_test = split_train_test(x=num_covs)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
-
-    # Normalise data
-    #x_mean = np.mean(x_train, axis=0)
-    #x_std = np.std(x_train, axis=0)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
