@@ -556,21 +556,21 @@ def my_prep_data(n, expr_df, info_df, seed):
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
-    num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
+    num_covs = np.zeros((expr_df.shape[0], 1), dtype=np.float32)
 
     print('Num covs: ', num_covs.shape)
 
     # Log-transform data
-    x = np.log(1 + expr_df)
-    x = np.float32(x)
+    #x = np.log(1 + expr_df)
+    x = np.float32(expr_df)
 
     # standardize expression data
-    #x = (x - x.mean()) / x.std()
+    x = (x - x.mean()) / x.std()
 
     # normalize expression data
-    expr_df_max = x.max()
-    expr_df_min = x.min()
-    x = (x - expr_df_min) / (expr_df_max - expr_df_min)
+    #expr_df_max = x.max()
+    #expr_df_min = x.min()
+    #x = (x - expr_df_min) / (expr_df_max - expr_df_min)
 
     # transpose matrix
     x = x.T
