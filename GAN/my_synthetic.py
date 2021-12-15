@@ -75,8 +75,6 @@ def pearson_correlation(x, y):
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x)
     y_ = standardize(y)
-    #x_ = x
-    #y_ = y
     return np.dot(x_.T, y_) / x.shape[0]
 
 
@@ -560,12 +558,12 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     print('Num covs: ', num_covs.shape)
 
-    # Log-transform data
-    x = np.log(1 + expr_df)
-    x = np.float32(x)
-
     # standardize expression data
-    x = (x - x.mean()) / x.std()
+    x = (expr_df - expr_df.mean()) / expr_df.std()
+
+    # Log-transform data
+    x = np.log(1 + x)
+    x = np.float32(x)
 
     # normalize expression data
     #expr_df_max = x.max()
@@ -814,7 +812,7 @@ def main():
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    plotPCA(x[0:num_samples], x_gen, info_df[0:num_samples])
+    plotPCA(expr_df[0:num_samples], x_gen, info_df[0:num_samples])
                     
 
 if __name__ == "__main__":
