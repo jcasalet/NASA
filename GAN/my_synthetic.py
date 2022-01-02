@@ -526,11 +526,16 @@ def my_find_mostvaried(df, n):
 
 def my_prep_data(n, expr_df, info_df, seed):
 
+    # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
+    # preservation,seqFacility,seqParameters,strain
+    genders = info_df['gender']
+    preservations = info_df['preservation']
+    strains = info_df['strain']
     conditions = info_df['condition']
     datasets = info_df['dataset']
-    libPrep = info_df['libPrep']
-    mission = info_df['mission']
-    seqfac = info_df['seqFacility']
+    libPreps = info_df['libPrep']
+    missions = info_df['mission']
+    seqfacs = info_df['seqFacility']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -543,12 +548,16 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     conditions, conditions_dict_inv = cat(conditions)
     datasets, datasets_dict_inv = cat(datasets)
-    libPrep, libPrep_dict_inv = cat(libPrep)
-    mission, mission_dict_inv = cat(mission)
-    seqfac, seqfac_dict_inv = cat(seqfac)
+    libPreps, libPreps_dict_inv = cat(libPreps)
+    missions, missions_dict_inv = cat(missions)
+    seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    genders, genders_dict_inv = cat(genders)
+    preservations, preservations_dict_inv = cat(preservations)
+    strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPrep[:, None],mission[:, None],seqfac[:, None]), axis=-1)
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
     #cat_covs = libPrep[:, None]
 
     #print(cat_covs)
@@ -573,7 +582,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # transpose matrix
     x = x.T
     # find n most varied genes
-    x = my_find_mostvaried(x, n)
+    #x = my_find_mostvaried(x, n)
 
     # Train/test split
     idx = np.arange(x.shape[0])
@@ -680,11 +689,66 @@ def pcaPlot(pca, df, info_df, variable, title):
     plt.savefig('./' + title, dpi=300)
     plt.close()
 
-def plotPCA(x, x_gen, info_df):
+def tsne_2d(data, **kwargs):
+    """
+    Transform data to 2d tSNE representation
+    :param data: expression data. Shape=(dim1, dim2)
+    :param kwargs: tSNE kwargs
+    :return:
+    """
+    from sklearn.manifold import TSNE
+    print('... performing tSNE')
+    tsne = TSNE(n_components=2, **kwargs)
+    return tsne.fit_transform(data)
+
+def plot_tsne_2d(data, labels, **kwargs):
+    """
+    Plots tSNE for the provided data, coloring the labels
+    :param data: expression data. Shape=(dim1, dim2)
+    :param labels: color labels. Shape=(dim1,)
+    :param kwargs: tSNE kwargs
+    :return: matplotlib axes
+    """
+    dim1, dim2 = data.shape
+
+    # Prepare label dict and color map
+    label_set = set(labels)
+    label_dict = {k: v for k, v in enumerate(label_set)}
+
+    # Perform tSNE
+    if dim2 == 2:
+        # print('plot_tsne_2d: Not performing tSNE. Shape of second dimension is 2')
+        data_2d = data
+    elif dim2 > 2:
+        data_2d = tsne_2d(data, **kwargs)
+    else:
+        raise ValueError('Shape of second dimension is <2: {}'.format(dim2))
+
+    # Plot scatterplot
+    for k, v in label_dict.items():
+        plt.scatter(data_2d[labels == v, 0], data_2d[labels == v, 1],
+                    label=v)
+    plt.legend()
+    return plt.gca()
+
+def myPlot(x, x_gen, info_df):
+
+    # tsne plots
+    '''import umap.umap_ as umap
+    print('x shape = ' + str(x.shape))
+    print('x_gen shape = ' + str(x_gen.shape))
+    x_combined = np.concatenate((x, x_gen))
+    categories = ['real'] * x.shape[0] + ['fake'] * x_gen.shape[0]
+    #tissues_test = [info_df[tidx] for tidx in info_df[:, 0]]
+    #tissues_combined = tissues_test + tissues_test
+    emb_2d = umap.UMAP().fit_transform(x_combined)
+    plt.figure(figsize=(10, 10))
+    plot_tsne_2d(emb_2d, labels=np.array(categories), s=4)
+    plt.title('UMAP real/synthetic')
+    plt.show()'''
+
     pca = PCA(n_components=2)
-    x = np.log(1 + x)
-    x = np.float32(x)
-    x = (x - x.mean()) / x.std()
+
 
     #pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
     #pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
@@ -697,6 +761,9 @@ def plotPCA(x, x_gen, info_df):
     #pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
     pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
     #pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+
+
+
 
 def plot_gamma(gamma_list):
 
@@ -750,6 +817,10 @@ def parse_args():
     return parser.parse_args() 
     
 def main():
+    # -g 0 -e 1 -ld 8 -bs 16 -nl 2 -hd 256 -lr 1e-03 -nb 5 -ng 0 -pg False -s 23 -ns 112 \
+    # -ie expanded_expr_df.csv -im expanded_info_df.csv
+
+    # -t False -m MODELS/gamma_0.983_ld_8_bs_2_nl_2_hd_64_lr_1e-04.h5 -ns 112 -gd /tmp
     options = parse_args()
     CONFIG = {'gpu': int(options.gpu), 'epochs': int(options.epochs), 'latent_dim': int(options.latent_dim),
               'batch_size': int(options.batch_size), 'nb_layers': int(options.nb_layers), 'hdim': int(options.hdim),
@@ -812,7 +883,7 @@ def main():
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    plotPCA(expr_df[0:num_samples], x_gen, info_df[0:num_samples])
+    myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples])
                     
 
 if __name__ == "__main__":
