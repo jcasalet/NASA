@@ -750,17 +750,24 @@ def myPlot(x, x_gen, info_df):
     pca = PCA(n_components=2)
 
 
-    #pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
-    #pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
-    #pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
     pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
-    #pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset')
 
-    #pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
-    #pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
-    #pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
+
+    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
     pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
-    #pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset')
 
 
 
