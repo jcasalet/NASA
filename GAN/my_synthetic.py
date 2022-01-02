@@ -672,11 +672,16 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 def pcaPlot(pca, df, info_df, variable, title):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    #pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
-    #pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
     pcaDF = pd.concat([pcaDF, info_df[['libPrep']]], axis=1)
-    #pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
-    #pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['strain']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['gender']]], axis=1)
+    pcaDF = pd.concat([pcaDF, info_df[['preservation']]], axis=1)
+
+
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
 
