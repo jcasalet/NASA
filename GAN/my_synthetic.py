@@ -59,6 +59,11 @@ def split_train_test(x, train_rate=0.75, seed=0):
 # CORRELATION UTILITIES
 # ---------------------
 
+def my_correlation(x, y):
+    from scipy.stats import spearmanr
+    return spearmanr(list(x), list(y))[0]
+
+
 def pearson_correlation(x, y):
     """
     Computes similarity measure between each pair of genes in the bipartite graph x <-> y
@@ -631,7 +636,8 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                             nc=num_covs_test,
                             gen=gen)
 
-            gamma_dx_dz = gamma_coef(x_test, x_gen)
+            #gamma_dx_dz = gamma_coef(x_test, x_gen)
+            gamma_dx_dz = my_correlation(x_test, x_gen)
             return gamma_dx_dz
             #score = (x_test - x_gen) ** 2
             #return -np.mean(score)
