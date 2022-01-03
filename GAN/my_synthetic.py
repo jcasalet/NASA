@@ -63,7 +63,13 @@ def my_correlation(x, y):
     from scipy.stats import spearmanr
     from scipy.stats import pearsonr
     #return spearmanr(list(x), list(y))[0]
-    return pearsonr(list(x), list(y))[0]
+    x_ = list(x)
+    y_ = list(y)
+    print('x type = ' + str(type(x_)))
+    print('y type = ' + str(type(y_)))
+    r = pearsonr(x_, y_)
+    print('r = ' + str(r))
+    return r[0]
 
 
 def pearson_correlation(x, y):
