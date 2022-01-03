@@ -61,7 +61,9 @@ def split_train_test(x, train_rate=0.75, seed=0):
 
 def my_correlation(x, y):
     from scipy.stats import spearmanr
-    return spearmanr(list(x), list(y))[0]
+    from scipy.stats import pearsonr
+    #return spearmanr(list(x), list(y))[0]
+    return pearsonr(list(x), list(y))[0]
 
 
 def pearson_correlation(x, y):
