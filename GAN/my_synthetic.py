@@ -698,6 +698,8 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir):
     ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
     ax.set_title(title, fontsize=20)
     #plt.show()
+    if gen_dir is None:
+        gen_dir = '.'
     plt.savefig(gen_dir + '/' + title, dpi=300)
     plt.close()
 
