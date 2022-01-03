@@ -898,7 +898,7 @@ def main():
         expr_df_samples = expr_df.T.index[0:num_samples]
         expr_df_genes = expr_df.index
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
-        x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
+        #x_gen_df = x_gen_df * x_gen_df.std() + x_gen_df.mean()
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
     print('x.shape = ', x.shape)
