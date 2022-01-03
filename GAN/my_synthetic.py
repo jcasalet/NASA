@@ -676,7 +676,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     print('Gamma(Dx, Dz): {:.4f}'.format(score))
 
 
-def pcaPlot(pca, df, info_df, variable, title):
+def pcaPlot(pca, df, info_df, variable, title, gen_dir):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
     pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
@@ -698,7 +698,7 @@ def pcaPlot(pca, df, info_df, variable, title):
     ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
     ax.set_title(title, fontsize=20)
     #plt.show()
-    plt.savefig('./' + title, dpi=300)
+    plt.savefig(gen_dir + '/' + title, dpi=300)
     plt.close()
 
 def tsne_2d(data, **kwargs):
@@ -743,7 +743,7 @@ def plot_tsne_2d(data, labels, **kwargs):
     plt.legend()
     return plt.gca()
 
-def myPlot(x, x_gen, info_df):
+def myPlot(x, x_gen, info_df, gen_dir):
 
     # tsne plots
     '''import umap.umap_ as umap
@@ -762,24 +762,24 @@ def myPlot(x, x_gen, info_df):
     pca = PCA(n_components=2)
 
 
-    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset')
-    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset')
+    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset', gen_dir)
 
 
-    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset')
-    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset')
+    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset', gen_dir)
 
 
 
@@ -902,7 +902,7 @@ def main():
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples])
+    myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.gen_dir)
                     
 
 if __name__ == "__main__":
