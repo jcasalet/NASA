@@ -521,14 +521,14 @@ def my_find_mostvaried(df, n):
     # df is genes X samples
     # calculate var, sort cols into n highest vars, drop shape[1]-n cols
     if n == 0:
-        return df
+        return df, None
     sdList = df.std(axis=0)
     sdDict = {k: v for v, k in enumerate(sdList)}
     sdDictSorted = sorted(sdDict.items(), key=operator.itemgetter(0), reverse=True) 
     topN = sdDictSorted[0:n]
     indices = [x[1] for x in topN]
     slicedDF = df[:,indices]
-    return slicedDF
+    return slicedDF, indices
 
 def my_prep_data(n, expr_df, info_df, seed):
 
@@ -588,7 +588,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # transpose matrix
     x = x.T
     # find n most varied genes
-    x = my_find_mostvaried(x, n)
+    x, indices = my_find_mostvaried(x, n)
 
     # Train/test split
     idx = np.arange(x.shape[0])
@@ -601,7 +601,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     num_covs_train, num_covs_test = split_train_test(x=num_covs)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
 
-    return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
+    return indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
@@ -867,7 +867,7 @@ def main():
         print('number of samples output must be smaller than input')
         sys.exit(1)
 
-    cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
+    indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
     np.random.seed(int(options.seed))
@@ -892,12 +892,13 @@ def main():
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
     #x_gen = np.clip(x_gen, 0, a_max=None)
-    calculate_norms(x_gen, expr_df.T[0:num_samples].to_numpy())
-    calculate_close(x_gen, expr_df.T[0:num_samples].to_numpy(), 1)
+    expr_df_subset = np.take(expr_df, indices, axis=0)
+    calculate_norms(x_gen, expr_df_subset.T[0:num_samples].to_numpy())
+    calculate_close(x_gen, expr_df_subset.T[0:num_samples].to_numpy(), 1)
 
     if not options.gen_dir is None:
-        expr_df_samples = expr_df.T.index[0:num_samples]
-        expr_df_genes = expr_df.index
+        expr_df_samples = expr_df_subset.T.index[0:num_samples]
+        expr_df_genes = expr_df_subset.index
         # undo log transform
         x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
