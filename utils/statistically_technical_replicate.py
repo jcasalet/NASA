@@ -28,6 +28,7 @@ for i in range(0, n):
 
 expanded_expr_df = pd.DataFrame(data=df_np, index=info_df['Sample'], columns=genes).T
 
-expanded_expr_df.to_csv('expanded_expr_df.csv')
-info_df.to_csv('expanded_info_df.csv', index=None)
+outfilePrefix = 'expanded_' + str(n) + '_' + str(var) + '_'
+expanded_expr_df.to_csv(outfilePrefix + 'expr.csv')
+info_df.to_csv(outfilePrefix + 'meta.csv', index=None)
 
