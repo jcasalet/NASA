@@ -898,9 +898,13 @@ def main():
     if not options.gen_dir is None:
         expr_df_samples = expr_df.T.index[0:num_samples]
         expr_df_genes = expr_df.index
-        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
-        x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
+        # undo log transform
+        x_gen = np.power(x_gen, np.e)
+        # undo standardization
+        x_gen = x_gen * expr_df.std() + expr_df.mean()
+        # remove any negative values
         x_gen = np.clip(x_gen, 0, a_max=None)
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
 
     print('x.shape = ', x.shape)
