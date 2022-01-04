@@ -909,6 +909,7 @@ def main():
         # remove any negative values
         x_gen_df = np.clip(x_gen_df, 0, a_max=None)
         x_gen_df.to_csv(options.gen_dir + '/gen.csv', sep=',', header=True, index=True)
+        expr_df_subset.to_csv(options.gen_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
