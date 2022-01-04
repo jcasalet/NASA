@@ -637,9 +637,11 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                             nc=num_covs_test,
                             gen=gen)
 
-            #gamma_dx_dz = gamma_coef(x_test, x_gen)
-            gamma_dx_dz = my_correlation(x_test, x_gen)
-            return gamma_dx_dz
+            gamma_dx_dz_orig = gamma_coef(x_test, x_gen)
+            gamma_dx_dz_mine = my_correlation(x_test, x_gen)
+            print('orig score = ' + str(gamma_dx_dz_orig))
+            print('my score = ' + str(gamma_dx_dz_mine))
+            return gamma_dx_dz_orig
             #score = (x_test - x_gen) ** 2
             #return -np.mean(score)
 
