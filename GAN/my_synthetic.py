@@ -883,13 +883,9 @@ def main():
     cc = cat_covs[0:num_samples]
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
-    #x_gen = np.clip(x_gen, 0, a_max=None)
     expr_df_subset = np.take(expr_df, indices, axis=0)
-    print('dims of x_gen df = ', str(x_gen.T.shape))
-    print('dims of expr df = ', str(expr_df.shape))
-    print('dims of expr subset df = ', str(expr_df_subset.shape))
     calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
-    #calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
+    calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
     expr_df_samples = expr_df_subset.T.index[0:num_samples]
     expr_df_genes = expr_df_subset.index
@@ -897,16 +893,13 @@ def main():
     x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
     x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
     # undo standardization
-    x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
+    x_gen_df = x_gen_df * expr_df_subset.std() + expr_df_subset.mean()
     # remove any negative values
     x_gen_df = np.clip(x_gen_df, 0, a_max=None)
 
     x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
     expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
-    print('x.shape = ', x.shape)
-    print('x_gen.shape = ', x_gen.shape)
-    print('info_df.shape = ', info_df.shape)
     myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
                     
 
