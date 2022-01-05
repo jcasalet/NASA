@@ -1,22 +1,32 @@
 #!/bin/bash
 
 # -e 200 -ld 8 -bs 1 -nl 2 -hd 64 -lr 5e-03 -nb 5 -ng 0  -ie ./Proj2_Normalized_Counts.csv -im ./all_metadata_Proj2.csv -cd checkpoints/ -gf top-liver-genes.txt
+# gamma_0.983_ld_8_bs_2_nl_2_hd_64_lr_1e-04.h5
+
 max_gamma=0
-epochs=100
+epochs=50
+seed=23
+num_samples=112
+num_genes=8000
+expr_data=expanded_20_0.05_expr.csv
+meta_data=expanded_20_0.05_meta.csv
+gen_dir=/tmp/crimson
 re='^[0-9]+([.][0-9]+)?$'
-for ld in 7 8 9 
+outputFile=myout_crimson
+for ld in 16 32
 do
-  for bs in 1 16
+  for bs in 4 8
     do
-      for nl in 1 2 3 
+      for nl in 2 4 
       do
-        for hd in 128 192
+        for hd in 128 256
         do
-	  for lr in 1e-03 5e-02
+	  for lr in 5e-04 1e-03
 	  do
              #python ../../../NASA/GAN/my_synthetic.py -g 0 -e 100 -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng 0 
 	     echo "new job: ld=$ld bs=$bs nl=$nl hd=$hd lr=$lr"
-             gamma=$(python ../../../NASA/GAN/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng 0 -s 23 2>/dev/null | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
+             gamma=$(python -u ../../../NASA/GAN/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng 0 -pg False -s $seed -ns $num_samples -ie $expr_data -im $meta_data -gd $gen_dir | tee $outputFile | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
+             #gamma=$(python ../../../NASA/GAN/my_synthetic.py -g 0 -e 100 -ld 4 -bs 1 -nl 2 -hd 32 -lr 1e-03 -nb 5 -ng 0 -s $seed -pg False 2>/dev/null | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
 	     if ! [[ $gamma =~ $re ]]
 	     then
 	        rm -rf checkpoints
