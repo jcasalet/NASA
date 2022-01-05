@@ -889,7 +889,7 @@ def main():
     print('dims of expr df = ', str(expr_df.shape))
     print('dims of expr subset df = ', str(expr_df_subset.shape))
     calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
-    calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
+    #calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
     expr_df_samples = expr_df_subset.T.index[0:num_samples]
     expr_df_genes = expr_df_subset.index
