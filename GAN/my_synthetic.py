@@ -589,9 +589,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     # transpose matrix
     x = x.T
     # find n most varied genes
-    x, indices = my_find_mostvaried(x, n)
+    x_subset, indices = my_find_mostvaried(x, n)
 
-    x_subset = np.take(x, indices, axis=0)
+    #x_subset = np.take(x, indices, axis=0)
 
 
     # Train/test split
