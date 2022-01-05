@@ -897,8 +897,8 @@ def main():
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
     #x_gen = np.clip(x_gen, 0, a_max=None)
-    calculate_norms(x_gen, x.T[0:num_samples].to_numpy())
-    calculate_close(x_gen, x.T[0:num_samples].to_numpy(), 1)
+    calculate_norms(x_gen, x.T[0:num_samples])
+    calculate_close(x_gen, x.T[0:num_samples], 1)
 
     x_samples = x.T.index[0:num_samples]
     x_genes = x.index
