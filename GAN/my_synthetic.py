@@ -569,9 +569,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
-    num_covs = np.zeros((expr_df.shape[0], 1), dtype=np.float32)
 
-    print('Num covs: ', num_covs.shape)
 
 
     # standardize expression data
@@ -592,7 +590,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     x_subset, indices = my_find_mostvaried(x, n)
 
     #x_subset = np.take(x, indices, axis=0)
+    num_covs = np.zeros((x_subset.shape[0], 1), dtype=np.float32)
 
+    print('Num covs: ', num_covs.shape)
 
     # Train/test split
     idx = np.arange(x.shape[0])
