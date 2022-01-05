@@ -570,17 +570,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
-
-
-
     # Log-transform data
     x = np.log(1 + expr_df)
     x = np.float32(x)
-
-    # normalize expression data
-    #expr_df_max = x.max()
-    #expr_df_min = x.min()
-    #x = (x - expr_df_min) / (expr_df_max - expr_df_min)
 
     # transpose matrix
     x = x.T
@@ -590,7 +582,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # standardize expression data
     x = (x - x.mean()) / x.std()
 
-    num_covs = np.zeros((expr_df.shape[0], 1), dtype=np.float32)
+    num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
     print('Num covs: ', num_covs.shape)
 
     # Train/test split
@@ -854,14 +846,8 @@ def main():
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
 
     checkpoint_dir = options.checkpoint_dir
-    '''genes_file = open(options.genes_file, "r")
-    genes = genes_file.readlines()
-    genes_list=list()
-    for g in genes:
-        genes_list.append(g.strip())'''
+
     expr_df = pd.read_csv(options.input_expr, index_col=0)
-    # df = pd.read_csv(options.input_expr, index_col=0).T
-    # expr_df = df[df.columns.intersection(genes_list)].T
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     # check num_samples against expr_df and info_df shapes
@@ -891,6 +877,7 @@ def main():
         print('not training!')
         gen = tf.keras.models.load_model(options.model)
 
+
     # reduce (down-sample) number of samples
     num_samples = int(options.num_samples)
     cc = cat_covs[0:num_samples]
@@ -898,18 +885,22 @@ def main():
     x_gen = predict(cc=cc, nc=nc, gen=gen)
     #x_gen = np.clip(x_gen, 0, a_max=None)
     expr_df_subset = np.take(expr_df, indices, axis=0)
+    print('dims of x_gen df = ', str(x_gen.T.shape))
+    print('dims of expr df = ', str(expr_df.shape))
+    print('dims of expr subset df = ', str(expr_df_subset.shape))
     calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
     calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
     expr_df_samples = expr_df_subset.T.index[0:num_samples]
     expr_df_genes = expr_df_subset.index
     # undo log transform
-    x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
+    #x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
     x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
     # undo standardization
     #x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
     # remove any negative values
-    x_gen_df = np.clip(x_gen_df, 0, a_max=None)
+    #x_gen_df = np.clip(x_gen_df, 0, a_max=None)
+
     x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
     expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
