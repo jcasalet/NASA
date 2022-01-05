@@ -572,11 +572,9 @@ def my_prep_data(n, expr_df, info_df, seed):
 
 
 
-    # standardize expression data
-    x = (expr_df - expr_df.mean()) / expr_df.std()
 
     # Log-transform data
-    x = np.log(1 + x)
+    x = np.log(1 + expr_df)
     x = np.float32(x)
 
     # normalize expression data
@@ -587,11 +585,12 @@ def my_prep_data(n, expr_df, info_df, seed):
     # transpose matrix
     x = x.T
     # find n most varied genes
-    x_subset, indices = my_find_mostvaried(x, n)
+    x, indices = my_find_mostvaried(x, n)
 
-    #x_subset = np.take(x, indices, axis=0)
-    num_covs = np.zeros((x_subset.shape[0], 1), dtype=np.float32)
+    # standardize expression data
+    x = (x - x.mean()) / x.std()
 
+    num_covs = np.zeros((expr_df.shape[0], 1), dtype=np.float32)
     print('Num covs: ', num_covs.shape)
 
     # Train/test split
@@ -601,7 +600,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
 
-    x_train, x_test = split_train_test(x=x_subset)
+    x_train, x_test = split_train_test(x=x)
     num_covs_train, num_covs_test = split_train_test(x=num_covs)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
 
@@ -875,6 +874,7 @@ def main():
 
     indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
+
     np.random.seed(int(options.seed))
 
     if eval(options.train):
@@ -897,25 +897,26 @@ def main():
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
     #x_gen = np.clip(x_gen, 0, a_max=None)
-    calculate_norms(x_gen, x.T[0:num_samples])
-    calculate_close(x_gen, x.T[0:num_samples], 1)
+    expr_df_subset = np.take(expr_df, indices, axis=0)
+    calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
+    calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
-    x_samples = x.T.index[0:num_samples]
-    x_genes = x.index
+    expr_df_samples = expr_df_subset.T.index[0:num_samples]
+    expr_df_genes = expr_df_subset.index
     # undo log transform
     x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
-    x_gen_df = pd.DataFrame(data=x_gen.T, index=x_genes, columns=x_samples)
+    x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
     # undo standardization
-    #x_gen_df = x_gen_df * x.std() + x.mean()
+    #x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
     # remove any negative values
     x_gen_df = np.clip(x_gen_df, 0, a_max=None)
     x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
-    x.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
+    expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    myPlot(x.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
+    myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
                     
 
 if __name__ == "__main__":
