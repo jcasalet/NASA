@@ -894,7 +894,7 @@ def main():
     nc = num_covs[0:num_samples]
     x_gen = predict(cc=cc, nc=nc, gen=gen)
     #x_gen = np.clip(x_gen, 0, a_max=None)
-    expr_df_subset = np.take(expr_df, indices, axis=0)
+    expr_df_subset = np.take(expr_df.to_numpy(), indices, axis=0)
     calculate_norms(x_gen, expr_df_subset.T[0:num_samples].to_numpy())
     calculate_close(x_gen, expr_df_subset.T[0:num_samples].to_numpy(), 1)
 
