@@ -40,7 +40,7 @@ do
              then
 		echo "found max $gamma"
                 echo "gamma:" $gamma "ld:" $ld "bs:" $bs "nl:" $nl "hd:" $hd "lr:" $lr >> ./best_params.txt
-		cp checkpoints/models/gen_liver.h5 MODELS/gamma_${gamma}_ld_${ld}_bs_${bs}_nl_${nl}_hd_${hd}_lr_${lr}.h5
+		cp checkpoints/models/gen_liver.h5 MODELS/gamma_${gamma}_ld_${ld}_bs_${bs}_nl_${nl}_hd_${hd}_lr_${lr}_ng_${num_genes}.h5
                 max_gamma=$gamma_ten
              fi
            done
