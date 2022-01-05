@@ -897,9 +897,9 @@ def main():
     x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
     x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
     # undo standardization
-    #x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
+    x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
     # remove any negative values
-    #x_gen_df = np.clip(x_gen_df, 0, a_max=None)
+    x_gen_df = np.clip(x_gen_df, 0, a_max=None)
 
     x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
     expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
