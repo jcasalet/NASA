@@ -900,13 +900,13 @@ def main():
     calculate_norms(x_gen, x.T[0:num_samples].to_numpy())
     calculate_close(x_gen, x.T[0:num_samples].to_numpy(), 1)
 
-    expr_df_samples = x.T.index[0:num_samples]
-    expr_df_genes = x.index
+    x_samples = x.T.index[0:num_samples]
+    x_genes = x.index
     # undo log transform
     x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
-    x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
+    x_gen_df = pd.DataFrame(data=x_gen.T, index=x_genes, columns=x_samples)
     # undo standardization
-    #x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
+    #x_gen_df = x_gen_df * x.std() + x.mean()
     # remove any negative values
     x_gen_df = np.clip(x_gen_df, 0, a_max=None)
     x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
@@ -915,7 +915,7 @@ def main():
     print('x.shape = ', x.shape)
     print('x_gen.shape = ', x_gen.shape)
     print('info_df.shape = ', info_df.shape)
-    myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
+    myPlot(x.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
                     
 
 if __name__ == "__main__":
