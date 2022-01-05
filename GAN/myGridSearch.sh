@@ -13,7 +13,9 @@ meta_data=expanded_20_0.05_meta.csv
 output_dir=/tmp
 re='^[0-9]+([.][0-9]+)?$'
 hostname=$(hostname)
-outputFile=myout_$hostname
+outputFile=$output_dir/myout_$hostname
+pathToPython=.
+
 for ld in 16 32
 do
   for bs in 4 8
@@ -25,7 +27,7 @@ do
 	  for lr in 5e-04 1e-03
 	  do
 	     echo "new job: ld=$ld bs=$bs nl=$nl hd=$hd lr=$lr"
-             gamma=$(python -u ../../../NASA/GAN/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng $num_genes -pg False -s $seed -ns $num_samples -ie $expr_data -im $meta_data -od $output_dir | tee $outputFile | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
+             gamma=$(python -u ${pathToPython}/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng $num_genes -pg False -s $seed -ns $num_samples -ie $expr_data -im $meta_data -od $output_dir | tee $outputFile | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
 	     if ! [[ $gamma =~ $re ]]
 	     then
 	        rm -rf checkpoints
