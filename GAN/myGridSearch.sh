@@ -10,9 +10,10 @@ num_samples=112
 num_genes=8000
 expr_data=expanded_20_0.05_expr.csv
 meta_data=expanded_20_0.05_meta.csv
-gen_dir=/tmp/crimson
+output_dir=/tmp
 re='^[0-9]+([.][0-9]+)?$'
-outputFile=myout_crimson
+hostname=$(hostname)
+outputFile=myout_$hostname
 for ld in 16 32
 do
   for bs in 4 8
@@ -23,10 +24,8 @@ do
         do
 	  for lr in 5e-04 1e-03
 	  do
-             #python ../../../NASA/GAN/my_synthetic.py -g 0 -e 100 -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng 0 
 	     echo "new job: ld=$ld bs=$bs nl=$nl hd=$hd lr=$lr"
-             gamma=$(python -u ../../../NASA/GAN/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng $num_genes -pg False -s $seed -ns $num_samples -ie $expr_data -im $meta_data -gd $gen_dir | tee $outputFile | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
-             #gamma=$(python ../../../NASA/GAN/my_synthetic.py -g 0 -e 100 -ld 4 -bs 1 -nl 2 -hd 32 -lr 1e-03 -nb 5 -ng 0 -s $seed -pg False 2>/dev/null | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
+             gamma=$(python -u ../../../NASA/GAN/my_synthetic.py -g 0 -e $epochs -ld $ld -bs $bs -nl $nl -hd $hd -lr $lr -nb 5 -ng $num_genes -pg False -s $seed -ns $num_samples -ie $expr_data -im $meta_data -od $output_dir | tee $outputFile | grep "Gamma(Dx, Dz):" | awk -F: '{print $2}' | xargs)
 	     if ! [[ $gamma =~ $re ]]
 	     then
 	        rm -rf checkpoints
