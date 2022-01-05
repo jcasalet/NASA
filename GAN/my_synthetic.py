@@ -894,7 +894,7 @@ def main():
     expr_df_samples = expr_df_subset.T.index[0:num_samples]
     expr_df_genes = expr_df_subset.index
     # undo log transform
-    #x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
+    x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
     x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
     # undo standardization
     #x_gen_df = x_gen_df * expr_df.std() + expr_df.mean()
