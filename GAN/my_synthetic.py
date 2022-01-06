@@ -888,12 +888,12 @@ def main():
         expr_df_samples = expr_df_subset.T.index[0:num_samples]
         expr_df_genes = expr_df_subset.index
         # undo log transform
-        x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
+        #x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         # undo standardization
-        x_gen_df = x_gen_df * expr_df_subset.std() + expr_df_subset.mean()
+        #x_gen_df = x_gen_df * expr_df_subset.std() + expr_df_subset.mean()
         # remove any negative values
-        x_gen_df = np.clip(x_gen_df, 0, a_max=None)
+        #x_gen_df = np.clip(x_gen_df, 0, a_max=None)
 
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
