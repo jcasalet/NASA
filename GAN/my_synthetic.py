@@ -534,14 +534,14 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
     # preservation,seqFacility,seqParameters,strain
-    genders = info_df['gender']
-    preservations = info_df['preservation']
-    strains = info_df['strain']
-    conditions = info_df['condition']
-    datasets = info_df['dataset']
+    #genders = info_df['gender']
+    #preservations = info_df['preservation']
+    #strains = info_df['strain']
+    #conditions = info_df['condition']
+    #datasets = info_df['dataset']
     libPreps = info_df['libPrep']
-    missions = info_df['mission']
-    seqfacs = info_df['seqFacility']
+    #missions = info_df['mission']
+    #seqfacs = info_df['seqFacility']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -552,19 +552,19 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    conditions, conditions_dict_inv = cat(conditions)
-    datasets, datasets_dict_inv = cat(datasets)
+    #conditions, conditions_dict_inv = cat(conditions)
+    #datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
-    missions, missions_dict_inv = cat(missions)
-    seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    genders, genders_dict_inv = cat(genders)
-    preservations, preservations_dict_inv = cat(preservations)
-    strains, strains_dict_inv = cat(strains)
+    #missions, missions_dict_inv = cat(missions)
+    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    #genders, genders_dict_inv = cat(genders)
+    #preservations, preservations_dict_inv = cat(preservations)
+    #strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-    #cat_covs = libPrep[:, None]
+    '''cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)'''
+    cat_covs = libPreps[:, None]
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
@@ -587,6 +587,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Train/test split
     idx = np.arange(x.shape[0])
+    np.random.seed(seed)
     np.random.shuffle(idx)
     x = x[idx, :]
     num_covs = num_covs[idx, :]
