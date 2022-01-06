@@ -851,12 +851,12 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     # check num_samples against expr_df and info_df shapes
-    if len(expr_df.T) != len(info_df):
+    '''if len(expr_df.T) != len(info_df):
         print('expression matrix columns and metadata matrix rows must match')
         sys.exit(1)
     elif len(expr_df.T) < int(options.num_samples):
         print('number of samples output must be smaller than input')
-        sys.exit(1)
+        sys.exit(1)'''
 
     indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
@@ -883,7 +883,7 @@ def main():
         x_gen = predict(cc=cc, nc=nc, gen=gen)
         expr_df_subset = np.take(expr_df, indices, axis=0)
         calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
-        calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
+        #calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
         expr_df_samples = expr_df_subset.T.index[0:num_samples]
         expr_df_genes = expr_df_subset.index
