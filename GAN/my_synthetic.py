@@ -833,7 +833,7 @@ def parse_args():
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
-    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None, required=True)
+    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None)
     return parser.parse_args() 
     
 def main():
