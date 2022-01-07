@@ -598,7 +598,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     num_covs_train, num_covs_test = split_train_test(x=num_covs)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
 
-    return indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
+    return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
@@ -860,7 +860,7 @@ def main():
         print('number of samples output must be smaller than input')
         sys.exit(1)'''
 
-    indices, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
+    cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
     np.random.seed(int(options.seed))
