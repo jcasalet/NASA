@@ -534,14 +534,14 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
     # preservation,seqFacility,seqParameters,strain
-    #genders = info_df['gender']
-    #preservations = info_df['preservation']
-    #strains = info_df['strain']
-    #conditions = info_df['condition']
+    genders = info_df['gender']
+    preservations = info_df['preservation']
+    strains = info_df['strain']
+    conditions = info_df['condition']
     datasets = info_df['dataset']
     libPreps = info_df['libPrep']
-    #missions = info_df['mission']
-    #seqfacs = info_df['seqFacility']
+    missions = info_df['mission']
+    seqfacs = info_df['seqFacility']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -552,22 +552,22 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    #conditions, conditions_dict_inv = cat(conditions)
+    conditions, conditions_dict_inv = cat(conditions)
     datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
-    #missions, missions_dict_inv = cat(missions)
-    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    #genders, genders_dict_inv = cat(genders)
-    #preservations, preservations_dict_inv = cat(preservations)
-    #strains, strains_dict_inv = cat(strains)
+    missions, missions_dict_inv = cat(missions)
+    seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    genders, genders_dict_inv = cat(genders)
+    preservations, preservations_dict_inv = cat(preservations)
+    strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    '''cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)'''
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
     #cat_covs = libPreps[:, None]
-    cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
+    #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
 
-    #print(cat_covs)
+    print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
@@ -846,26 +846,17 @@ def main():
     CONFIG = {'gpu': int(options.gpu), 'epochs': int(options.epochs), 'latent_dim': int(options.latent_dim),
               'batch_size': int(options.batch_size), 'nb_layers': int(options.nb_layers), 'hdim': int(options.hdim),
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
-
-    checkpoint_dir = options.checkpoint_dir
-
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, index_col=0)
-
-    # check num_samples against expr_df and info_df shapes
-    '''if len(expr_df.T) != len(info_df):
-        print('expression matrix columns and metadata matrix rows must match')
-        sys.exit(1)
-    elif len(expr_df.T) < int(options.num_samples):
-        print('number of samples output must be smaller than input')
-        sys.exit(1)'''
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
 
-    np.random.seed(int(options.seed))
-
     if eval(options.train):
+        checkpoint_dir = options.checkpoint_dir
+
+        np.random.seed(int(options.seed))
+
         if options.plot_gamma:
             gamma_list = list()
         else:
@@ -901,7 +892,7 @@ def main():
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
-        myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
+    #myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
                     
 
 if __name__ == "__main__":
