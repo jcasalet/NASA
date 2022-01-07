@@ -562,9 +562,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-    #cat_covs = libPreps[:, None]
+    '''cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)'''
+    cat_covs = libPreps[:, None]
     #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
 
     print(cat_covs)
