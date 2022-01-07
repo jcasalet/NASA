@@ -578,7 +578,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     # transpose matrix
     x = x.T
     # find n most varied genes
-    x, indices = my_find_mostvaried(x, n)
+    #x, indices = my_find_mostvaried(x, n)
 
     # standardize expression data
     x = (x - x.mean()) / x.std()
@@ -883,7 +883,8 @@ def main():
         cc = cat_covs[0:num_samples]
         nc = num_covs[0:num_samples]
         x_gen = predict(cc=cc, nc=nc, gen=gen)
-        expr_df_subset = np.take(expr_df, indices, axis=0)
+        #expr_df_subset = np.take(expr_df, indices, axis=0)
+        expr_df_subset = expr_df
         calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
         #calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
 
