@@ -573,6 +573,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
 
     ages = np.int32(info_df['age'])
+    durations = np.int32(info_df['duration'])
     num_dicts = [] # big dict to hold all categorical dicts
     def num(var):
         '''Function to repeatedly process categorical metadata. Pass in a column ("var") from info_df as a variable.'''
@@ -583,9 +584,13 @@ def my_prep_data(n, expr_df, info_df, seed):
         return var, var_dict_inv
 
     ages, ages_dict_inv = num(ages)
+    durations,durations_dict_inv = num(durations)
 
-    num_covs = ages[:, None]
-
+    #num_covs = ages[:, None]
+    num_covs = np.concatenate((ages[:, None], durations[:, None]), axis=-1)
+    print(num_covs)
+    num_covs = np.int32(num_covs) # make sure all are integers
+    print('num covs: ', num_covs.shape)
 
     # Log-transform data
     x = np.log(1 + expr_df)
