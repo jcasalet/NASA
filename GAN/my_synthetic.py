@@ -571,6 +571,22 @@ def my_prep_data(n, expr_df, info_df, seed):
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
+
+    ages = np.int32(info_df['age'])
+    num_dicts = [] # big dict to hold all categorical dicts
+    def num(var):
+        '''Function to repeatedly process categorical metadata. Pass in a column ("var") from info_df as a variable.'''
+        var_dict_inv = np.array(list(sorted(set(var))))
+        var_dict = {t: i for i, t in enumerate(var_dict_inv)}
+        var = np.vectorize(lambda t: var_dict[t])(var) # convert to integer
+        num_dicts.append(var_dict_inv) # add to big dict
+        return var, var_dict_inv
+
+    ages, ages_dict_inv = num(ages)
+
+    num_covs = ages[:, None]
+
+
     # Log-transform data
     x = np.log(1 + expr_df)
     x = np.float32(x)
@@ -583,8 +599,8 @@ def my_prep_data(n, expr_df, info_df, seed):
     # standardize expression data
     x = (x - x.mean()) / x.std()
 
-    num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
-    print('Num covs: ', num_covs.shape)
+    '''num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
+    print('Num covs: ', num_covs.shape)'''
 
     # Train/test split
     idx = np.arange(x.shape[0])
