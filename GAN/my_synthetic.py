@@ -25,7 +25,7 @@ tfkl = tf.keras.layers
 # ---------------------
 # DATA UTILITIES
 # ---------------------
-def standardize(x, mean=None, std=None):
+def standardize(x, mean=None, std=None, kappa=1):
     """
     Shape x: (nb_samples, nb_vars)
     """
@@ -33,7 +33,7 @@ def standardize(x, mean=None, std=None):
         mean = np.mean(x, axis=0)
     if std is None:
         std = np.std(x, axis=0)
-    return (x - mean) / std
+    return (x - mean) / (std * kappa)
 
 
 def split_train_test(x, train_rate=0.75, seed=0):
@@ -65,7 +65,7 @@ def my_correlation(x, y):
     return pearsonr(list(x.flatten()), list(y.flatten()))[0]
 
 
-def pearson_correlation(x, y):
+def pearson_correlation(x, y, kappa):
     """
     Computes similarity measure between each pair of genes in the bipartite graph x <-> y
     :param x: Gene matrix 1. Shape=(nb_samples, nb_genes_1)
@@ -73,10 +73,10 @@ def pearson_correlation(x, y):
     :return: Matrix with shape (nb_genes_1, nb_genes_2) containing the similarity coefficients
     """
 
-    def standardize(a):
+    def standardize(a, kappa):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
-        return (a - a_off) / a_std
+        return (a - a_off) / (a_std * kappa)
 
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x)
@@ -109,26 +109,26 @@ def upper_diag_list(m_):
     return m[~np.isnan(m)]
 
 
-def correlations_list(x, y, corr_fn=pearson_correlation):
+def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     """
     Generates correlation list between all pairs of genes in the bipartite graph x <-> y
     :param x: Gene matrix 1. Shape=(nb_samples, nb_genes_1)
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    corr = corr_fn(x, y)
+    corr = corr_fn(x, y, kappa)
     return upper_diag_list(corr)
 
 
-def gamma_coef(x, y):
+def gamma_coef(x, y, kappa):
     """
     Compute gamma coefficients for two given expression matrices
     :param x: matrix of gene expressions. Shape=(nb_samples_1, nb_genes)
     :param y: matrix of gene expressions. Shape=(nb_samples_2, nb_genes)
     :return: Gamma(D^X, D^Z)
     """
-    dists_x = 1 - correlations_list(x, x)
-    dists_y = 1 - correlations_list(y, y)
+    dists_x = 1 - correlations_list(x, x, kappa)
+    dists_y = 1 - correlations_list(y, y, kappa)
     gamma_dx_dy = pearson_correlation(dists_x, dists_y)
     return gamma_dx_dy
 
@@ -567,7 +567,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     #cat_covs = libPreps[:, None]
     #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
 
-    print(cat_covs)
+    #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
@@ -588,7 +588,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     #num_covs = ages[:, None]
     num_covs = np.concatenate((ages[:, None], durations[:, None]), axis=-1)
-    print(num_covs)
+    #print(num_covs)
     num_covs = np.int32(num_covs) # make sure all are integers
     print('num covs: ', num_covs.shape)
 
@@ -655,7 +655,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                             nc=num_covs_test,
                             gen=gen)
 
-            gamma_dx_dz_orig = gamma_coef(x_test, x_gen)
+            gamma_dx_dz_orig = gamma_coef(x_test, x_gen, kappa=2)
             #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
             #print('orig score = ' + str(gamma_dx_dz_orig))
             #print('my score = ' + str(gamma_dx_dz_mine))

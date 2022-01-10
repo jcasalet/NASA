@@ -17,7 +17,7 @@ def findMostVaried(df, n):
 	slicedDF = df.iloc[indices]
 	return slicedDF, indices
 
-def findSumNear0(df, delta):
+def findSumGTDelta(df, delta):
 	cSums = df.sum(axis=1)
 	cList = list()
 	for index, s in cSums.iteritems():
@@ -33,7 +33,7 @@ def main():
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 
-	df_subset, cList = findSumNear0(df, delta)
+	df_subset, cList = findSumGTDelta(df, delta)
 
 	df_subset = df_subset.reset_index()
 
