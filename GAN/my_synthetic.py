@@ -858,7 +858,7 @@ def parse_args():
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
     parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None)
-    parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=None)
+    parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
     return parser.parse_args()
     
 def main():
