@@ -73,14 +73,14 @@ def pearson_correlation(x, y, kappa):
     :return: Matrix with shape (nb_genes_1, nb_genes_2) containing the similarity coefficients
     """
 
-    def standardize(a, kappa):
+    def standardize(a, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
         return (a - a_off) / (a_std * kappa)
 
     assert x.shape[0] == y.shape[0]
-    x_ = standardize(x)
-    y_ = standardize(y)
+    x_ = standardize(x, kappa)
+    y_ = standardize(y, kappa)
     return np.dot(x_.T, y_) / x.shape[0]
 
 
@@ -116,11 +116,12 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    corr = corr_fn(x, y, kappa)
-    return upper_diag_list(corr)
+    #corr = corr_fn(x, y, kappa)
+    #return upper_diag_list(corr)
+    return upper_diag_list(pearson_correlation(x, y, kappa))
 
 
-def gamma_coef(x, y, kappa):
+def gamma_coef(x, y, kappa=1):
     """
     Compute gamma coefficients for two given expression matrices
     :param x: matrix of gene expressions. Shape=(nb_samples_1, nb_genes)
@@ -129,7 +130,7 @@ def gamma_coef(x, y, kappa):
     """
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
-    gamma_dx_dy = pearson_correlation(dists_x, dists_y)
+    gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
     return gamma_dx_dy
 
 
@@ -395,7 +396,7 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None):
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None, kappa=1):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
@@ -458,7 +459,7 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
             gen_losses(gen_loss)
         if not gamma_list is None:
-            score = score_fn(gen)
+            score = score_fn(gen, kappa=kappa)
             gamma_list.append(score)
         # Logs
         with disc_summary_writer.as_default():
@@ -623,7 +624,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list):
+             x_test, x_train, checkpoint_dir, gamma_list, kappa=1):
     # Train on GL liver...
 
     # Script that trains the model
@@ -649,13 +650,13 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                               h_dims=[CONFIG['hdim']] * CONFIG['nb_layers'])
 
     # Evaluation metrics
-    def score_fn(x_test, cat_covs_test, num_covs_test):
-        def _score(gen):
+    def score_fn(x_test, cat_covs_test, num_covs_test, kappa=1):
+        def _score(gen, kappa=1):
             x_gen = predict(cc=cat_covs_test, ## x_gen is an array of nans, throws downstream Assertion Error LMS
                             nc=num_covs_test,
                             gen=gen)
 
-            gamma_dx_dz_orig = gamma_coef(x_test, x_gen, kappa=2)
+            gamma_dx_dz_orig = gamma_coef(x_test, x_gen, kappa)
             #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
             #print('orig score = ' + str(gamma_dx_dz_orig))
             #print('my score = ' + str(gamma_dx_dz_mine))
@@ -685,14 +686,15 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
           disc=disc,
           gen_opt=gen_opt,
           disc_opt=disc_opt,
-          score_fn=score_fn(x_test, cat_covs_test, num_covs_test),
+          score_fn=score_fn(x_test, cat_covs_test, num_covs_test, kappa=1),
           save_fn=save_fn,
           log_dir=checkpoint_dir + '/logs',
           checkpoint_dir=checkpoint_dir,
-          gamma_list=gamma_list)
+          gamma_list=gamma_list,
+          kappa=kappa)
 
     # Evaluate data
-    score = score_fn(x_test, cat_covs_test, num_covs_test)(gen)
+    score = score_fn(x_test, cat_covs_test, num_covs_test, kappa=1)(gen)
     print('Gamma(Dx, Dz): {:.4f}'.format(score))
 
 
@@ -856,7 +858,8 @@ def parse_args():
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
     parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None)
-    return parser.parse_args() 
+    parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=None)
+    return parser.parse_args()
     
 def main():
     # -g 0 -e 1 -ld 8 -bs 16 -nl 2 -hd 256 -lr 1e-03 -nb 5 -ng 0 -pg False -s 23 -ns 112 \
@@ -875,6 +878,7 @@ def main():
 
     if eval(options.train):
         checkpoint_dir = options.checkpoint_dir
+        kappa = float(options.kappa)
 
         np.random.seed(int(options.seed))
 
@@ -884,7 +888,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list)
+             x_test, x_train, checkpoint_dir, gamma_list, kappa)
         #(gamma_list)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
