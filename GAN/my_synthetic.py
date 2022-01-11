@@ -595,7 +595,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Log-transform data
     #x = np.log(1 + expr_df)
-    x = np.float32(x)
+    x = np.float32(expr_df)
 
     # transpose matrix
     x = x.T
