@@ -894,7 +894,7 @@ def main():
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
     else:
         print('not training!')
-        gen = tf.keras.models.load_model(options.model)
+        gen = tf.keras.models.load_model(options.model, compile=False)
         # reduce (down-sample) number of samples
         num_samples = int(options.num_samples)
         cc = cat_covs[0:num_samples]
