@@ -76,6 +76,8 @@ def pearson_correlation(x, y, kappa):
     def standardize(a, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
+        if not np.any(a_std):
+            return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
 
     assert x.shape[0] == y.shape[0]
@@ -617,9 +619,9 @@ def my_prep_data(n, expr_df, info_df, seed):
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
 
-    x_train, x_test = split_train_test(x=x)
-    num_covs_train, num_covs_test = split_train_test(x=num_covs)
-    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs)
+    x_train, x_test = split_train_test(x=x, train_rate=0.9)
+    num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=0.9)
+    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=0.9)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
