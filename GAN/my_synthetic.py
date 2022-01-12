@@ -860,7 +860,7 @@ def parse_args():
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
     parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
-    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=None)
+    parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
     return parser.parse_args()
     
@@ -899,8 +899,11 @@ def main():
         gen = tf.keras.models.load_model(options.model, compile=False)
         # reduce (down-sample) number of samples
         num_samples = int(options.num_samples)
+        if num_samples == 0:
+            num_samples = len(cat_covs)
         cc = cat_covs[0:num_samples]
         nc = num_covs[0:num_samples]
+
         x_gen = predict(cc=cc, nc=nc, gen=gen)
         #expr_df_subset = np.take(expr_df, indices, axis=0)
         expr_df_subset = expr_df
