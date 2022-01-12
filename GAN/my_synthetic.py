@@ -660,6 +660,9 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                             gen=gen)
 
             gamma_dx_dz_orig = gamma_coef(x_test, x_gen, kappa)
+
+            if gamma_dx_dz_orig > 0.95:
+                np.savetxt('x_gen.txt_' + str(gamma_dx_dz_orig), x_gen, delimiter=',')
             #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
             #print('orig score = ' + str(gamma_dx_dz_orig))
             #print('my score = ' + str(gamma_dx_dz_mine))
