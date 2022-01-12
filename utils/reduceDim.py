@@ -37,9 +37,17 @@ def main():
 
 	df_subset = df_subset.reset_index()
 
-	df_subset,indices = findMostVaried(df_subset, n) 
+	df_subset,indices = findMostVaried(df_subset, n)
 
 	df_subset = df_subset.drop(columns=['index'])
+
+	genes = df_subset['gene']
+
+	df_subset = df_subset.drop(columns=['gene'])
+
+	df_subset = np.clip(df_subset, 0, a_max=None)
+
+	df_subset.insert(0, 'gene', genes)
 
 	df_subset.to_csv('expr_reduced_' + str(n) + '_' + str(delta) + '.csv', sep=',', index=None)
 
