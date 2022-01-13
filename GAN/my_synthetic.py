@@ -537,14 +537,14 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
     # preservation,seqFacility,seqParameters,strain
-    #genders = info_df['gender']
-    #preservations = info_df['preservation']
-    #strains = info_df['strain']
+    genders = info_df['gender']
+    preservations = info_df['preservation']
+    strains = info_df['strain']
     conditions = info_df['condition']
     datasets = info_df['dataset']
     libPreps = info_df['libPrep']
-    #missions = info_df['mission']
-    #seqfacs = info_df['seqFacility']
+    missions = info_df['mission']
+    seqfacs = info_df['seqFacility']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -556,20 +556,20 @@ def my_prep_data(n, expr_df, info_df, seed):
         return var, var_dict_inv
 
     conditions, conditions_dict_inv = cat(conditions)
-    #datasets, datasets_dict_inv = cat(datasets)
+    datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
-    #missions, missions_dict_inv = cat(missions)
-    ##seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    #genders, genders_dict_inv = cat(genders)
-    #preservations, preservations_dict_inv = cat(preservations)
-    #strains, strains_dict_inv = cat(strains)
+    missions, missions_dict_inv = cat(missions)
+    seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    genders, genders_dict_inv = cat(genders)
+    preservations, preservations_dict_inv = cat(preservations)
+    strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-    #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
     #cat_covs = libPreps[:, None]
     #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None], conditions[:, None]), axis=-1)
-    cat_covs = np.concatenate((conditions[:, None], libPreps[:, None]), axis=-1)
+    #cat_covs = np.concatenate((conditions[:, None], libPreps[:, None]), axis=-1)
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
@@ -655,15 +655,17 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     # Evaluation metrics
     def score_fn(x_test, cat_covs_test, num_covs_test, kappa=1):
         def _score(gen, kappa=1):
-            x_gen = predict(cc=cat_covs_test, ## x_gen is an array of nans, throws downstream Assertion Error LMS
-                            nc=num_covs_test,
-                            gen=gen)
-
+            x_gen = predict(cc=cat_covs_test, nc=num_covs_test, gen=gen)
             gamma_dx_dz_orig = gamma_coef(x_test, x_gen, kappa)
-
+            x_mean = np.mean(x_train, axis=0)
+            x_std = np.std(x_train, axis=0)
+            x_gen = x_gen * x_std + x_mean
+            print('after unstdize: ', str(gamma_coef(x_test, x_gen, kappa)))
             if gamma_dx_dz_orig > 0.90:
-                my_x_gen = predict(cc=cat_covs,  nc=num_covs, gen=gen)
-                np.savetxt('x_gen.txt_' + str(gamma_dx_dz_orig), my_x_gen, delimiter=',')
+                #my_x_gen = predict(cc=cat_covs,  nc=num_covs, gen=gen)
+                num_samples = cat_covs_test.shape[0]
+                np.savetxt('x_gen_' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', x_gen, delimiter=',')
+
             #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
             #print('orig score = ' + str(gamma_dx_dz_orig))
             #print('my score = ' + str(gamma_dx_dz_mine))
