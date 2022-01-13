@@ -569,7 +569,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
     #cat_covs = libPreps[:, None]
     #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None], conditions[:, None]), axis=-1)
-    cat_covs = np.concatenate((conditions[:, None], libPreps[:, None]), axis=-1)
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None]), axis=-1)
 
     #print(cat_covs)
     cat_covs = np.int32(cat_covs) # make sure all are integers
