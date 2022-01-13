@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import sys
 import argparse
+from random import randint
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -29,9 +29,12 @@ def main():
 
     if not colName is None:
         # subset meta_df with col match
-        col_meta_df = meta_df[meta_df[colName] == colVal]
-        # get samples in subset
-        col_samples_list = col_meta_df['Sample']
+        if not colName is None:
+            col_meta_df = meta_df[meta_df[colName] == colVal]
+            # get samples in subset
+            col_samples_list = col_meta_df['Sample']
+        else:
+            col_samples_list = expr_df.columns
         # subset the expr_df with samples
         expr_samples_df = expr_df[expr_df.columns.intersection(col_samples_list)].T
 
@@ -44,7 +47,7 @@ def main():
                 expr_row = expr_samples_df[expr_samples_df.index == sample]
                 noise = np.random.normal(0, var, expr_row.shape)
                 noised_expr_row = expr_row + noise
-                new_sample = sample + '_' + str(i)
+                new_sample = sample + '_' + str(randint(0, 1000000))
                 noised_expr_row.rename(index={sample:new_sample}, inplace=True)
                 expr_df_T = expr_df_T.append(noised_expr_row, ignore_index=False)
 

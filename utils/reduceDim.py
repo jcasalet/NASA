@@ -30,6 +30,7 @@ def main():
 	sep=sys.argv[2]
 	n = int(sys.argv[3])
 	delta = int(sys.argv[4])
+	#alpha = int(sys.argv[5])
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 
