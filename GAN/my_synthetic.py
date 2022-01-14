@@ -660,11 +660,13 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
             '''x_mean = np.mean(x_train, axis=0)
             x_std = np.std(x_train, axis=0)
             x_gen = x_gen * x_std + x_mean
-            print('after unstdize: ', str(gamma_coef(x_test, x_gen, kappa)))
-            if gamma_dx_dz_orig > 0.90:
+            print('after unstdize: ', str(gamma_coef(x_test, x_gen, kappa)))'''
+            if gamma_dx_dz_orig > 0.95:
                 #my_x_gen = predict(cc=cat_covs,  nc=num_covs, gen=gen)
                 num_samples = cat_covs_test.shape[0]
-                np.savetxt('x_gen_' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', x_gen, delimiter=',')'''
+                np.savetxt('x_gen_' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', x_gen, delimiter=',')
+                np.savetxt('cat_covs_' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', cat_covs_test, delimiter=',')
+                np.savetxt('num_covs' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', num_covs_test, delimiter=',')
 
             #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
             #print('orig score = ' + str(gamma_dx_dz_orig))
