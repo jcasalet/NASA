@@ -615,6 +615,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     idx = np.arange(x.shape[0])
     np.random.seed(seed)
     np.random.shuffle(idx)
+    np.savetxt('idx.txt', idx, delimiter=',')
     x = x[idx, :]
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]
