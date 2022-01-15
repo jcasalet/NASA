@@ -86,7 +86,7 @@ def main():
 
     df1_np = df1.to_numpy().T[0:num_samples].T
     # Log-transform data
-    x = np.log(df1_np)
+    x = np.log(1 + df1_np)
     x = np.float32(x)
     # standardize expression data
     x = (x - x.mean()) / x.std()
