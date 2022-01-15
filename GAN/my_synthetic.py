@@ -612,13 +612,14 @@ def my_prep_data(n, expr_df, info_df, seed):
     print('Num covs: ', num_covs.shape)'''
 
     # Train/test split
-    idx = np.arange(x.shape[0])
+
+    '''idx = np.arange(x.shape[0])
     np.random.seed(seed)
     np.random.shuffle(idx)
     np.savetxt('idx.txt', idx.astype(int), fmt='%i', delimiter=',')
     x = x[idx, :]
     num_covs = num_covs[idx, :]
-    cat_covs = cat_covs[idx, :]
+    cat_covs = cat_covs[idx, :]'''
 
     x_train, x_test = split_train_test(x=x, train_rate=0.9)
     num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=0.9)
