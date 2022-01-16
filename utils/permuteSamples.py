@@ -18,29 +18,14 @@ for i in range(meta.shape[0]):
 
 
 meta = meta.sample(frac=1)
-meta.to_csv('m.csv', sep=',', index=False)
+meta.to_csv(metaFile.split('.csv')[0] + '_permuted.csv', sep=',', index=False)
 
 sample_list = list(meta['Sample'])
 #sample_list.sort()
 
 #expr = expr.reindex(columns=['gene'] + sample_list)
 expr = expr[['gene'] + sample_list]
-expr.to_csv('e.csv', sep=',', index=False)
+expr.to_csv(exprFile.split('.csv')[0] + '_permuted.csv', sep=',', index=False)
 
-#sample_id_list_shuffle = np.random.permutation(sample_id_list)
-# sort
-# sort column names alphabetically
-# sort row names alphabetically
-
-# random permute
-
-
-
-
-
-#expr.columns.get_loc('GLDS_48_Mmus_C57_6J_LVR_GC_C_Rep4_M39_29')
-#709
-#expr.columns[709]
-#'GLDS_48_Mmus_C57_6J_LVR_GC_C_Rep4_M39_29'
 
 
