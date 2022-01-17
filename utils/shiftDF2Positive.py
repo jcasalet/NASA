@@ -16,5 +16,5 @@ if theMin < 0:
     df = df.add(theMin)
 
 df.insert(0, 'gene', genes)
-df.to_csv(dfFile.split('.csv')[0] + '_min.csv', sep=',', index=False)
+df.to_csv(dfFile.split('.csv')[0] + '_shifted.csv', sep=',', index=False)
 

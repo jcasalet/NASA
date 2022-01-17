@@ -92,14 +92,14 @@ def my_load():
 # Load dataset
 expr_df, info_df = my_load()
 x = expr_df.values.T
-symbols = expr_df.index.levels[0].values
+symbols = expr_df.index.values
 sampl_ids = expr_df.columns.values
 tissues = info_df['libPrep'].values
 datasets = info_df['dataset'].values
 
 # Log-transform data
+x = np.float32(x[1:])
 x = np.log(1 + x)
-x = np.float32(x)
 
 # Process categorical metadata
 cat_dicts = []
@@ -137,11 +137,9 @@ x_std = np.std(x_train, axis=0)
 # x_train = standardize(x_train, mean=x_mean, std=x_std)
 # x_test = standardize(x_test, mean=x_mean, std=x_std)
 
-gen = tf.keras.models.load_model('./checkpoints/models/gen_liver.h5')
+gen = tf.keras.models.load_model('./gen_liver.h5')
 
-x_gen = predict(cc=cat_covs_test,
-                nc=num_covs_test,
-                gen=gen)
+x_gen = predict(cc=cat_covs_test, nc=num_covs_test, gen=gen)
 x_gen = x_gen*x_std + x_mean
 x_gen = np.clip(x_gen, 0, a_max=None)
 

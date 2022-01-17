@@ -555,19 +555,18 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    #conditions, conditions_dict_inv = cat(conditions)
+    conditions, conditions_dict_inv = cat(conditions)
     datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
-    #missions, missions_dict_inv = cat(missions)
-    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    #genders, genders_dict_inv = cat(genders)
-    #preservations, preservations_dict_inv = cat(preservations)
-    #strains, strains_dict_inv = cat(strains)
+    missions, missions_dict_inv = cat(missions)
+    seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    genders, genders_dict_inv = cat(genders)
+    preservations, preservations_dict_inv = cat(preservations)
+    strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-    #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-    cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
@@ -765,10 +764,10 @@ def plot_tsne_2d(data, labels, **kwargs):
     plt.legend()
     return plt.gca()
 
-def myPlot(x, x_gen, info_df, gen_dir):
+def myPlot(x, x_gen, info_df, output_dir):
 
     # tsne plots
-    '''import umap.umap_ as umap
+    import umap.umap_ as umap
     print('x shape = ' + str(x.shape))
     print('x_gen shape = ' + str(x_gen.shape))
     x_combined = np.concatenate((x, x_gen))
@@ -779,30 +778,30 @@ def myPlot(x, x_gen, info_df, gen_dir):
     plt.figure(figsize=(10, 10))
     plot_tsne_2d(emb_2d, labels=np.array(categories), s=4)
     plt.title('UMAP real/synthetic')
-    plt.show()'''
+    plt.show()
 
     pca = PCA(n_components=2)
 
     x = standardize(x)
 
-    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset', gen_dir)
-    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset', gen_dir)
+    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset', output_dir)
+    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset', output_dir)
 
 
-    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset', gen_dir)
-    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset', gen_dir)
+    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset', output_dir)
+    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset', output_dir)
 
 
 
@@ -889,6 +888,15 @@ def main():
              x_test, x_train, checkpoint_dir, gamma_list, kappa)
         #(gamma_list)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
+        num_samples = int(options.num_samples)
+        if num_samples == 0:
+            num_samples = len(cat_covs)
+        cc = cat_covs[0:num_samples]
+        nc = num_covs[0:num_samples]
+
+        x_gen = predict(cc=cc, nc=nc, gen=gen)
+        myPlot(x, x_gen, info_df, options.output_dir)
+
     else:
         print('not training!')
         gen = tf.keras.models.load_model(options.model, compile=False)
@@ -900,26 +908,13 @@ def main():
         nc = num_covs[0:num_samples]
 
         x_gen = predict(cc=cc, nc=nc, gen=gen)
-        #expr_df_subset = np.take(expr_df, indices, axis=0)
-        expr_df_subset = expr_df
-        calculate_norms(x_gen, expr_df_subset.T[0:num_samples])
-        #calculate_close(x_gen, expr_df_subset.T[0:num_samples], 1)
-
-        expr_df_samples = expr_df_subset.T.index[0:num_samples]
-        expr_df_genes = expr_df_subset.index
-        # undo log transform
-        #x_gen = np.sign(x_gen) * np.power(np.abs(x_gen), np.e)
+        expr_df_samples = expr_df.T.index[0:num_samples]
+        expr_df_genes = expr_df.index
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
-        # undo standardization
-        #x_gen_df = x_gen_df * expr_df_subset.std() + expr_df_subset.mean()
-        # remove any negative values
-        #x_gen_df = np.clip(x_gen_df, 0, a_max=None)
-
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
-        expr_df_subset.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
+        expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
 
-    #myPlot(expr_df.T[0:num_samples], x_gen, info_df[0:num_samples], options.output_dir)
-                    
+
 
 if __name__ == "__main__":
     main()
