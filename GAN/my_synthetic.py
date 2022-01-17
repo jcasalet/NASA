@@ -778,7 +778,9 @@ def myPlot(x, x_gen, info_df, output_dir):
     plt.figure(figsize=(10, 10))
     plot_tsne_2d(emb_2d, labels=np.array(categories), s=4)
     plt.title('UMAP real/synthetic')
-    plt.show()
+    #plt.show()
+    plt.savefig(output_dir + '/umap_real_v_synthetic.png', dpi=300)
+
 
     pca = PCA(n_components=2)
 
