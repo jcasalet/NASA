@@ -555,23 +555,19 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    conditions, conditions_dict_inv = cat(conditions)
+    #conditions, conditions_dict_inv = cat(conditions)
     datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
-    missions, missions_dict_inv = cat(missions)
-    seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    genders, genders_dict_inv = cat(genders)
-    preservations, preservations_dict_inv = cat(preservations)
-    strains, strains_dict_inv = cat(strains)
+    #missions, missions_dict_inv = cat(missions)
+    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    #genders, genders_dict_inv = cat(genders)
+    #preservations, preservations_dict_inv = cat(preservations)
+    #strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-    #cat_covs = libPreps[:, None]
-    #cat_covs = np.concatenate((datasets[:, None], libPreps[:, None], conditions[:, None]), axis=-1)
-    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None]), axis=-1)
-
-    #print(cat_covs)
+    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+    #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
+    cat_covs = np.concatenate((datasets[:, None], libPreps[:, None]), axis=-1)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
@@ -632,12 +628,6 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
              x_test, x_train, checkpoint_dir, gamma_list, kappa=1):
     # Train on GL liver...
 
-    # Script that trains the model
-    # %load adversarial-gene-expression/gtex_tcga_gan.py
-    #import wandb
-
-    #tf.config.run_functions_eagerly(True)  # LMS added to avoid variable creation error https://stackoverflow.com/questions/58352326/running-the-tensorflow-2-0-code-gives-valueerror-tf-function-decorated-functio
-
     MODELS_DIR = checkpoint_dir + '/models/'
 
     # GPU limit
@@ -670,12 +660,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
                 np.savetxt('cat_covs_' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', cat_covs_test, delimiter=',')
                 np.savetxt('num_covs' + str(num_samples) + '_' + str(gamma_dx_dz_orig) + '.csv', num_covs_test, delimiter=',')
 
-            #gamma_dx_dz_mine = my_correlation(x_test, x_gen)
-            #print('orig score = ' + str(gamma_dx_dz_orig))
-            #print('my score = ' + str(gamma_dx_dz_mine))
             return gamma_dx_dz_orig
-            #score = (x_test - x_gen) ** 2
-            #return -np.mean(score)
 
         return _score
 
