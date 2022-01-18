@@ -592,7 +592,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
-    x = np.log(1 + expr_df)
+    x = np.log10(expr_df)
     x = np.float32(x)
 
     # transpose matrix
@@ -915,6 +915,7 @@ def main():
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
+        myPlot(x, x_gen, info_df, options.output_dir)
 
 
 
