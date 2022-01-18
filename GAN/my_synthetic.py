@@ -592,7 +592,7 @@ def my_prep_data(n, expr_df, info_df, seed):
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
-    x = np.log10(expr_df)
+    x = np.log10(1+ expr_df)
     x = np.float32(x)
 
     # transpose matrix
