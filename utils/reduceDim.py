@@ -50,7 +50,7 @@ def main():
 
 	df_subset.insert(0, 'gene', genes)
 
-	outputFileName = exprFile.split('.')[0] + '_expanded_' + str(n) + '_' + str(delta) + '.csv'
+	outputFileName = exprFile.split('.')[0] + '__reduced_' + str(n) + '_' + str(delta) + '.csv'
 
 	df_subset.to_csv(outputFileName, sep=',', index=None)
 

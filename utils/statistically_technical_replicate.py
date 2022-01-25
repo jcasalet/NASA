@@ -62,8 +62,9 @@ def main():
     expr_df = expr_df.drop(columns=['gene'])
     expr_df = np.clip(expr_df, 0, a_max=None)
     expr_df.insert(0, 'gene', genes)
-    expr_df.to_csv('expanded_expr.csv', index=False)
-    meta_df.to_csv('expanded_meta.csv', index=False)
+    outputFileNameSuffix = '__expanded_' + str(n) + '_' + str(var) + '.csv'
+    expr_df.to_csv(expr_df_file.split('.')[0] + outputFileNameSuffix, index=False)
+    meta_df.to_csv(meta_df_file.split('.')[0] + outputFileNameSuffix, index=False)
     print('new expr dims: ', str(expr_df.shape))
     print('new meta dims: ', str(meta_df.shape))
 
@@ -71,12 +72,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
 
     '''genes = expr_df['gene']
     expr_df_T = expr_df.T

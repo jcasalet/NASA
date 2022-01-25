@@ -624,10 +624,10 @@ def my_prep_data(n, expr_df, info_df, seed):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list, kappa=1):
+             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1):
     # Train on GL liver...
 
-    MODELS_DIR = checkpoint_dir + '/models/'
+    MODELS_DIR = odir + '/models/'
 
     # GPU limit
     limit_gpu(CONFIG['gpu'])
@@ -887,7 +887,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, kappa)
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa)
         #(gamma_list)
         gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
