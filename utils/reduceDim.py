@@ -33,10 +33,9 @@ def removeAlphaZeros(df, alpha):
 
 def main():
 	exprFile = sys.argv[1]
-	sep=sys.argv[2]
-	n = int(sys.argv[3])
-	delta = int(sys.argv[4])
-	alpha = float(sys.argv[5])
+	n = int(sys.argv[2])
+	delta = int(sys.argv[3])
+	alpha = float(sys.argv[4])
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 
