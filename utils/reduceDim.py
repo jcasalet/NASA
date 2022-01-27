@@ -35,7 +35,7 @@ def main():
 	exprFile = sys.argv[1]
 	n = int(sys.argv[2])
 	delta = int(sys.argv[3])
-	alpha = float(sys.argv[4])
+	alpha = float(int(sys.argv[4])/100)
 	sep=','
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
@@ -60,7 +60,7 @@ def main():
 
 	df_subset.insert(0, 'gene', genes)
 
-	outputFileName = exprFile.split('.')[0] + '__reduced_' + str(n) + '_' + str(delta) + '.csv'
+	outputFileName = exprFile.split('.')[0] + '__reduced_' + str(n) + '_' + str(delta) + '_' + str(sys.argv[4]) + '.csv'
 
 	df_subset.to_csv(outputFileName, sep=',', index=None)
 
