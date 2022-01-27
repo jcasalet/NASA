@@ -24,19 +24,29 @@ def findSumGTDelta(df, delta):
 		if s > delta:
 			cList.append(index)
 	return df.iloc[cList], cList
-	
+
+def removeAlphaZeros(df, alpha):
+	row_cut_off = int(alpha * len(df.columns))
+	df = df[(df == 0).sum(axis='columns') <= row_cut_off]
+	return df
+
+
 def main():
 	exprFile = sys.argv[1]
 	sep=sys.argv[2]
 	n = int(sys.argv[3])
 	delta = int(sys.argv[4])
-	#alpha = int(sys.argv[5])
+	alpha = float(sys.argv[5])
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 
 	df_subset, cList = findSumGTDelta(df, delta)
 
 	df_subset = df_subset.reset_index()
+
+	print(len(df_subset))
+	df_subset = removeAlphaZeros(df_subset, alpha)
+	print(len(df_subset))
 
 	df_subset,indices = findMostVaried(df_subset, n)
 
