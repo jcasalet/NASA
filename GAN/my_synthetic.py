@@ -902,7 +902,6 @@ def main():
     else:
         print('not training!')
         gen = tf.keras.models.load_model(options.model, compile=False)
-        # reduce (down-sample) number of samples
         num_samples = int(options.num_samples)
         if num_samples == 0:
             num_samples = len(cat_covs)
