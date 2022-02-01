@@ -781,7 +781,6 @@ def myPlot(x, x_gen, info_df, output_dir):
     #plt.show()
     plt.savefig(output_dir + '/umap_real_v_synthetic.png', dpi=300)
 
-
     pca = PCA(n_components=2)
 
     x = standardize(x)
@@ -889,7 +888,7 @@ def main():
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa)
         #(gamma_list)
-        gen = tf.keras.models.load_model('checkpoints/models/gen_liver.h5') # this is the one I just trained
+        gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
         if num_samples == 0:
             num_samples = len(cat_covs)
