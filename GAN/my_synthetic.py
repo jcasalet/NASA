@@ -783,7 +783,7 @@ def myPlot(x, x_gen, info_df, output_dir):
 
     pca = PCA(n_components=2)
 
-    x = standardize(x)
+    #x = standardize(x)
 
     pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
     pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
