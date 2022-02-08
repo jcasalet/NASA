@@ -136,4 +136,5 @@ def main():
     myPlot(expr_df, gen_df, info_df, options.output_dir)
 
 
-
+if __name__ == "__main__":
+    main()
