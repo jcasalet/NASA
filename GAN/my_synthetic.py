@@ -787,12 +787,12 @@ def myPlot(x, x_gen, info_df, output_dir):
 
     pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
     pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset_', output_dir)
-    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset_', output_dir)
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset_', output_dir)
-    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset_', output_dir)
-    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset_', output_dir)
-    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset_', output_dir)
+    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset_'  + 'n=' + str(x.shape[0], output_dir)
+    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset_'  + 'n=' + str(x.shape[0], output_dir)
+    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset_'  + 'n=' + str(x.shape[0], output_dir)
+    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset_'  + 'n=' + str(x.shape[0], output_dir)
+    pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset_' + 'n=' + str(x.shape[0], output_dir)
+    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset_' + 'n=' + str(x.shape[0], output_dir)
 
 
     pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
