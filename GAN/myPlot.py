@@ -3,6 +3,7 @@ import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+import numpy as np
 
 
 def pcaPlot(pca, df, info_df, variable, title, gen_dir):
