@@ -147,7 +147,7 @@ def main():
     # standardize expression data
     x = (x - x.mean()) / x.std()
 
-    myPlot(x, gen_df, info_df, options.output_dir)
+    myPlot(x, gen_df.T, info_df, options.output_dir)
 
 
 if __name__ == "__main__":
