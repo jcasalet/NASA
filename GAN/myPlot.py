@@ -136,7 +136,7 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     # Log-transform data
-    x = np.log10(1+ expr_df)
+    '''x = np.log10(1+ expr_df)
     x = np.float32(x)
 
     # transpose matrix
@@ -145,9 +145,9 @@ def main():
     #x, indices = my_find_mostvaried(x, n)
 
     # standardize expression data
-    x = (x - x.mean()) / x.std()
+    x = (x - x.mean()) / x.std()'''
 
-    myPlot(x, gen_df.T, info_df, options.output_dir)
+    myPlot(expr_df.T, gen_df.T, info_df, options.output_dir)
 
 
 if __name__ == "__main__":
