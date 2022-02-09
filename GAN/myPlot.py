@@ -134,7 +134,20 @@ def main():
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     gen_df = pd.read_csv(options.gen_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, index_col=0)
-    myPlot(expr_df, gen_df, info_df, options.output_dir)
+
+    # Log-transform data
+    x = np.log10(1+ expr_df)
+    x = np.float32(x)
+
+    # transpose matrix
+    x = x.T
+    # find n most varied genes
+    #x, indices = my_find_mostvaried(x, n)
+
+    # standardize expression data
+    x = (x - x.mean()) / x.std()
+
+    myPlot(x, gen_df, info_df, options.output_dir)
 
 
 if __name__ == "__main__":
