@@ -49,6 +49,7 @@ def main():
 	sep=','
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
+	print('original size: ', str(len(df)))
 
 	df_subset, cList = findSumGTDelta(df, delta)
 	df_subset = df_subset.reset_index()
