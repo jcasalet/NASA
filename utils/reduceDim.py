@@ -51,19 +51,17 @@ def main():
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 
 	df_subset, cList = findSumGTDelta(df, delta)
-
 	df_subset = df_subset.reset_index()
-
-	print(len(df_subset))
+	print('after reducing by sum to delta: ', str(delta), str(len(df_subset)))
+	
 	df_subset = removeAlphaZeros(df_subset, alpha)
-	print(len(df_subset))
+	print('after reducing by removing nearly 0s alpha: ', str(alpha), str(len(df_subset)))
 
 	df_subset,indices = findMostVaried(df_subset, n)
+	print('after reducing by n: ', str(n), str(len(df_subset)))
 
 	df_subset = df_subset.drop(columns=['index'])
-
 	genes = df_subset['gene']
-
 	df_subset = df_subset.drop(columns=['gene'])
 
 	df_subset = np.clip(df_subset, 0, a_max=None)
