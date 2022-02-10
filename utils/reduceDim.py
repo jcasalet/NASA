@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 import numpy as np
 import operator
+import argparse
 
 
 def findMostVaried(df, n):
@@ -30,12 +31,21 @@ def removeAlphaZeros(df, alpha):
 	df = df[(df == 0).sum(axis='columns') <= row_cut_off]
 	return df
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--expr_file', help='expression file', default=None)
+    parser.add_argument('-n', '--num', help='number to reduce to', default=None)
+    parser.add_argument('-d', '--delta', help='delta diff b/w highest and lowest expr value', default=None)
+    parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=None)
+
+    return parser.parse_args()
 
 def main():
-	exprFile = sys.argv[1]
-	n = int(sys.argv[2])
-	delta = int(sys.argv[3])
-	alpha = float(int(sys.argv[4])/100)
+	args = parse_args()
+	exprFile = args.expr_file
+	n = int(args.num)
+	delta = int(args.delta)
+	alpha = float(int(args.alpha)/100)
 	sep=','
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
