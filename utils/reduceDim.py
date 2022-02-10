@@ -53,9 +53,9 @@ def main():
 	df_subset, cList = findSumGTDelta(df, delta)
 	df_subset = df_subset.reset_index()
 	print('after reducing by sum to delta: ', str(delta), str(len(df_subset)))
-	
+
 	df_subset = removeAlphaZeros(df_subset, alpha)
-	print('after reducing by removing nearly 0s alpha: ', str(alpha), str(len(df_subset)))
+	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), str(len(df_subset)))
 
 	df_subset,indices = findMostVaried(df_subset, n)
 	print('after reducing by n: ', str(n), str(len(df_subset)))
