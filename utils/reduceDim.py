@@ -59,7 +59,7 @@ def main():
 	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), str(len(df_subset)))
 
 	df_subset,indices = findMostVaried(df_subset, n)
-	print('after reducing by n: ', str(n), str(len(df_subset)))
+	print('after reducing by n most varied: ', str(n), str(len(df_subset)))
 
 	df_subset = df_subset.drop(columns=['index'])
 	genes = df_subset['gene']
