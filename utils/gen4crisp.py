@@ -12,7 +12,7 @@ def parse_args():
 def create_dict(keyName, sampleList, metaDF):
     myDict = dict()
     for sample in sampleList:
-        myDict['sample'] = metaDF['sample'][keyName]
+        myDict[sample] = metaDF[metaDF['sample'] == sample][keyName]
     return myDict
 
 def main():
