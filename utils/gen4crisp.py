@@ -40,7 +40,7 @@ def main():
     for key in metaDF.columns:
         if key == 'sample':
             continue
-        theDict = create_dict(key, df['sample'])
+        theDict = create_dict(key, df['sample'], metaDF)
         # join dict to dfs
         df[key] = df['sample'].map(theDict)
 
