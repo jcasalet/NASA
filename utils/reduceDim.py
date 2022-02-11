@@ -8,6 +8,7 @@ import argparse
 def findMostVaried(df, n):
 	# df is genes X samples
 	# calculate var, sort cols into n highest vars, drop shape[1]-n cols
+	# first find range of var and print to stdout
 	if n == 0:
 		return df, None
 	sdList = df.std(axis=1)
@@ -19,6 +20,7 @@ def findMostVaried(df, n):
 	return slicedDF, indices
 
 def findSumGTDelta(df, delta):
+	# first find min sum and print that to stdout
 	cSums = df.sum(axis=1)
 	cList = list()
 	for index, s in cSums.iteritems():
@@ -27,6 +29,7 @@ def findSumGTDelta(df, delta):
 	return df.iloc[cList], cList
 
 def removeAlphaZeros(df, alpha):
+	# first find max num 0s row and print to stdout
 	row_cut_off = int(alpha * len(df.columns))
 	df = df[(df == 0).sum(axis='columns') <= row_cut_off]
 	return df
