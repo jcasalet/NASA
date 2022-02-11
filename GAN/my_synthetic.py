@@ -15,6 +15,7 @@ import sys
 
 tfk = tf.keras
 tfkl = tf.keras.layers
+tf.compat.v1.enable_eager_execution()
 
 
 # ------------------
@@ -430,7 +431,10 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
     gen_log_dir = log_dir + current_time + '/gen'
     disc_log_dir = log_dir + current_time + '/disc'
     gen_summary_writer = tf.summary.create_file_writer(gen_log_dir)
+    # gen_summary_writer = tf.contrib.summary.create_file_writer(gen_log_dir)
     disc_summary_writer = tf.summary.create_file_writer(disc_log_dir)
+    # disc_summary_writer = tf.contrib.ßsummary.create_file_writer(disc_log_dir)
+
 
     checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
     checkpoint = tf.train.Checkpoint(generator_optimizer=gen_opt,
@@ -465,9 +469,12 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             gamma_list.append(score)
         # Logs
         with disc_summary_writer.as_default():
+            #tf.summary.scalar('loss', disc_losses.result())
             tf.summary.scalar('loss', disc_losses.result(), step=epoch)
+
         with gen_summary_writer.as_default():
-            tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+            #tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+            tf.summary.scalar('loss', gen_losses.result())
 
         # Save the model
         if epoch % 5 == 0:
