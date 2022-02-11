@@ -25,16 +25,16 @@ def main():
     metaDF = pd.read_csv(args.meta, header=0, sep=',')
 
     # set index and transpose
-    df = df.transpose()
+    #df = df.transpose()
 
     # re-index to set index as column name
-    df.reset_index(inplace=True)
+    #df.reset_index(inplace=True)
 
     # rename "index" column to "sample"
-    df = df.rename(columns={"index": "sample"})
+    #df = df.rename(columns={"index": "sample"})
 
     # replace "." with "_" in sample names
-    df['sample'] = df['sample'].str.replace('.', '-')
+    #df['sample'] = df['sample'].str.replace('.', '-')
 
     # create dicts
     for key in metaDF.columns:
