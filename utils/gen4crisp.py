@@ -38,6 +38,7 @@ def main():
 
     # create dicts
     for key in metaDF.columns:
+        print('processing ' + key)
         if key == 'sample':
             continue
         theDict = create_dict(key, df['sample'], metaDF)
