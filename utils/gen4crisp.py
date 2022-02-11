@@ -17,7 +17,7 @@ def create_dict(keyName, sampleList, metaDF):
 
 def main():
 
-    args = argparse()
+    args = parse_args()
     # read in expr
     df = pd.read_csv(args.expr, header=0, sep=',')
 
