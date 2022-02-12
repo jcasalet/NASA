@@ -12,7 +12,8 @@ def parse_args():
 def create_dict(keyName, sampleList, metaDF):
     myDict = dict()
     for sample in sampleList:
-        myDict[sample] = metaDF[metaDF['sample'] == sample][keyName]
+        value = metaDF[metaDF['sample'] == sample][keyName].iloc[0]
+        myDict[sample] = value
     return myDict
 
 def main():
@@ -20,34 +21,33 @@ def main():
     args = parse_args()
     # read in expr
     df = pd.read_csv(args.expr, header=0, sep=',')
-
     # read in meta
     metaDF = pd.read_csv(args.meta, header=0, sep=',')
 
-    # set index and transpose
+    genes=list(df['gene'])
+    df=df.drop(columns=['gene'])
     df = df.transpose()
-
-    # re-index to set index as column name
+    df.columns = genes
     df.reset_index(inplace=True)
-
-    # rename "index" column to "sample"
     df = df.rename(columns={"index": "sample"})
 
     # replace "." with "_" in sample names
     #df['sample'] = df['sample'].str.replace('.', '-')
+
+
 
     # create dicts
     for key in metaDF.columns:
         print('processing ' + key)
         if key == 'sample':
             continue
-        theDict = create_dict(key, df['sample'], metaDF)
+        theDict = create_dict(key, list(df['sample']), metaDF)
         # join dict to dfs
         df[key] = df['sample'].map(theDict)
 
-
     # save final uber table to pickle file
-    df.to_pickle(args.out)
+    df.to_pickle(args.out + '.pkl')
+    df.to_csv(args.out + '.csv', sep=',', index=None)
 
 if __name__ == "__main__":
     main()
