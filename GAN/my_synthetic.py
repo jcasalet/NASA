@@ -712,7 +712,7 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, excl_list):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
     for meta_param in list(info_df.columns):
-        if meta_param in excl_list:
+        if not excl_list is None and meta_param in excl_list:
             continue
         pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
 
@@ -794,10 +794,10 @@ def myPlot(x, x_gen, info_df, output_dir, exclude_list):
     #x = standardize(x)
 
     for meta_param in list(info_df.columns):
-        if meta_param in exclude_list:
+        if not exclude_list is None and meta_param in exclude_list:
             continue
-        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
+        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir, exclude_list)
+        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir, exclude_list)
 
 
 def plot_gamma(gamma_list):
