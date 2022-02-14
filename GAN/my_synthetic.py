@@ -865,6 +865,8 @@ def main():
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
+
+
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
     x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), options.excl)
 
