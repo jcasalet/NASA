@@ -544,14 +544,23 @@ def my_prep_data(n, expr_df, info_df, seed):
 
     # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
     # preservation,seqFacility,seqParameters,strain
-    genders = info_df['gender']
+
+    # Triangulum Task,Triangulum ID,H&E File ID,GLDS,Sample,NASA ID,Study,Group,ORO Positivity (%),
+    # Dissection,Strain ,Age at launch (weeks),Duration (days),Library prep,Notes
+    '''genders = info_df['gender']
     preservations = info_df['preservation']
     strains = info_df['strain']
     conditions = info_df['condition']
     datasets = info_df['dataset']
     libPreps = info_df['libPrep']
     missions = info_df['mission']
-    seqfacs = info_df['seqFacility']
+    seqfacs = info_df['seqFacility']'''
+    preservations = info_df['Dissection']
+    strains = info_df['Strain']
+    conditions = info_df['Group']
+    datasets = info_df['NASA ID']
+    libPreps = info_df['Library prep']
+    missions = info_df['GLDS']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -566,14 +575,16 @@ def my_prep_data(n, expr_df, info_df, seed):
     datasets, datasets_dict_inv = cat(datasets)
     libPreps, libPreps_dict_inv = cat(libPreps)
     missions, missions_dict_inv = cat(missions)
-    seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    genders, genders_dict_inv = cat(genders)
+    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
+    #genders, genders_dict_inv = cat(genders)
     preservations, preservations_dict_inv = cat(preservations)
     strains, strains_dict_inv = cat(strains)
 
     ## Final concatenation
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-                               seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
+    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
+    #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
+    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None], missions[:, None],
+           preservations[:, None], strains[:, None]), axis=-1)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
