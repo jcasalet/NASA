@@ -713,18 +713,13 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     print('Gamma(Dx, Dz): {:.4f}'.format(score))
 
 
-def pcaPlot(pca, df, info_df, variable, title, gen_dir):
+def pcaPlot(pca, df, info_df, variable, title, gen_dir, excl_list):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    pcaDF = pd.concat([pcaDF, info_df[['condition']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['dataset']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['libPrep']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['mission']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['seqFacility']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['strain']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['gender']]], axis=1)
-    pcaDF = pd.concat([pcaDF, info_df[['preservation']]], axis=1)
-
+    for meta_param in info_df.columns:
+        if meta_param in excl_list:
+            continue
+        pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
 
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
@@ -782,7 +777,7 @@ def plot_tsne_2d(data, labels, **kwargs):
     plt.legend()
     return plt.gca()
 
-def myPlot(x, x_gen, info_df, output_dir):
+def myPlot(x, x_gen, info_df, output_dir, exclude_list):
 
     # tsne plots
     import umap.umap_ as umap
@@ -803,26 +798,11 @@ def myPlot(x, x_gen, info_df, output_dir):
 
     #x = standardize(x)
 
-    pcaPlot(pca, x, info_df, 'condition', 'Condition_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-    #pcaPlot(pca, x, info_df, 'seqFacility', 'Sequencing_Facility_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'dataset', 'GLDS_Dataset_Real_Dataset_'  + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'libPrep', 'Library_Prep_Real_Dataset_'  + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'mission', 'Mission_Real_Dataset_'  + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'strain', 'Strain_Real_Dataset_'  + 'n=' + str(x.shape[0]), output_dir)
-    #pcaPlot(pca, x, info_df, 'gender', 'Gender_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-    pcaPlot(pca, x, info_df, 'preservation', 'Preservation_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
-
-
-    pcaPlot(pca, x_gen, info_df, 'condition', 'Condition_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    #pcaPlot(pca, x_gen, info_df, 'seqFacility', 'Sequencing_Facility_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    pcaPlot(pca, x_gen, info_df, 'dataset', 'GLDS_Dataset_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    pcaPlot(pca, x_gen, info_df, 'libPrep', 'Library_Prep_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    pcaPlot(pca, x_gen, info_df, 'mission', 'Mission_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    pcaPlot(pca, x_gen, info_df, 'strain', 'Strain_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    #pcaPlot(pca, x_gen, info_df, 'gender', 'Gender_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-    pcaPlot(pca, x_gen, info_df, 'preservation', 'Preservation_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
-
-
+    for meta_param in list(info_df.columns):
+        if meta_param in exclude_list:
+            continue
+        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir)
+        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir)
 
 
 def plot_gamma(gamma_list):
@@ -875,6 +855,7 @@ def parse_args():
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
     parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
+    parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
     return parser.parse_args()
     
 def main():
@@ -904,7 +885,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa)
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, options.excl)
         #(gamma_list)
         gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
@@ -914,7 +895,7 @@ def main():
         nc = num_covs[0:num_samples]
 
         x_gen = predict(cc=cc, nc=nc, gen=gen)
-        myPlot(x, x_gen, info_df, options.output_dir)
+        myPlot(x, x_gen, info_df, options.output_dir, options.excl)
 
     else:
         print('not training!')
@@ -931,7 +912,7 @@ def main():
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
-        myPlot(x, x_gen, info_df, options.output_dir)
+        myPlot(x, x_gen, info_df, options.output_dir, options.excl)
 
 
 
