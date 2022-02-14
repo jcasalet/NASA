@@ -540,7 +540,7 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF, indices
 
-def my_prep_data(n, expr_df, info_df, seed):
+def my_prep_data(n, expr_df, info_df, seed, excl_list):
 
     # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
     # preservation,seqFacility,seqParameters,strain
@@ -555,12 +555,6 @@ def my_prep_data(n, expr_df, info_df, seed):
     libPreps = info_df['libPrep']
     missions = info_df['mission']
     seqfacs = info_df['seqFacility']'''
-    preservations = info_df['Dissection']
-    strains = info_df['Strain']
-    conditions = info_df['Group']
-    datasets = info_df['NASA ID']
-    libPreps = info_df['Library prep']
-    missions = info_df['GLDS']
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
@@ -571,20 +565,21 @@ def my_prep_data(n, expr_df, info_df, seed):
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    conditions, conditions_dict_inv = cat(conditions)
-    datasets, datasets_dict_inv = cat(datasets)
-    libPreps, libPreps_dict_inv = cat(libPreps)
-    missions, missions_dict_inv = cat(missions)
-    #seqfacs, seqfacs_dict_inv = cat(seqfacs)
-    #genders, genders_dict_inv = cat(genders)
-    preservations, preservations_dict_inv = cat(preservations)
-    strains, strains_dict_inv = cat(strains)
-
+    metaDict = dict()
+    metaDict_inv = dict()
+    my_tuple = tuple()
+    for meta_param in info_df.columns:
+        if not excl_list is None and meta_param in excl_list:
+            continue
+        metaDict[meta_param] = info_df[meta_param]
+        metaDict[meta_param], metaDict_inv[meta_param] = cat(metaDict[meta_param])
+        my_tuple = my_tuple + (metaDict[meta_param][:, None],)
     ## Final concatenation
     #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
     #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-    cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None], missions[:, None],
-           preservations[:, None], strains[:, None]), axis=-1)
+
+
+    cat_covs = np.concatenate(my_tuple, axis=-1)
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
@@ -642,7 +637,7 @@ def my_prep_data(n, expr_df, info_df, seed):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1):
+             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1, excl_list=None):
     # Train on GL liver...
 
     MODELS_DIR = odir + '/models/'
@@ -716,7 +711,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 def pcaPlot(pca, df, info_df, variable, title, gen_dir, excl_list):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    for meta_param in info_df.columns:
+    for meta_param in list(info_df.columns):
         if meta_param in excl_list:
             continue
         pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
@@ -871,7 +866,7 @@ def main():
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed))
+    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), options.excl)
 
     if eval(options.train):
         checkpoint_dir = options.checkpoint_dir
