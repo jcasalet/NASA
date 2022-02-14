@@ -473,8 +473,8 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             tf.summary.scalar('loss', disc_losses.result(), step=epoch)
 
         with gen_summary_writer.as_default():
-            #tf.summary.scalar('loss', gen_losses.result(), step=epoch)
-            tf.summary.scalar('loss', gen_losses.result())
+            tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+            #tf.summary.scalar('loss', gen_losses.result())
 
         # Save the model
         if epoch % 5 == 0:
