@@ -554,9 +554,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
     metaDict = dict()
     metaDict_inv = dict()
     my_tuple = tuple()
-    for meta_param in info_df.columns:
-        if not meta_param in use_meta_cols['cat']:
-            continue
+    for meta_param in use_meta_cols['cat']:
         metaDict[meta_param] = info_df[meta_param]
         metaDict[meta_param], metaDict_inv[meta_param] = cat(metaDict[meta_param])
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
@@ -565,9 +563,6 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
     cat_covs = np.int32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
-
-    ages = np.int32(info_df['age'])
-    durations = np.int32(info_df['duration'])
     num_dicts = [] # big dict to hold all categorical dicts
     def num(var):
         '''Function to repeatedly process categorical metadata. Pass in a column ("var") from info_df as a variable.'''
@@ -580,9 +575,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
     metaDict = dict()
     metaDict_inv = dict()
     my_tuple = tuple()
-    for meta_param in info_df.columns:
-        if not meta_param in use_meta_cols['num']:
-            continue
+    for meta_param in use_meta_cols['num']:
         metaDict[meta_param] = info_df[meta_param]
         metaDict[meta_param], metaDict_inv[meta_param] = num(metaDict[meta_param])
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
@@ -778,7 +771,7 @@ def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
 
     #x = standardize(x)
 
-    for meta_param in use_meta_cols['cat']:
+    for meta_param in list(use_meta_cols['cat']):
         pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
         pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir, use_meta_cols)
 
@@ -847,7 +840,7 @@ def main():
               'batch_size': int(options.batch_size), 'nb_layers': int(options.nb_layers), 'hdim': int(options.hdim),
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
     expr_df = pd.read_csv(options.input_expr, index_col=0)
-    info_df = pd.read_csv(options.input_meta, index_col=0)
+    info_df = pd.read_csv(options.input_meta, header=0, sep=',')
     with open(options.use_meta_file, 'r') as f:
         use_meta_cols = json.load(f)
     f.close()
