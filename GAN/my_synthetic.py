@@ -865,10 +865,13 @@ def main():
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, index_col=0)
 
-
+    if not options.excl is None:
+        exclude_list = eval(options.excl)
+    else:
+        exclude_list = None
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), options.excl)
+    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), exclude_list)
 
     if eval(options.train):
         checkpoint_dir = options.checkpoint_dir
@@ -882,7 +885,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, options.excl)
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, exclude_list)
         #(gamma_list)
         gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
@@ -909,7 +912,7 @@ def main():
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
-        myPlot(x, x_gen, info_df, options.output_dir, options.excl)
+        myPlot(x, x_gen, info_df, options.output_dir, exclude_list)
 
 
 
