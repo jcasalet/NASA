@@ -11,7 +11,7 @@ import argparse
 import pandas as pd
 from sklearn import preprocessing
 from numpy import linalg as LA
-import sys
+import json
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -540,25 +540,11 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF, indices
 
-def my_prep_data(n, expr_df, info_df, seed, excl_list):
+def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
 
-    # Sample,age,animalreturn,dataset,condition,duration,gender,libPrep,mission,
-    # preservation,seqFacility,seqParameters,strain
-
-    # Triangulum Task,Triangulum ID,H&E File ID,GLDS,Sample,NASA ID,Study,Group,ORO Positivity (%),
-    # Dissection,Strain ,Age at launch (weeks),Duration (days),Library prep,Notes
-    '''genders = info_df['gender']
-    preservations = info_df['preservation']
-    strains = info_df['strain']
-    conditions = info_df['condition']
-    datasets = info_df['dataset']
-    libPreps = info_df['libPrep']
-    missions = info_df['mission']
-    seqfacs = info_df['seqFacility']'''
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
     def cat(var):
-        '''Function to repeatedly process categorical metadata. Pass in a column ("var") from info_df as a variable.'''
         var_dict_inv = np.array(list(sorted(set(var))))
         var_dict = {t: i for i, t in enumerate(var_dict_inv)}
         var = np.vectorize(lambda t: var_dict[t])(var) # convert to integer
@@ -569,15 +555,11 @@ def my_prep_data(n, expr_df, info_df, seed, excl_list):
     metaDict_inv = dict()
     my_tuple = tuple()
     for meta_param in info_df.columns:
-        if not excl_list is None and meta_param in excl_list:
+        if not meta_param in use_meta_cols['cat']:
             continue
         metaDict[meta_param] = info_df[meta_param]
         metaDict[meta_param], metaDict_inv[meta_param] = cat(metaDict[meta_param])
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
-    ## Final concatenation
-    #cat_covs = np.concatenate((conditions[:, None], datasets[:, None], libPreps[:, None],missions[:, None],
-    #                           seqfacs[:, None], genders[:, None], preservations[:, None], strains[:, None]), axis=-1)
-
 
     cat_covs = np.concatenate(my_tuple, axis=-1)
     cat_covs = np.int32(cat_covs) # make sure all are integers
@@ -595,12 +577,17 @@ def my_prep_data(n, expr_df, info_df, seed, excl_list):
         num_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
-    ages, ages_dict_inv = num(ages)
-    durations,durations_dict_inv = num(durations)
+    metaDict = dict()
+    metaDict_inv = dict()
+    my_tuple = tuple()
+    for meta_param in info_df.columns:
+        if not meta_param in use_meta_cols['num']:
+            continue
+        metaDict[meta_param] = info_df[meta_param]
+        metaDict[meta_param], metaDict_inv[meta_param] = num(metaDict[meta_param])
+        my_tuple = my_tuple + (metaDict[meta_param][:, None],)
 
-    #num_covs = ages[:, None]
-    num_covs = np.concatenate((ages[:, None], durations[:, None]), axis=-1)
-    #print(num_covs)
+    num_covs = np.concatenate(my_tuple, axis=-1)
     num_covs = np.int32(num_covs) # make sure all are integers
     print('num covs: ', num_covs.shape)
 
@@ -637,7 +624,7 @@ def my_prep_data(n, expr_df, info_df, seed, excl_list):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1, excl_list=None):
+             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1):
     # Train on GL liver...
 
     MODELS_DIR = odir + '/models/'
@@ -708,12 +695,10 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
     print('Gamma(Dx, Dz): {:.4f}'.format(score))
 
 
-def pcaPlot(pca, df, info_df, variable, title, gen_dir, excl_list):
+def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    for meta_param in list(info_df.columns):
-        if not excl_list is None and meta_param in excl_list:
-            continue
+    for meta_param in use_meta_cols['cat']:
         pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
 
     sns.set(style="whitegrid", font_scale=1.1)
@@ -772,7 +757,7 @@ def plot_tsne_2d(data, labels, **kwargs):
     plt.legend()
     return plt.gca()
 
-def myPlot(x, x_gen, info_df, output_dir, exclude_list):
+def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
 
     # tsne plots
     import umap.umap_ as umap
@@ -793,11 +778,9 @@ def myPlot(x, x_gen, info_df, output_dir, exclude_list):
 
     #x = standardize(x)
 
-    for meta_param in list(info_df.columns):
-        if not exclude_list is None and meta_param in exclude_list:
-            continue
-        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir, exclude_list)
-        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir, exclude_list)
+    for meta_param in use_meta_cols['cat']:
+        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
+        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir, use_meta_cols)
 
 
 def plot_gamma(gamma_list):
@@ -831,8 +814,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--train', help='boolean train or not', default='True')
     parser.add_argument('-s', '--seed', help='integer rng seed', default=0)
-    parser.add_argument('-ie', '--input_expr', help='input expression data', default='Proj2_Normalized_Counts.csv')
-    parser.add_argument('-im', '--input_meta', help='input meta data', default='all_metadata_Proj2.csv')
+    parser.add_argument('-ie', '--input_expr', help='input expression data', default=None)
+    parser.add_argument('-im', '--input_meta', help='input meta data', default=None)
+    parser.add_argument('-umf', '--use_meta_file', help='file to specify meta data to use in analysis', default=None, required=True)
     parser.add_argument('-cd', '--checkpoint_dir', help='checkpoint directory', default='checkpoints')
     parser.add_argument('-gf', '--genes_file', help='input genelist data', default='top-liver-genes.txt')
     parser.add_argument('-m', '--model', help='model file to use instead of training', default=None)
@@ -864,14 +848,13 @@ def main():
               'lr': float(options.lr), 'nb_critic': int(options.nb_critic)}
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, index_col=0)
+    with open(options.use_meta_file, 'r') as f:
+        use_meta_cols = json.load(f)
+    f.close()
 
-    if not options.excl is None:
-        exclude_list = eval(options.excl)
-    else:
-        exclude_list = None
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), exclude_list)
+    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), use_meta_cols)
 
     if eval(options.train):
         checkpoint_dir = options.checkpoint_dir
@@ -885,7 +868,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, exclude_list)
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa)
         #(gamma_list)
         gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
@@ -895,7 +878,7 @@ def main():
         nc = num_covs[0:num_samples]
 
         x_gen = predict(cc=cc, nc=nc, gen=gen)
-        myPlot(x, x_gen, info_df, options.output_dir, options.excl)
+        myPlot(x, x_gen, info_df, options.output_dir, use_meta_cols)
 
     else:
         print('not training!')
@@ -912,7 +895,7 @@ def main():
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
-        myPlot(x, x_gen, info_df, options.output_dir, exclude_list)
+        myPlot(x, x_gen, info_df, options.output_dir, use_meta_cols)
 
 
 
