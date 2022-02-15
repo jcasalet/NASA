@@ -698,7 +698,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
-    for meta_param in use_meta_cols['cat']:
+    for meta_param in list(use_meta_cols['cat']):
         pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
 
     sns.set(style="whitegrid", font_scale=1.1)
