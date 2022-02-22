@@ -7,6 +7,8 @@ def parse_args():
     parser.add_argument('-e', '--expr', help='expression file name', default=None, required=True)
     parser.add_argument('-m', '--meta', help='metadata file name', default=None, required=True)
     parser.add_argument('-o', '--out', help='output file name', default=None, required=True)
+    parser.add_argument('-ce', '--crisp_env', help='colon-sep list of vars for crisp env', default=None, required=True)
+    parser.add_argument('-k', '--key', help='key to index sample', default=None, required=True)
     return parser.parse_args()
 
 def create_dict(keyName, sampleList, metaDF):
@@ -34,9 +36,28 @@ def main():
     # replace "." with "_" in sample names
     #df['sample'] = df['sample'].str.replace('.', '-')
 
+    envVar = args.crisp_env
+    keyVar = args.key
+    envVarList = []
+    envVarArray = envVar.split(':')
+    for e in envVarArray:
+        envVarList.append(e)
 
+    # create env dict
+    env_dict = dict()
+    for i in range(len(metaDF)):
+        sample = metaDF.iloc[i][keyVar]
+        envString = ""
+        for v in envVarList:
+            if len(envString) == 0:
+                envString = v
+            else:
+                envString = envString + ':' + metaDF.iloc[i][v]
+        env_dict[sample] = envString
 
-    # create dicts
+    df['env'] = df[keyVar].map(env_dict)
+
+    # create other dicts
     for key in metaDF.columns:
         print('processing ' + key)
         if key == 'sample':
@@ -44,6 +65,8 @@ def main():
         theDict = create_dict(key, list(df['sample']), metaDF)
         # join dict to dfs
         df[key] = df['sample'].map(theDict)
+
+
 
     # save final uber table to pickle file
     df.to_pickle(args.out + '.pkl')
