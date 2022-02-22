@@ -25,7 +25,6 @@ def main():
 
     expr_df = pd.read_csv(expr_df_file, header=0, sep=',')
     meta_df = pd.read_csv(meta_df_file, header=0, sep=',')
-    genes = expr_df['gene']
 
 
     if not colName is None:
@@ -43,12 +42,14 @@ def main():
 
     # amplify set of samples that match column value
     for i in range(n):
+        counter=0
         for sample in col_samples_list:
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
             noise = np.random.normal(0, var, expr_row.shape)
             noised_expr_row = expr_row + noise
-            new_sample = sample + '_' + str(randint(0, 1000000))
+            #new_sample = sample + '_' + str(randint(0, 1000000))
+            new_sample = sample + '_' + str(i * counter)
             noised_expr_row.rename(index={sample:new_sample}, inplace=True)
             expr_df_T = expr_df_T.append(noised_expr_row, ignore_index=False)
 
@@ -57,6 +58,9 @@ def main():
             new_meta_row = meta_row.copy(deep=True)
             new_meta_row['Sample'] = new_sample
             meta_df = meta_df.append(new_meta_row, ignore_index=True)
+
+            # bump counter
+            counter += 1
 
     expr_df = expr_df_T.T
     genes = expr_df['gene']
