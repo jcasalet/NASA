@@ -194,7 +194,7 @@ def make_generator(x_dim, vocab_sizes, nb_numeric, h_dims=None, z_dim=10):
     # Define inputs
     z = tfkl.Input((z_dim,))
     nb_categoric = len(vocab_sizes)
-    cat = tfkl.Input((nb_categoric,), dtype=tf.int32)
+    cat = tfkl.Input((nb_categoric,), dtype=tf.float32)
     num = tfkl.Input((nb_numeric,), dtype=tf.float32)
 
     embed_cats = []
@@ -251,7 +251,7 @@ def make_discriminator(x_dim, vocab_sizes, nb_numeric, h_dims=None):
 
     x = tfkl.Input((x_dim,))
     nb_categoric = len(vocab_sizes)
-    cat = tfkl.Input((nb_categoric,), dtype=tf.int32)
+    cat = tfkl.Input((nb_categoric,), dtype=tf.float32)
     num = tfkl.Input((nb_numeric,), dtype=tf.float32)
 
     embed_cats = []
@@ -567,7 +567,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
 
     cat_covs = np.concatenate(my_tuple, axis=-1)
-    cat_covs = np.int32(cat_covs) # make sure all are integers
+    cat_covs = np.float32(cat_covs) # make sure all are integers
     print('Cat covs: ', cat_covs.shape)
 
     num_dicts = [] # big dict to hold all categorical dicts
@@ -588,7 +588,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
 
     num_covs = np.concatenate(my_tuple, axis=-1)
-    num_covs = np.int32(num_covs) # make sure all are integers
+    num_covs = np.float32(num_covs) # make sure all are integers
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
