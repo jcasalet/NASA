@@ -80,7 +80,6 @@ def pearson_correlation(x, y, kappa):
         if not np.any(a_std):
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
-    print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
@@ -131,6 +130,7 @@ def gamma_coef(x, y, kappa=1):
     :param y: matrix of gene expressions. Shape=(nb_samples_2, nb_genes)
     :return: Gamma(D^X, D^Z)
     """
+    print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
     gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
