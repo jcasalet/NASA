@@ -399,7 +399,7 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None, kappa=1):
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None, kappa=1, gpu=0):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
@@ -430,10 +430,13 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
     current_time = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     gen_log_dir = log_dir + current_time + '/gen'
     disc_log_dir = log_dir + current_time + '/disc'
-    gen_summary_writer = tf.summary.create_file_writer(gen_log_dir)
-    # gen_summary_writer = tf.contrib.summary.create_file_writer(gen_log_dir)
-    disc_summary_writer = tf.summary.create_file_writer(disc_log_dir)
-    # disc_summary_writer = tf.contrib.ßsummary.create_file_writer(disc_log_dir)
+
+    if gpu == 0:
+        gen_summary_writer = tf.summary.create_file_writer(gen_log_dir)
+        disc_summary_writer = tf.summary.create_file_writer(disc_log_dir)
+    else:
+        gen_summary_writer = tf.contrib.summary.create_file_writer(gen_log_dir)
+        disc_summary_writer = tf.contrib.summary.create_file_writer(disc_log_dir)
 
 
     checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
@@ -469,12 +472,16 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             gamma_list.append(score)
         # Logs
         with disc_summary_writer.as_default():
-            #tf.summary.scalar('loss', disc_losses.result())
-            tf.summary.scalar('loss', disc_losses.result(), step=epoch)
+            if gpu == 0:
+                tf.summary.scalar('loss', disc_losses.result(), step=epoch)
+            else:
+                tf.summary.scalar('loss', disc_losses.result())
 
         with gen_summary_writer.as_default():
-            tf.summary.scalar('loss', gen_losses.result(), step=epoch)
-            #tf.summary.scalar('loss', gen_losses.result())
+            if gpu == 0:
+                tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+            else:
+                tf.summary.scalar('loss', gen_losses.result())
 
         # Save the model
         if epoch % 5 == 0:
@@ -617,7 +624,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1):
+             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1, gpu=0):
     # Train on GL liver...
 
     MODELS_DIR = odir + '/models/'
@@ -681,7 +688,8 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
           log_dir=checkpoint_dir + '/logs',
           checkpoint_dir=checkpoint_dir,
           gamma_list=gamma_list,
-          kappa=kappa)
+          kappa=kappa,
+          gpu=gpu)
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test, kappa=1)(gen)
@@ -861,7 +869,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa)
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, options.gpu)
         #(gamma_list)
         gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
