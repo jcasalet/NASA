@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import argparse
 from random import randint
+from multiprocessing import Process, Queue, cpu_count
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -11,7 +13,59 @@ def parse_args():
     parser.add_argument('-v', '--var', help='variance of noise', default=0.1)
     parser.add_argument('-cn', '--colName', help='column name to replicate', default=None)
     parser.add_argument('-cv', '--colVal', help='column value to replicate', default=None)
+    parser.add_argument("-nc", "--ncpu", help="Number of processes. Default=cpu_count()", default=cpu_count())
+
     return parser.parse_args()
+
+def divide(n, d):
+   res = list()
+   qu = int(n/d)
+   rm = n%d
+   for i in range(d):
+       if i < rm:
+           res.append(qu + 1)
+       else:
+           res.append(qu)
+   return res
+
+def getStartAndEnd(partitionSizes, threadID):
+    start = 0
+    for i in range(threadID):
+        start += partitionSizes[i]
+    end = start + partitionSizes[threadID]
+
+    return start, end
+
+def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs):
+
+    results = dict()
+    partitionSizes = divide(len(samples), numProcs)
+    start, end = getStartAndEnd(partitionSizes, threadID)
+    print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
+    for i in range(n):
+        temp_meta_df = pd.DataFrame(columns=meta_df.columns)
+        temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
+        for sample in samples[start:end]:
+            # add new sample to expr data
+            expr_row = expr_samples_df[expr_samples_df.index == sample]
+            noise = np.random.normal(0, var, expr_row.shape)
+            noised_expr_row = expr_row + noise
+            new_sample = sample + '_' + str(randint(0, 1000000))
+            #new_sample = sample + '_' + str((i+1) * n)
+            noised_expr_row.rename(index={sample: new_sample}, inplace=True)
+            temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
+
+            # add new sample to meta data
+            meta_row = meta_df[meta_df['Sample'] == sample]
+            new_meta_row = meta_row.copy(deep=True)
+            new_meta_row['Sample'] = new_sample
+            temp_meta_df = temp_meta_df.append(new_meta_row, ignore_index=True)
+    #return expr_df_T, meta_df
+    results['expr_df_T'] = temp_expr_df
+    results['meta_df'] = temp_meta_df
+    print('expr dims: ', str(temp_expr_df.shape))
+    print('meta dims: ', str(temp_meta_df.shape))
+    q.put(results)
 
 def main():
     options = parse_args()
@@ -22,11 +76,10 @@ def main():
     colName = options.colName
     colVal = options.colVal
 
+    numProcs = int(options.ncpu)
 
     expr_df = pd.read_csv(expr_df_file, header=0, sep=',')
     meta_df = pd.read_csv(meta_df_file, header=0, sep=',')
-    genes = expr_df['gene']
-
 
     if not colName is None:
         col_meta_df = meta_df[meta_df[colName] == colVal]
@@ -39,24 +92,33 @@ def main():
     # subset the expr_df with samples
     expr_samples_df = expr_df[expr_df.columns.intersection(col_samples_list)].T
 
+    # save gene list
+    genes = expr_df['gene']
+    # transpose expr_df to have rows be samples
     expr_df_T = expr_df.T
 
     # amplify set of samples that match column value
-    for i in range(n):
-        for sample in col_samples_list:
-            # add new sample to expr data
-            expr_row = expr_samples_df[expr_samples_df.index == sample]
-            noise = np.random.normal(0, var, expr_row.shape)
-            noised_expr_row = expr_row + noise
-            new_sample = sample + '_' + str(randint(0, 1000000))
-            noised_expr_row.rename(index={sample:new_sample}, inplace=True)
-            expr_df_T = expr_df_T.append(noised_expr_row, ignore_index=False)
+    q = Queue()
+    processList = list()
+    for i in range(numProcs):
+        p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n,
+                                                         var, i, numProcs, ))
+        #expr_df_T, meta_df = process_samples_subset(col_samples_list, expr_samples_df, expr_df_T, meta_df, var)
+        p.start()
+        processList.append(p)
 
-            # add new sample to meta data
-            meta_row = meta_df[meta_df['Sample'] == sample]
-            new_meta_row = meta_row.copy(deep=True)
-            new_meta_row['Sample'] = new_sample
-            meta_df = meta_df.append(new_meta_row, ignore_index=True)
+    results = dict()
+    for i in range(numProcs):
+        results.update(q.get())
+        expr_df_T = expr_df_T.append(results['expr_df_T'], ignore_index=False )
+        meta_df = meta_df.append(results['meta_df'], ignore_index=False)
+
+
+    for i in range(numProcs):
+        processList[i].join()
+
+    print('expr_df_T dims:', str(expr_df_T.shape))
+    print('meta_df dims: ', str(meta_df.shape))
 
     expr_df = expr_df_T.T
     genes = expr_df['gene']
@@ -70,28 +132,5 @@ def main():
     print('new meta dims: ', str(meta_df.shape))
 
 
-
 if __name__ == "__main__":
     main()
-
-    '''genes = expr_df['gene']
-    expr_df_T = expr_df.T
-    expr_df_T_np = expr_df_T.to_numpy()
-    df_np = expr_df_T_np[1:]
-    orig_df_np = expr_df_T_np[1:]
-    orig_info_df = meta_df.copy(deep=True)
-    for i in range(0, n):
-        noise = np.random.normal(0, var, orig_df_np.shape)
-        noised_np = orig_df_np + noise
-        noised_np[noised_np<0] = 0
-        new_samples = ['sample_' + str(i) + '_' + str(j) for j in range(len(expr_df.columns)-1)]
-        orig_info_df['Sample'] = new_samples
-        info_df = meta_df.append(orig_info_df)
-        df_np = np.concatenate([df_np, noised_np])
-
-    expanded_expr_df = pd.DataFrame(data=df_np, index=meta_df['Sample'], columns=genes).T
-
-    outfilePrefix = 'expanded_' + str(n) + '_' + str(var) + '_'
-    expanded_expr_df.to_csv(outfilePrefix + 'expr.csv')
-    meta_df.to_csv(outfilePrefix + 'meta.csv', index=None)'''
-
