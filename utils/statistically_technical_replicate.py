@@ -42,9 +42,9 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     partitionSizes = divide(len(samples), numProcs)
     start, end = getStartAndEnd(partitionSizes, threadID)
     print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
+    temp_meta_df = pd.DataFrame(columns=meta_df.columns)
+    temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
     for i in range(n):
-        temp_meta_df = pd.DataFrame(columns=meta_df.columns)
-        temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
         for sample in samples[start:end]:
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
@@ -63,8 +63,8 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     #return expr_df_T, meta_df
     results['expr_df_T'] = temp_expr_df
     results['meta_df'] = temp_meta_df
-    print('expr dims: ', str(temp_expr_df.shape))
-    print('meta dims: ', str(temp_meta_df.shape))
+    print('subset expr dims: ', str(temp_expr_df.shape))
+    print('subset meta dims: ', str(temp_meta_df.shape))
     q.put(results)
 
 def main():
@@ -110,15 +110,19 @@ def main():
     results = dict()
     for i in range(numProcs):
         results.update(q.get())
+        print('results expr shape: ', str(results['expr_df_T'].shape))
+        print('results meta shape: ', str(results['meta_df'].shape))
+
         expr_df_T = expr_df_T.append(results['expr_df_T'], ignore_index=False )
         meta_df = meta_df.append(results['meta_df'], ignore_index=False)
 
+        print('expr_df_T after append dims:', str(expr_df_T.shape))
+        print('meta_df after append dims: ', str(meta_df.shape))
 
     for i in range(numProcs):
         processList[i].join()
 
-    print('expr_df_T dims:', str(expr_df_T.shape))
-    print('meta_df dims: ', str(meta_df.shape))
+
 
     expr_df = expr_df_T.T
     genes = expr_df['gene']
