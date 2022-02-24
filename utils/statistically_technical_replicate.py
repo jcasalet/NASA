@@ -106,17 +106,6 @@ def main():
         #expr_df_T, meta_df = process_samples_subset(col_samples_list, expr_samples_df, expr_df_T, meta_df, var)
         p.start()
         processList.append(p)
-    for i in range(n):
-        counter=0
-        for sample in col_samples_list:
-            # add new sample to expr data
-            expr_row = expr_samples_df[expr_samples_df.index == sample]
-            noise = np.random.normal(0, var, expr_row.shape)
-            noised_expr_row = expr_row + noise
-            new_sample = sample + '_' + str(randint(0, 1000000))
-            #new_sample = sample + '_' + str(i * counter)
-            noised_expr_row.rename(index={sample:new_sample}, inplace=True)
-            expr_df_T = expr_df_T.append(noised_expr_row, ignore_index=False)
 
     results = dict()
     for i in range(numProcs):
