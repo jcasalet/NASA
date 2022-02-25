@@ -80,6 +80,8 @@ def pearson_correlation(x, y, kappa):
         if not np.any(a_std):
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
+    print('x shape = ', str(x.shape))
+    print('y shape = ', str(y.shape))
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
