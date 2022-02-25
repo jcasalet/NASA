@@ -864,6 +864,7 @@ def main():
         kappa = float(options.kappa)
 
         np.random.seed(int(options.seed))
+        tf.random.set_seed(int(options.seed))
 
         if options.plot_gamma:
             gamma_list = list()
