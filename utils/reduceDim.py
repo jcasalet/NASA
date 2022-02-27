@@ -72,7 +72,7 @@ def main():
 
 	df_subset.insert(0, 'gene', genes)
 
-	outputFileName = exprFile.split('.csv')[0] + '__reduced_' + str(n) + '_' + str(delta) + '_' + str(sys.argv[4]) + '.csv'
+	outputFileName = exprFile.split('.csv')[0] + '__reduced_' + str(n) + '_' + str(delta) + '_' + str(alpha) + '.csv'
 
 	df_subset.to_csv(outputFileName, sep=',', index=None)
 
