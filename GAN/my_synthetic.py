@@ -549,7 +549,7 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF, indices
 
-def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
+def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
     # Process categorical metadata
     cat_dicts = [] # big dict to hold all categorical dicts
@@ -618,9 +618,9 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols):
     num_covs = num_covs[idx, :]
     cat_covs = cat_covs[idx, :]'''
 
-    x_train, x_test = split_train_test(x=x, train_rate=0.9)
-    num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=0.9)
-    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=0.9)
+    x_train, x_test = split_train_test(x=x, train_rate=train_percent)
+    num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=train_percent)
+    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=train_percent)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
@@ -838,6 +838,7 @@ def parse_args():
     parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
     parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
+    parser.add_argument('-tp', '--train_percent', help='percentage to split for training', default=0.80, required=False)
     return parser.parse_args()
     
 def main():
@@ -857,7 +858,7 @@ def main():
 
 
     cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, \
-    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), use_meta_cols)
+    x_train, = my_prep_data(int(options.num_genes), expr_df, info_df, int(options.seed), use_meta_cols, float(options.train_percent))
 
     if eval(options.train):
         checkpoint_dir = options.checkpoint_dir
