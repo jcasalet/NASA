@@ -128,9 +128,12 @@ def main():
     expr_df = expr_df.drop(columns=['gene'])
     expr_df = np.clip(expr_df, 0, a_max=None)
     expr_df.insert(0, 'gene', genes)
-    outputFileNameSuffix = '__expanded_' + str(n) + '_' + str(var) + '_' + str(colVal) + '.csv'
-    expr_df.to_csv(expr_df_file.split('.')[0] + outputFileNameSuffix, index=False)
-    meta_df.to_csv(meta_df_file.split('.')[0] + outputFileNameSuffix, index=False)
+    if not colVal is None:
+        outputFileNameSuffix = '__expanded_' + str(n) + '_' + str(var) + '_' + str(colName) + '_' + str(colVal) + '.csv'
+    else:
+        outputFileNameSuffix = '__expanded_' + str(n) + '_' + str(var) + '.csv'
+    expr_df.to_csv(expr_df_file.split('.csv')[0] + outputFileNameSuffix, index=False)
+    meta_df.to_csv(meta_df_file.split('.csv')[0] + outputFileNameSuffix, index=False)
     print('new expr dims: ', str(expr_df.shape))
     print('new meta dims: ', str(meta_df.shape))
 
