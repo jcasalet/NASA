@@ -44,13 +44,18 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
     temp_meta_df = pd.DataFrame(columns=meta_df.columns)
     temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
+    myRands = list()
     for i in range(n):
         for sample in samples[start:end]:
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
             noise = np.random.normal(0, var, expr_row.shape)
             noised_expr_row = expr_row + noise
-            new_sample = sample + '_' + str(randint(0, 1000000))
+            myRand = randint(0, 1000000)
+            while myRand in myRands:
+                myRand = randint(0, 1000000)
+            myRands.append(myRand)
+            new_sample = sample + '_' + str(myRand)
             #new_sample = sample + '_' + str((i+1) * n * threadID)
             noised_expr_row.rename(index={sample: new_sample}, inplace=True)
             temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
