@@ -43,6 +43,7 @@ def main():
     for e in envVarArray:
         envVarList.append(e)
 
+    print(envVarList)
     # create env dict
     env_dict = dict()
     for i in range(len(metaDF)):
@@ -50,11 +51,10 @@ def main():
         envString = ""
         for v in envVarList:
             if len(envString) == 0:
-                envString = v
+                envString = metaDF.iloc[i][v]
             else:
                 envString = envString + ':' + metaDF.iloc[i][v]
         env_dict[sample] = envString
-
     df['env'] = df[keyVar].map(env_dict)
 
     # create other dicts
