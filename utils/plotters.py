@@ -5,7 +5,6 @@ import numpy as np
 from sklearn.decomposition import PCA
 import argparse
 import json
-import tensorflow as tf
 
 
 def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
