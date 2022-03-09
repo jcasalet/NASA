@@ -70,7 +70,7 @@ def plot_tsne_2d(data, labels, **kwargs):
     plt.legend()
     return plt.gca()
 
-def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
+def myPlot(x, info_df, output_dir, use_meta_cols):
 
     # tsne plots
     '''import umap.umap_ as umap
@@ -92,8 +92,7 @@ def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
     #x = standardize(x)
 
     for meta_param in list(use_meta_cols['cat']):
-        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Real_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
-        pcaPlot(pca, x_gen, info_df, meta_param, meta_param + '_Fake_Dataset_' + 'n=' + str(x_gen.shape[0]), output_dir, use_meta_cols)
+        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
 
 
 def plot_gamma(gamma_list):
@@ -118,9 +117,8 @@ def main():
     f.close()
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     info_df = pd.read_csv(options.input_meta, header=0, sep=',')
-    expr_gen = pd.read_csv(options.output_dir + '/gen.csv', sep=',')
 
-    myPlot(expr_df, expr_gen, info_df, options.output_dir, use_meta_cols)
+    myPlot(expr_df, info_df, options.output_dir, use_meta_cols)
 
 
 
