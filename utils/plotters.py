@@ -116,9 +116,19 @@ def main():
         use_meta_cols = json.load(f)
     f.close()
     expr_df = pd.read_csv(options.input_expr, index_col=0)
+    x = np.log10(1+ expr_df)
+    x = np.float32(x)
+
+    # transpose matrix
+    x = x.T
+    # find n most varied genes
+    #x, indices = my_find_mostvaried(x, n)
+
+    # standardize expression data
+    x = (x - x.mean()) / x.std()
     info_df = pd.read_csv(options.input_meta, header=0, sep=',')
 
-    myPlot(expr_df, info_df, options.output_dir, use_meta_cols)
+    myPlot(x, info_df, options.output_dir, use_meta_cols)
 
 
 
