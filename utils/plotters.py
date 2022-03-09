@@ -73,7 +73,7 @@ def plot_tsne_2d(data, labels, **kwargs):
 def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
 
     # tsne plots
-    import umap.umap_ as umap
+    '''import umap.umap_ as umap
     print('x shape = ' + str(x.shape))
     print('x_gen shape = ' + str(x_gen.shape))
     x_combined = np.concatenate((x, x_gen))
@@ -85,7 +85,7 @@ def myPlot(x, x_gen, info_df, output_dir, use_meta_cols):
     plot_tsne_2d(emb_2d, labels=np.array(categories), s=4)
     plt.title('UMAP real/synthetic')
     #plt.show()
-    plt.savefig(output_dir + '/umap_real_v_synthetic.png', dpi=300)
+    plt.savefig(output_dir + '/umap_real_v_synthetic.png', dpi=300)'''
 
     pca = PCA(n_components=2)
 
