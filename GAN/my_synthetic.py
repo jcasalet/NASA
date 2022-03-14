@@ -66,7 +66,7 @@ def my_correlation(x, y):
     return pearsonr(list(x.flatten()), list(y.flatten()))[0]
 
 
-def pearson_correlation(x, y, kappa):
+def pearson_correlation(x, y, kappa=1):
     """
     Computes similarity measure between each pair of genes in the bipartite graph x <-> y
     :param x: Gene matrix 1. Shape=(nb_samples, nb_genes_1)
@@ -74,21 +74,15 @@ def pearson_correlation(x, y, kappa):
     :return: Matrix with shape (nb_genes_1, nb_genes_2) containing the similarity coefficients
     """
 
-    '''def standardize(a, kappa=1):
+    def standardize(a, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
         if not np.any(a_std):
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
-    print('before stdize: x shape = ', str(x.shape))
-    print('before stdize: y shape = ', str(y.shape))
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
-    print('after stdize: x shape = ', str(x.shape))
-    print('after stdize: y shape = ', str(y.shape))'''
-    x_ = x
-    y_ = y
     return np.dot(x_.T, y_) / x.shape[0]
 
 def cosine_similarity(x, y):
@@ -128,7 +122,7 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    corr = pearson_correlation(x, y, kappa)
+    corr = cosine_similarity(x, y)
     result = upper_diag_list(corr)
     return result
     #return upper_diag_list(pearson_correlation(x, y, kappa))
@@ -144,7 +138,7 @@ def gamma_coef(x, y, kappa=1):
     print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
-    gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
+    gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     return gamma_dx_dy
 
 
