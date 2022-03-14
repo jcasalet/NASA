@@ -74,7 +74,7 @@ def pearson_correlation(x, y, kappa):
     :return: Matrix with shape (nb_genes_1, nb_genes_2) containing the similarity coefficients
     """
 
-    def standardize(a, kappa=1):
+    '''def standardize(a, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
         if not np.any(a_std):
@@ -86,9 +86,10 @@ def pearson_correlation(x, y, kappa):
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
     print('after stdize: x shape = ', str(x.shape))
-    print('after stdize: y shape = ', str(y.shape))
+    print('after stdize: y shape = ', str(y.shape))'''
+    x_ = x
+    y_ = y
     return np.dot(x_.T, y_) / x.shape[0]
-
 
 def cosine_similarity(x, y):
     """
