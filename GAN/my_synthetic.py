@@ -92,7 +92,7 @@ def cosine_similarity(x, y):
     :param y: Array of numbers. Shape=(n,)
     :return: cosine similarity between vectors
     """
-    return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+    return np.dot(x.T, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 
 def upper_diag_list(m_):
