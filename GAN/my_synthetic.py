@@ -114,6 +114,7 @@ def upper_diag_list(m_):
     tril = np.tril(tril)
     m += tril
     m = np.ravel(m)
+    print('shape of m the upper-diag matr before isnan: ', str(m.shape))
     m = m[~np.isnan(m)]
     print('shape of m the upper-diag matr after isnan: ', str(m.shape))
 
