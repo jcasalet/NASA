@@ -27,64 +27,9 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
     plt.savefig(gen_dir + '/' + title, dpi=300)
     plt.close()
 
-def tsne_2d(data, **kwargs):
-    """
-    Transform data to 2d tSNE representation
-    :param data: expression data. Shape=(dim1, dim2)
-    :param kwargs: tSNE kwargs
-    :return:
-    """
-    from sklearn.manifold import TSNE
-    print('... performing tSNE')
-    tsne = TSNE(n_components=2, **kwargs)
-    return tsne.fit_transform(data)
 
-def plot_tsne_2d(data, labels, **kwargs):
-    """
-    Plots tSNE for the provided data, coloring the labels
-    :param data: expression data. Shape=(dim1, dim2)
-    :param labels: color labels. Shape=(dim1,)
-    :param kwargs: tSNE kwargs
-    :return: matplotlib axes
-    """
-    dim1, dim2 = data.shape
-
-    # Prepare label dict and color map
-    label_set = set(labels)
-    label_dict = {k: v for k, v in enumerate(label_set)}
-
-    # Perform tSNE
-    if dim2 == 2:
-        # print('plot_tsne_2d: Not performing tSNE. Shape of second dimension is 2')
-        data_2d = data
-    elif dim2 > 2:
-        data_2d = tsne_2d(data, **kwargs)
-    else:
-        raise ValueError('Shape of second dimension is <2: {}'.format(dim2))
-
-    # Plot scatterplot
-    for k, v in label_dict.items():
-        plt.scatter(data_2d[labels == v, 0], data_2d[labels == v, 1],
-                    label=v)
-    plt.legend()
-    return plt.gca()
 
 def myPlot(x, info_df, output_dir, use_meta_cols):
-
-    # tsne plots
-    '''import umap.umap_ as umap
-    print('x shape = ' + str(x.shape))
-    print('x_gen shape = ' + str(x_gen.shape))
-    x_combined = np.concatenate((x, x_gen))
-    categories = ['real'] * x.shape[0] + ['fake'] * x_gen.shape[0]
-    #tissues_test = [info_df[tidx] for tidx in info_df[:, 0]]
-    #tissues_combined = tissues_test + tissues_test
-    emb_2d = umap.UMAP().fit_transform(x_combined)
-    plt.figure(figsize=(10, 10))
-    plot_tsne_2d(emb_2d, labels=np.array(categories), s=4)
-    plt.title('UMAP real/synthetic')
-    #plt.show()
-    plt.savefig(output_dir + '/umap_real_v_synthetic.png', dpi=300)'''
 
     pca = PCA(n_components=2)
 
@@ -92,13 +37,6 @@ def myPlot(x, info_df, output_dir, use_meta_cols):
 
     for meta_param in list(use_meta_cols['cat']):
         pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
-
-
-def plot_gamma(gamma_list):
-
-    plt.plot(list(range(len(gamma_list))), gamma_list)
-    plt.ylim([0, 1])
-    plt.savefig('./' + 'gamma_scores', dpi=300)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -117,12 +55,8 @@ def main():
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     x = np.log10(1+ expr_df)
     x = np.float32(x)
-
     # transpose matrix
     x = x.T
-    # find n most varied genes
-    #x, indices = my_find_mostvaried(x, n)
-
     # standardize expression data
     x = (x - x.mean()) / x.std()
     info_df = pd.read_csv(options.input_meta, header=0, sep=',')
