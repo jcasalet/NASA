@@ -80,11 +80,13 @@ def pearson_correlation(x, y, kappa):
         if not np.any(a_std):
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
-    print('x shape = ', str(x.shape))
-    print('y shape = ', str(y.shape))
+    print('before stdize: x shape = ', str(x.shape))
+    print('before stdize: y shape = ', str(y.shape))
     assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
+    print('after stdize: x shape = ', str(x.shape))
+    print('after stdize: y shape = ', str(y.shape))
     return np.dot(x_.T, y_) / x.shape[0]
 
 
@@ -105,12 +107,16 @@ def upper_diag_list(m_):
     :return: list of values in the upper-diagonal of m_ (from top to bottom and from
              left to right). Shape=(N*(N-1)/2,)
     """
+    print('in upper diag list')
     m = np.triu(m_, k=1)  # upper-diagonal matrix
     tril = np.zeros_like(m_) + np.nan
     tril = np.tril(tril)
     m += tril
     m = np.ravel(m)
-    return m[~np.isnan(m)]
+    m = m[~np.isnan(m)]
+    print('shape of m the upper-diag matr after isnan: ', str(m.shape))
+
+    return m
 
 
 def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
@@ -120,9 +126,10 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    #corr = corr_fn(x, y, kappa)
-    #return upper_diag_list(corr)
-    return upper_diag_list(pearson_correlation(x, y, kappa))
+    corr = corr_fn(x, y, kappa)
+    result = upper_diag_list(corr)
+    return result
+    #return upper_diag_list(pearson_correlation(x, y, kappa))
 
 
 def gamma_coef(x, y, kappa=1):
