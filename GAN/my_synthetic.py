@@ -849,6 +849,7 @@ def parse_args():
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
     parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
     parser.add_argument('-tp', '--train_percent', help='percentage to split for training', default=0.80, required=False)
+    parser.add_argument('-us', '--un_standardize', help='boolean unstdize gen.csv', default=False, required=False)
     return parser.parse_args()
     
 def main():
@@ -907,7 +908,8 @@ def main():
         expr_df_samples = expr_df.T.index[0:num_samples]
         expr_df_genes = expr_df.index
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
-        x_gen_df = un_standardize(expr_df, x_gen_df)
+        if eval(options.un_standardize):
+            x_gen_df = un_standardize(expr_df, x_gen_df)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
         myPlot(x, x_gen, info_df, options.output_dir, use_meta_cols)
