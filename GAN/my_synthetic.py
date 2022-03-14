@@ -893,6 +893,8 @@ def main():
         nc = num_covs[0:num_samples]
 
         x_gen = predict(cc=cc, nc=nc, gen=gen)
+        x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df.index, columns=expr_df.T.index[0:num_samples])
+        x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         myPlot(x, x_gen, info_df, options.output_dir, use_meta_cols)
 
     else:
