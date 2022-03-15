@@ -494,7 +494,11 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
         if epoch % 5 == 0:
             checkpoint.save(file_prefix=checkpoint_prefix)
 
-            score = score_fn(gen)
+            try:
+                score = score_fn(gen)
+            except Exception as e:
+                print('exception in scoring function: ', str(e))
+                continue
             if score > best_score:
                 print('Saving model ...')
                 save_fn()
