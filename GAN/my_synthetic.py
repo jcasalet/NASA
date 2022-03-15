@@ -78,6 +78,7 @@ def pearson_correlation(x, y, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
         if not np.any(a_std):
+            print('failed np.any(a_std')
             return np.zeros(a.shape)
         return (a - a_off) / (a_std + kappa)
     assert x.shape[0] == y.shape[0]
@@ -122,7 +123,8 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    corr = pearson_correlation(x, y)
+    #corr = pearson_correlation(x, y)
+    corr = my_correlation(x,y)
     result = upper_diag_list(corr)
     return result
     #return upper_diag_list(pearson_correlation(x, y, kappa))
