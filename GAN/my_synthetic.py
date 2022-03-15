@@ -480,7 +480,7 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
                 gamma_list.append(score)
             except Exception as e:
                 print('exception in score function: ', str(e))
-                continue
+                break
         # Logs
         with disc_summary_writer.as_default():
             if gpu == 0:
@@ -502,7 +502,7 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
                 score = score_fn(gen)
             except Exception as e:
                 print('exception in scoring function: ', str(e))
-                continue
+                break
             if score > best_score:
                 print('Saving model ...')
                 save_fn()
@@ -891,7 +891,7 @@ def main():
         np.random.seed(int(options.seed))
         tf.random.set_seed(int(options.seed))
 
-        if options.plot_gamma:
+        if eval(options.plot_gamma):
             gamma_list = list()
         else:
             gamma_list = None
