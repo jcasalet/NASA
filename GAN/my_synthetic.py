@@ -124,7 +124,7 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param corr_fn: correlation function taking x and y as inputs
     """
     #corr = pearson_correlation(x, y)
-    corr = pearson_correlation(x,y)
+    corr = pearson_correlation(x,y, kappa)
     result = upper_diag_list(corr)
     return result
     #return upper_diag_list(pearson_correlation(x, y, kappa))
