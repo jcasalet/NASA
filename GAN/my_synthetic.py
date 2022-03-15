@@ -81,7 +81,7 @@ def pearson_correlation(x, y, kappa=1):
             print('failed np.any(a_std')
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
-    assert x.shape[0] == y.shape[0]
+        assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
     return np.dot(x_.T, y_) / x.shape[0]
@@ -475,8 +475,12 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
             gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
             gen_losses(gen_loss)
         if not gamma_list is None:
-            score = score_fn(gen, kappa=kappa)
-            gamma_list.append(score)
+            try:
+                score = score_fn(gen, kappa=kappa)
+                gamma_list.append(score)
+            except Exception as e:
+                print('exception in score function: ', str(e))
+                continue
         # Logs
         with disc_summary_writer.as_default():
             if gpu == 0:
