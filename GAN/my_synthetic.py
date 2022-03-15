@@ -12,6 +12,7 @@ import pandas as pd
 from sklearn import preprocessing
 from numpy import linalg as LA
 import json
+import sys
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -458,71 +459,72 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
     initial_patience = patience
 
     for epoch in range(epochs):
-        for i in range(0, len(dataset), batch_size):
-            x = dataset[i: i + batch_size, :]
-            cc = cat_covs[i: i + batch_size, :]
-            nc = num_covs[i: i + batch_size, :]
+        try:
+            for i in range(0, len(dataset), batch_size):
+                x = dataset[i: i + batch_size, :]
+                cc = cat_covs[i: i + batch_size, :]
+                nc = num_covs[i: i + batch_size, :]
 
-            # Train critic
-            disc_loss = None
-            for _ in range(nb_critic):
+                # Train critic
+                disc_loss = None
+                for _ in range(nb_critic):
+                    z = tf.random.normal([x.shape[0], z_dim])
+                    disc_loss = train_disc(x, z, cc, nc, gen, disc, disc_opt, p_aug=p_aug, norm_scale=norm_scale)
+                disc_losses(disc_loss)
+
+                # Train generator
                 z = tf.random.normal([x.shape[0], z_dim])
-                disc_loss = train_disc(x, z, cc, nc, gen, disc, disc_opt, p_aug=p_aug, norm_scale=norm_scale)
-            disc_losses(disc_loss)
+                gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
+                gen_losses(gen_loss)
+            if not gamma_list is None:
+                try:
+                    score = score_fn(gen, kappa=kappa)
+                    gamma_list.append(score)
+                except Exception as e:
+                    print('exception in score function: ', str(e))
+                    sys.exit()
+            # Logs
+            with disc_summary_writer.as_default():
+                if gpu == 0:
+                    tf.summary.scalar('loss', disc_losses.result(), step=epoch)
+                else:
+                    tf.summary.scalar('loss', disc_losses.result())
 
-            # Train generator
-            z = tf.random.normal([x.shape[0], z_dim])
-            gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
-            gen_losses(gen_loss)
-        if not gamma_list is None:
-            try:
-                score = score_fn(gen, kappa=kappa)
-                gamma_list.append(score)
-            except Exception as e:
-                print('exception in score function: ', str(e))
-                break
-        # Logs
-        with disc_summary_writer.as_default():
-            if gpu == 0:
-                tf.summary.scalar('loss', disc_losses.result(), step=epoch)
-            else:
-                tf.summary.scalar('loss', disc_losses.result())
+            with gen_summary_writer.as_default():
+                if gpu == 0:
+                    tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+                else:
+                    tf.summary.scalar('loss', gen_losses.result())
 
-        with gen_summary_writer.as_default():
-            if gpu == 0:
-                tf.summary.scalar('loss', gen_losses.result(), step=epoch)
-            else:
-                tf.summary.scalar('loss', gen_losses.result())
+            # Save the model
+            if epoch % 5 == 0:
+                checkpoint.save(file_prefix=checkpoint_prefix)
 
-        # Save the model
-        if epoch % 5 == 0:
-            checkpoint.save(file_prefix=checkpoint_prefix)
-
-            try:
                 score = score_fn(gen)
-            except Exception as e:
-                print('exception in scoring function: ', str(e))
-                break
-            if score > best_score:
-                print('Saving model ...')
-                save_fn()
-                best_score = score
-                patience = initial_patience
-            else:
-                patience -= 1
+
+                if score > best_score:
+                    print('Saving model ...')
+                    save_fn()
+                    best_score = score
+                    patience = initial_patience
+                else:
+                    patience -= 1
+
+                if verbose:
+                    print('Score: {:.3f}'.format(score))
 
             if verbose:
-                print('Score: {:.3f}'.format(score))
+                print('Epoch {}. Gen loss: {:.2f}. Disc loss: {:.2f}'.format(epoch + 1,
+                                                                             gen_losses.result(),
+                                                                             disc_losses.result()))
+            gen_losses.reset_states()
+            disc_losses.reset_states()
 
-        if verbose:
-            print('Epoch {}. Gen loss: {:.2f}. Disc loss: {:.2f}'.format(epoch + 1,
-                                                                         gen_losses.result(),
-                                                                         disc_losses.result()))
-        gen_losses.reset_states()
-        disc_losses.reset_states()
-
-        if patience == 0:
-            break
+            if patience == 0:
+                break
+        except Exception as e:
+            print('exception in batch: ', str(e))
+            continue
 
 
 def predict(cc, nc, gen, z=None, training=False):
