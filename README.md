@@ -1,1 +1,115 @@
-# NASA
+# Summary 
+
+Gene expression data from RNA sequencing (RNASeq) experiments yields valuable information about the state of a organ, and by extension, the state of an organism. RNASeq data sets often suffer from the curse of dimensionality -- having several orders of magnitude more columns than rows -- which makes analysis difficult.  Moreover, data from humans is protected by privacy policies and therefore difficult or impossible to obtain.
+
+Assuming there is sufficient data to study, what's lacking in the field is an objective way to measure the performance of machine learning and artificial intelligence algorithms on these data sets.
+
+This software repository contains scripts that resolve the aforementioned issues. 
+
+# Generate fake expression data 
+Run the following steps to generate fake gene expression data. 
+
+## Clone the repo.
+1. Clone this github repository to your local system. 
+
+```console
+$ git clone https://github.com/jcasalet/NASA
+```
+
+2. Change directory to the `NASA` directory. 
+
+```console
+$ cd NASA 
+```
+
+## Permute the expression data and the metadata 
+Run the following steps to permute the data and metadata so that the samples are in the same order.  Subsequent software in this pipeline requires this.
+
+1. Examine the first column of the original expression data and first row of the original meta data.  Note that they are not the same.
+```console
+$ sed -n '1,1 p' examples/data/expr.csv | awk -F, '{print $2}' 
+
+$ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
+```
+
+2. Run the permuteSamples.py script.
+
+```console
+$ python utils/permuteSamples.py examples/data/expr.csv examples/data/meta.csv
+```
+
+
+3. Examine the first column of the permuted expression data and first row of the permuted meta data.  Note that they are the same.
+
+```console
+$ sed -n '1,1 p' examples/data/expr_permuted.csv | awk -F, '{print $2}' 
+
+$ sed -n '2,2 p' examples/data/meta_permuted.csv | awk -F, '{print $1}'
+```
+
+
+## Reduce the dimensionality of the original data set. 
+To reduce the number of rows (genes) in a data set, perform the following steps:
+
+1. Run the `wc` command to determine the number of genes  
+
+```console
+$ wc -l examples/data/expr_permuted.csv 
+```
+
+2. Run the reduceDim.py script.
+
+```console
+$ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 29000 -d 10 -a 90
+```
+
+3. Run the `wc` command to determine number of genes after reduction. 
+```console
+$ wc -l examples/data/expr_permuted__reduced_29000_10_0.9.csv 
+```
+
+## Increase the number of technical replicates  
+To increase the number of technical replicates, perform the following steps:
+
+1. Determine the number of samples in the original data set.
+```console
+$ wc -l examples/data/meta_permuted.csv  
+```
+
+2. Run the statistically_technical_replicate.py script
+```console
+$ python utils/statistically_technical_replicate.py \
+-e examples/data/expr_permuted__reduced_29000_10_0.9.csv \
+-m examples/data/meta_permuted.csv \
+-n 50 \
+-v 10
+```
+
+3. Determine the number of samples in the amplified data set.
+```console
+$ wc -l examples/data/meta_permuted_50.csv  
+```
+
+## Use a GAN to generate a fake data set
+To create a synthetic gene expression data set, perform the following steps:
+
+1. Create a meta JSON file to indicate which meta data are numerical and which are categorical.
+```console
+$ cat examples/data/meta.json 
+```
+
+2. Make an output directory
+```console
+$ mkdir /tmp/gan-out 
+```
+
+
+3. Run the gen_fake_expr.py script
+```console
+$ python GAN/gen_fake_expr.py -ie examples/data/expr_permuted__reduced_2900_10_0.9__expanded_50_10.csv  -im meta_permuted__expanded_50_0.1.csv -od  /tmp/gan-out  -umf examples/data/meta.json
+```
+
+3. Examine the output
+```console
+$ ls -R /tmp/gan-out 
+```

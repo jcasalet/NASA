@@ -6,10 +6,8 @@ import operator
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-import random
 import argparse
 import pandas as pd
-from sklearn import preprocessing
 from numpy import linalg as LA
 import json
 import sys
@@ -17,12 +15,6 @@ import sys
 tfk = tf.keras
 tfkl = tf.keras.layers
 tf.compat.v1.enable_eager_execution()
-
-
-# ------------------
-# RNASeqDB
-# ------------------
-
 
 # ---------------------
 # DATA UTILITIES
@@ -50,19 +42,12 @@ def split_train_test(x, train_rate=0.75, seed=0):
     x_test = x[split_point:]
     return x_train, x_test
 
-
-# ------------------
-# E. coli M3D
-# ------------------
-
-
-
 # ---------------------
 # CORRELATION UTILITIES
 # ---------------------
 
 def my_correlation(x, y):
-    from scipy.stats import spearmanr
+    #from scipy.stats import spearmanr
     from scipy.stats import pearsonr
     return pearsonr(list(x.flatten()), list(y.flatten()))[0]
 
@@ -79,10 +64,9 @@ def pearson_correlation(x, y, kappa=1):
         a_off = np.mean(a, axis=0)
         a_std = np.std(a, axis=0)
         if not np.any(a_std):
-            print('failed np.any(a_std')
             return np.zeros(a.shape)
         return (a - a_off) / (a_std * kappa)
-        assert x.shape[0] == y.shape[0]
+    assert x.shape[0] == y.shape[0]
     x_ = standardize(x, kappa)
     y_ = standardize(y, kappa)
     return np.dot(x_.T, y_) / x.shape[0]
@@ -104,16 +88,12 @@ def upper_diag_list(m_):
     :return: list of values in the upper-diagonal of m_ (from top to bottom and from
              left to right). Shape=(N*(N-1)/2,)
     """
-    print('in upper diag list')
     m = np.triu(m_, k=1)  # upper-diagonal matrix
     tril = np.zeros_like(m_) + np.nan
     tril = np.tril(tril)
     m += tril
     m = np.ravel(m)
-    print('shape of m the upper-diag matr before isnan: ', str(m.shape))
     m = m[~np.isnan(m)]
-    print('shape of m the upper-diag matr after isnan: ', str(m.shape))
-
     return m
 
 
@@ -124,12 +104,10 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param y: Gene matrix 2. Shape=(nb_samples, nb_genes_2)
     :param corr_fn: correlation function taking x and y as inputs
     """
-    #corr = pearson_correlation(x, y)
-    corr = pearson_correlation(x,y, kappa)
+    #corr = pearson_correlation(x,y, kappa)
+    corr = cosine_similarity(x, y)
     result = upper_diag_list(corr)
     return result
-    #return upper_diag_list(pearson_correlation(x, y, kappa))
-
 
 def gamma_coef(x, y, kappa=1):
     """
@@ -142,19 +120,8 @@ def gamma_coef(x, y, kappa=1):
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
     gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
+    #gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     return gamma_dx_dy
-
-
-# ---------------------
-# CLUSTERING UTILITIES
-# ---------------------
-
-# ---------------------
-# PLOTTING UTILITIES
-# ---------------------
-
-# %load adversarial-gene-expression/tf_utils.py
-
 
 
 # ------------------
@@ -459,72 +426,72 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
     initial_patience = patience
 
     for epoch in range(epochs):
-        try:
-            for i in range(0, len(dataset), batch_size):
-                x = dataset[i: i + batch_size, :]
-                cc = cat_covs[i: i + batch_size, :]
-                nc = num_covs[i: i + batch_size, :]
+        for i in range(0, len(dataset), batch_size):
+            x = dataset[i: i + batch_size, :]
+            cc = cat_covs[i: i + batch_size, :]
+            nc = num_covs[i: i + batch_size, :]
 
-                # Train critic
-                disc_loss = None
-                for _ in range(nb_critic):
-                    z = tf.random.normal([x.shape[0], z_dim])
-                    disc_loss = train_disc(x, z, cc, nc, gen, disc, disc_opt, p_aug=p_aug, norm_scale=norm_scale)
-                disc_losses(disc_loss)
-
-                # Train generator
+            # Train critic
+            disc_loss = None
+            for _ in range(nb_critic):
                 z = tf.random.normal([x.shape[0], z_dim])
-                gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
-                gen_losses(gen_loss)
-            if not gamma_list is None:
-                try:
-                    score = score_fn(gen, kappa=kappa)
-                    gamma_list.append(score)
-                except Exception as e:
-                    print('exception in score function: ', str(e))
-                    sys.exit()
-            # Logs
-            with disc_summary_writer.as_default():
-                if gpu == 0:
-                    tf.summary.scalar('loss', disc_losses.result(), step=epoch)
-                else:
-                    tf.summary.scalar('loss', disc_losses.result())
+                disc_loss = train_disc(x, z, cc, nc, gen, disc, disc_opt, p_aug=p_aug, norm_scale=norm_scale)
+            disc_losses(disc_loss)
 
-            with gen_summary_writer.as_default():
-                if gpu == 0:
-                    tf.summary.scalar('loss', gen_losses.result(), step=epoch)
-                else:
-                    tf.summary.scalar('loss', gen_losses.result())
+            # Train generator
+            z = tf.random.normal([x.shape[0], z_dim])
+            gen_loss = train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=p_aug, norm_scale=norm_scale)
+            gen_losses(gen_loss)
+        if not gamma_list is None:
+            try:
+                score = score_fn(gen, kappa=kappa)
+                gamma_list.append(score)
+            except Exception as e:
+                print('exception in score function: ', str(e))
+                sys.exit(1)
+        # Logs
+        with disc_summary_writer.as_default():
+            if gpu == 0:
+                tf.summary.scalar('loss', disc_losses.result(), step=epoch)
+            else:
+                tf.summary.scalar('loss', disc_losses.result())
 
-            # Save the model
-            if epoch % 5 == 0:
-                checkpoint.save(file_prefix=checkpoint_prefix)
+        with gen_summary_writer.as_default():
+            if gpu == 0:
+                tf.summary.scalar('loss', gen_losses.result(), step=epoch)
+            else:
+                tf.summary.scalar('loss', gen_losses.result())
 
+        # Save the model
+        if epoch % 5 == 0:
+            checkpoint.save(file_prefix=checkpoint_prefix)
+            try:
                 score = score_fn(gen)
+            except Exception as e:
+                print('exception in score fcn: ', str(e))
+                sys.exit(1)
 
-                if score > best_score:
-                    print('Saving model ...')
-                    save_fn()
-                    best_score = score
-                    patience = initial_patience
-                else:
-                    patience -= 1
-
-                if verbose:
-                    print('Score: {:.3f}'.format(score))
+            if score > best_score:
+                print('Saving model ...')
+                save_fn()
+                best_score = score
+                patience = initial_patience
+            else:
+                patience -= 1
 
             if verbose:
-                print('Epoch {}. Gen loss: {:.2f}. Disc loss: {:.2f}'.format(epoch + 1,
-                                                                             gen_losses.result(),
-                                                                             disc_losses.result()))
-            gen_losses.reset_states()
-            disc_losses.reset_states()
+                print('Score: {:.3f}'.format(score))
 
-            if patience == 0:
-                break
-        except Exception as e:
-            print('exception in batch: ', str(e))
-            continue
+        if verbose:
+            print('Epoch {}. Gen loss: {:.2f}. Disc loss: {:.2f}'.format(epoch + 1,
+                                                                         gen_losses.result(),
+                                                                         disc_losses.result()))
+        gen_losses.reset_states()
+        disc_losses.reset_states()
+
+        if patience == 0:
+            break
+
 
 
 def predict(cc, nc, gen, z=None, training=False):
@@ -571,7 +538,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     def cat(var):
         var_dict_inv = np.array(list(sorted(set(var))))
         var_dict = {t: i for i, t in enumerate(var_dict_inv)}
-        var = np.vectorize(lambda t: var_dict[t])(var) # convert to integer
+        var = np.vectorize(lambda t: var_dict[t])(var)
         cat_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
@@ -584,15 +551,15 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
 
     cat_covs = np.concatenate(my_tuple, axis=-1)
-    cat_covs = np.float32(cat_covs) # make sure all are integers
+    cat_covs = np.float32(cat_covs)
     print('Cat covs: ', cat_covs.shape)
 
-    num_dicts = [] # big dict to hold all categorical dicts
+    num_dicts = [] # big dict to hold all numerical dicts
     def num(var):
         '''Function to repeatedly process categorical metadata. Pass in a column ("var") from info_df as a variable.'''
         var_dict_inv = np.array(list(sorted(set(var))))
         var_dict = {t: i for i, t in enumerate(var_dict_inv)}
-        var = np.vectorize(lambda t: var_dict[t])(var) # convert to integer
+        var = np.vectorize(lambda t: var_dict[t])(var)
         num_dicts.append(var_dict_inv) # add to big dict
         return var, var_dict_inv
 
@@ -605,7 +572,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
         my_tuple = my_tuple + (metaDict[meta_param][:, None],)
 
     num_covs = np.concatenate(my_tuple, axis=-1)
-    num_covs = np.float32(num_covs) # make sure all are integers
+    num_covs = np.float32(num_covs)
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
@@ -618,21 +585,9 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     #x, indices = my_find_mostvaried(x, n)
 
     # standardize expression data
-    x = (x - x.mean()) / x.std()
-
-    '''num_covs = np.zeros((x.shape[0], 1), dtype=np.float32)
-    print('Num covs: ', num_covs.shape)'''
+    #x = (x - x.mean()) / x.std()
 
     # Train/test split
-
-    '''idx = np.arange(x.shape[0])
-    np.random.seed(seed)
-    np.random.shuffle(idx)
-    np.savetxt('idx.txt', idx.astype(int), fmt='%i', delimiter=',')
-    x = x[idx, :]
-    num_covs = num_covs[idx, :]
-    cat_covs = cat_covs[idx, :]'''
-
     x_train, x_test = split_train_test(x=x, train_rate=train_percent)
     num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=train_percent)
     cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=train_percent)
