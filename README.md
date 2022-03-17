@@ -123,9 +123,9 @@ $ mkdir /tmp/gan-out
 * `-e` is the number of epochs
 
 ```console
-$ python GAN/gen_fake_expr.py \
+$ python GAN/gen_fake_expr.py \ 
 -ie examples/data/expr_permuted__reduced_29000_10_0.9__expanded_50_10.csv  \
--im examples/data/meta_permuted__expanded_50_10.0.csv \ 
+-im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
 -e 50
