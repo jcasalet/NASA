@@ -32,7 +32,7 @@ $ sed -n '1,1 p' examples/data/expr.csv | awk -F, '{print $2}'
 $ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 ```
 
-2. Run the `permuteSamples.py` script.
+2. Run the `permuteSamples.py` script.  The `-e` option specifies the expression data file and the `-m` option specifies the metadata file.
 
 ```console
 $ python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv
@@ -57,7 +57,11 @@ To reduce the number of rows (genes) in a data set, perform the following steps:
 $ wc -l examples/data/expr_permuted.csv 
 ```
 
-2. Run the `reduceDim.py` script.
+2. Run the `reduceDim.py` script. The options are described below:
+* `-n` option specifies the number of genes with the highest variance to keep
+* `-d` option specifies the difference threshold between the highest and lowest expression level below which genes should be removed
+* `-a` option specifies the percentage threshold (out of 100) of genes with zero expression above which genes should be removed
+* `-e` option specifies the input expression file.
 
 ```console
 $ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 29000 -d 10 -a 90
