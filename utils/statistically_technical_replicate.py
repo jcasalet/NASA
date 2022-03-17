@@ -125,7 +125,7 @@ def main():
         print('meta_df after append dims: ', str(meta_df.shape))
 
     for i in range(numProcs):
-        print('joing thread: ', str(i))
+        print('joining thread: ', str(i))
         processList[i].join()
 
     expr_df = expr_df_T.T

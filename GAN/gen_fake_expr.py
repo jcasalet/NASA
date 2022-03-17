@@ -813,7 +813,7 @@ def parse_args():
     parser.add_argument('-lr', '--lr', help='learning rate', default=5e-04)
     parser.add_argument('-nb', '--nb_critic', help='number of critic batches per gen batch', default=5)
     parser.add_argument('-ng', '--num_genes', help='number of genes with highest variance', default=0)
-    parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default=False)
+    parser.add_argument('-pg', '--plot_gamma', help='boolean plot gamma vals', default='False')
     parser.add_argument('-osr', '--over_sample_rate', help='integer over sample rate', default=1)
     parser.add_argument('-ns', '--num_samples', help='integer number of samples to generate', default=0)
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
