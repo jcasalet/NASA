@@ -115,14 +115,8 @@ def main():
     results = dict()
     for i in range(numProcs):
         results.update(q.get())
-        print('results expr shape: ', str(results['expr_df_T'].shape))
-        print('results meta shape: ', str(results['meta_df'].shape))
-
         expr_df_T = expr_df_T.append(results['expr_df_T'], ignore_index=False )
         meta_df = meta_df.append(results['meta_df'], ignore_index=False)
-
-        print('expr_df_T after append dims:', str(expr_df_T.shape))
-        print('meta_df after append dims: ', str(meta_df.shape))
 
     for i in range(numProcs):
         print('joining thread: ', str(i))
