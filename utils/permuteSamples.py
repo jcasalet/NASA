@@ -1,9 +1,17 @@
-import numpy as np
 import pandas as pd
 import sys
+import argparse
 
-exprFile = sys.argv[1]
-metaFile = sys.argv[2]
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--expr_file', help='expression file', default=None)
+    parser.add_argument('-m', '--meta_file', help='metadata file', default=None)
+    return parser.parse_args()
+
+args = parse_args()
+exprFile = args.expr_file
+metaFile = args.meta_file
 
 expr = pd.read_csv(exprFile, sep=',', header=0)
 meta = pd.read_csv(metaFile, sep=',', header=0)

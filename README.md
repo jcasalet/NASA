@@ -35,7 +35,7 @@ $ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 2. Run the `permuteSamples.py` script.
 
 ```console
-$ python utils/permuteSamples.py examples/data/expr.csv examples/data/meta.csv
+$ python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv
 ```
 
 
