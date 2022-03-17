@@ -128,7 +128,7 @@ $ python GAN/gen_fake_expr.py \
 -im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
--e 50
+-e 20
 ```
 
 3. Examine the output
