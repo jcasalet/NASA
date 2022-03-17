@@ -135,3 +135,32 @@ $ python GAN/gen_fake_expr.py \
 ```console
 $ ls -R /tmp/gan-out 
 ```
+
+## Compare PCA plots 
+To compare the PCA plots of original expression data to replicated data and generated fake data, run the following steps. 
+
+1. Create a meta.json file mapping meta data as either numerical or categorical
+
+```console
+$ cat examples/data/meta.json 
+```
+
+2. Run the `plotters.py` script.
+* `-ie` defines the input expression data file
+* `-im` defines the input metadata file
+* `-umf` defines the metadata JSON file which maps parameters as numerical or categorical
+* `-od` defines the output directory
+
+```console
+$ python utils/plotters.py \
+-ie examples/data/expr_permuted.csv  \
+-im examples/data/meta_permuted.csv \
+-umf examples/data/meta.json \
+-od /tmp/gan-out
+```
+
+3. Examine the output to compare PCA plots
+ 
+```console
+$ open /tmp/gan-out/*.png
+```
