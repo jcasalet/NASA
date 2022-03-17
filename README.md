@@ -115,7 +115,7 @@ $ mkdir /tmp/gan-out
 ```
 
 
-3. Run the `gen_fake_expr.py` script.  Note that this script will take several minutes to run. The number of epochs we define here as 50 is probably fewer than desired, but for the sake of quickly getting results to examine, the value is set is intentionally low.
+3. Run the `gen_fake_expr.py` script.  Note that this script will take several minutes to run. The number of epochs we define here as 20 is fewer than desired for the accuracy of the GAN, but for the sake of quickly getting results to examine, the value is set is intentionally low.
 * `-ie` is the input expression file
 * `-im` is the input metadata file
 * `-od` is the output directory
