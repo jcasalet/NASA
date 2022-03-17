@@ -98,7 +98,7 @@ $ python utils/statistically_technical_replicate.py \
 
 3. Determine the number of samples in the amplified data set.
 ```console
-$ wc -l examples/data/meta_permuted_50.csv  
+$ wc -l examples/data/meta_permuted__expanded_50_10.0.csv  
 ```
 
 ## Use a GAN to generate a fake data set
@@ -120,9 +120,15 @@ $ mkdir /tmp/gan-out
 * `-im` is the input metadata file
 * `-od` is the output directory
 * `-umf` is the JSON file defining which categorical and numerical values to use
+* `-e` is the number of epochs
 
 ```console
-$ python GAN/gen_fake_expr.py -ie examples/data/expr_permuted__reduced_2900_10_0.9__expanded_50_10.csv  -im meta_permuted__expanded_50_0.1.csv -od  /tmp/gan-out  -umf examples/data/meta.json
+$ python GAN/gen_fake_expr.py \
+-ie examples/data/expr_permuted__reduced_2900_10_0.9__expanded_50_10.csv  \
+-im meta_permuted__expanded_50_0.1.csv \
+-od  /tmp/gan-out  \
+-umf examples/data/meta.json \
+-e 50
 ```
 
 3. Examine the output
