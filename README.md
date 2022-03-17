@@ -115,7 +115,7 @@ $ mkdir /tmp/gan-out
 ```
 
 
-3. Run the `gen_fake_expr.py` script.  Note that this script will take several minutes to run. The number of epochs we define here as 20 is fewer than desired for the accuracy of the GAN, but for the sake of quickly getting results to examine, the value is set is intentionally low.
+3. Run the `gen_fake_expr.py` script.  Note that this script will take several minutes to run. The number of epochs we define here as 10 is fewer than desired for the accuracy of the GAN, but for the sake of quickly getting results to examine, the value is set is intentionally low.  Set the number of epochs to 100 or higher to get more realistic, fake generated expression data.
 * `-ie` is the input expression file
 * `-im` is the input metadata file
 * `-od` is the output directory
@@ -128,7 +128,7 @@ $ python GAN/gen_fake_expr.py \
 -im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
--e 20
+-e 10
 ```
 
 3. Examine the output
