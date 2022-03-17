@@ -105,7 +105,7 @@ def correlations_list(x, y, corr_fn=pearson_correlation, kappa=1):
     :param corr_fn: correlation function taking x and y as inputs
     """
     #corr = pearson_correlation(x,y, kappa)
-    corr = cosine_similarity(x, y)
+    corr = pearson_correlation(x, y, kappa)
     result = upper_diag_list(corr)
     return result
 
@@ -119,7 +119,7 @@ def gamma_coef(x, y, kappa=1):
     print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
-    gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
+    gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     #gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     return gamma_dx_dy
 
