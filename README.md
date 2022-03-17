@@ -32,7 +32,9 @@ $ sed -n '1,1 p' examples/data/expr.csv | awk -F, '{print $2}'
 $ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 ```
 
-2. Run the `permuteSamples.py` script.  The `-e` option specifies the expression data file and the `-m` option specifies the metadata file.
+2. Run the `permuteSamples.py` script.  
+* `-e` option specifies the expression data file 
+* `-m` option specifies the metadata file
 
 ```console
 $ python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv
@@ -80,7 +82,12 @@ To increase the number of technical replicates, perform the following steps:
 $ wc -l examples/data/meta_permuted.csv  
 ```
 
-2. Run the `statistically_technical_replicate.py` script
+2. Run the `statistically_technical_replicate.py` script.
+* `-e` specifies the input expression file
+* `-m` specifies the input metadata file
+* `-n` specifies the number of times more samples to create
+* `-v` specifies the variance to use for the zero-mean gaussian sampling
+
 ```console
 $ python utils/statistically_technical_replicate.py \
 -e examples/data/expr_permuted__reduced_29000_10_0.9.csv \
@@ -108,7 +115,12 @@ $ mkdir /tmp/gan-out
 ```
 
 
-3. Run the `gen_fake_expr.py` script
+3. Run the `gen_fake_expr.py` script.
+* `-ie` is the input expression file
+* `-im` is the input metadata file
+* `-od` is the output directory
+* `-umf` is the JSON file defining which categorical and numerical values to use
+
 ```console
 $ python GAN/gen_fake_expr.py -ie examples/data/expr_permuted__reduced_2900_10_0.9__expanded_50_10.csv  -im meta_permuted__expanded_50_0.1.csv -od  /tmp/gan-out  -umf examples/data/meta.json
 ```
