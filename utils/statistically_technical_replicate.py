@@ -68,8 +68,6 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     #return expr_df_T, meta_df
     results['expr_df_T'] = temp_expr_df
     results['meta_df'] = temp_meta_df
-    print('subset expr dims: ', str(temp_expr_df.shape))
-    print('subset meta dims: ', str(temp_meta_df.shape))
     q.put(results)
 
 def main():
