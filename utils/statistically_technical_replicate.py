@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('-cn', '--colName', help='column name to replicate', default=None)
     parser.add_argument('-cv', '--colVal', help='column value to replicate', default=None)
     parser.add_argument("-nc", "--ncpu", help="Number of processes. Default=cpu_count()", default=cpu_count())
+    parser.add_argument("-s", "--seed", help="Seed for random number generator.", default=23)
 
     return parser.parse_args()
 
@@ -36,7 +37,7 @@ def getStartAndEnd(partitionSizes, threadID):
 
     return start, end
 
-def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs):
+def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed):
 
     results = dict()
     partitionSizes = divide(len(samples), numProcs)
@@ -78,6 +79,8 @@ def main():
     var = float(options.var)
     colName = options.colName
     colVal = options.colVal
+    seed = int(options.seed)
+    random.seed(seed)
 
     numProcs = int(options.ncpu)
 
@@ -105,7 +108,7 @@ def main():
     processList = list()
     for i in range(numProcs):
         p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n,
-                                                         var, i, numProcs, ))
+                                                         var, i, numProcs, seed, ))
         #expr_df_T, meta_df = process_samples_subset(col_samples_list, expr_samples_df, expr_df_T, meta_df, var)
         p.start()
         processList.append(p)
