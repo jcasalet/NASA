@@ -119,8 +119,8 @@ def gamma_coef(x, y, kappa=1):
     print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
-    gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     #gamma_dx_dy = cosine_similarity(dists_x, dists_y)
+    gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
     return gamma_dx_dy
 
 
