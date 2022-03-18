@@ -42,7 +42,7 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     results = dict()
     partitionSizes = divide(len(samples), numProcs)
     start, end = getStartAndEnd(partitionSizes, threadID)
-    print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
+    #print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
     temp_meta_df = pd.DataFrame(columns=meta_df.columns)
     temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
     myRands = list()
