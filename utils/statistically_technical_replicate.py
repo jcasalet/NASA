@@ -52,9 +52,9 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
             expr_row = expr_samples_df[expr_samples_df.index == sample]
             noise = np.random.normal(0, var, expr_row.shape)
             noised_expr_row = expr_row + noise
-            myRand = randint(0, 1000000)
+            myRand = randint(0, 1000000) * (1 + threadID)
             while myRand in myRands:
-                myRand = randint(0, 1000000)
+                myRand = randint(0, 1000000) * (1 + threadID)
             myRands.append(myRand)
             new_sample = sample + '_' + str(myRand)
             #new_sample = sample + '_' + str((i+1) * n * threadID)
