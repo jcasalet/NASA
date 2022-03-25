@@ -121,6 +121,8 @@ $ mkdir /tmp/gan-out
 * `-od` is the output directory
 * `-umf` is the JSON file defining which categorical and numerical values to use
 * `-e` is the number of epochs
+* `-s` is the seed for the random number generator
+* `-cd` is the checkpoint directory
 
 ```console
 $ python GAN/gen_fake_expr.py \
@@ -128,7 +130,9 @@ $ python GAN/gen_fake_expr.py \
 -im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
--e 10
+-e 10 \
+-s 23 \
+-cd /tmp/gan-out
 ```
 
 3. Examine the output

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import argparse
-from random import randint
+import random
 from multiprocessing import Process, Queue, cpu_count
 
 
@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('-cn', '--colName', help='column name to replicate', default=None)
     parser.add_argument('-cv', '--colVal', help='column value to replicate', default=None)
     parser.add_argument("-nc", "--ncpu", help="Number of processes. Default=cpu_count()", default=cpu_count())
+    parser.add_argument("-s", "--seed", help="Seed for random number generator.", default=23)
 
     return parser.parse_args()
 
@@ -36,12 +37,12 @@ def getStartAndEnd(partitionSizes, threadID):
 
     return start, end
 
-def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs):
+def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed):
 
     results = dict()
     partitionSizes = divide(len(samples), numProcs)
     start, end = getStartAndEnd(partitionSizes, threadID)
-    print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
+    #print('id: ', str(threadID), 'numProcs: ', str(numProcs), 'start: ', str(start), 'end: ', str(end))
     temp_meta_df = pd.DataFrame(columns=meta_df.columns)
     temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
     myRands = list()
@@ -51,11 +52,11 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
             expr_row = expr_samples_df[expr_samples_df.index == sample]
             noise = np.random.normal(0, var, expr_row.shape)
             noised_expr_row = expr_row + noise
-            myRand = randint(0, 1000000)
+            myRand = random.randint(0, 1000000)
             while myRand in myRands:
-                myRand = randint(0, 1000000)
+                myRand = random.randint(0, 1000000)
             myRands.append(myRand)
-            new_sample = sample + '_' + str(myRand)
+            new_sample = sample + '_' + str(threadID) + '_' + str(myRand)
             #new_sample = sample + '_' + str((i+1) * n * threadID)
             noised_expr_row.rename(index={sample: new_sample}, inplace=True)
             temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
@@ -68,8 +69,6 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     #return expr_df_T, meta_df
     results['expr_df_T'] = temp_expr_df
     results['meta_df'] = temp_meta_df
-    print('subset expr dims: ', str(temp_expr_df.shape))
-    print('subset meta dims: ', str(temp_meta_df.shape))
     q.put(results)
 
 def main():
@@ -80,6 +79,8 @@ def main():
     var = float(options.var)
     colName = options.colName
     colVal = options.colVal
+    seed = int(options.seed)
+    random.seed(seed)
 
     numProcs = int(options.ncpu)
 
@@ -107,7 +108,7 @@ def main():
     processList = list()
     for i in range(numProcs):
         p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n,
-                                                         var, i, numProcs, ))
+                                                         var, i, numProcs, seed, ))
         #expr_df_T, meta_df = process_samples_subset(col_samples_list, expr_samples_df, expr_df_T, meta_df, var)
         p.start()
         processList.append(p)

@@ -119,8 +119,8 @@ def gamma_coef(x, y, kappa=1):
     print('x shape = ', str(x.shape), 'y shape = ', str(y.shape))
     dists_x = 1 - correlations_list(x, x, kappa)
     dists_y = 1 - correlations_list(y, y, kappa)
-    gamma_dx_dy = cosine_similarity(dists_x, dists_y)
     #gamma_dx_dy = cosine_similarity(dists_x, dists_y)
+    gamma_dx_dy = pearson_correlation(dists_x, dists_y, kappa)
     return gamma_dx_dy
 
 
@@ -819,7 +819,7 @@ def parse_args():
     parser.add_argument('-k', '--kappa', help='float multiple in denom of stdize', default=1)
     parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
     parser.add_argument('-tp', '--train_percent', help='percentage to split for training', default=0.80, required=False)
-    parser.add_argument('-us', '--un_standardize', help='boolean unstdize gen.csv', default=False, required=False)
+    parser.add_argument('-us', '--un_standardize', help='boolean unstdize gen.csv', default='False', required=False)
     return parser.parse_args()
     
 def main():
