@@ -49,7 +49,7 @@ def parse_args():
 	parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
 	parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
 	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=90)
-	parser.add_argument('k', '--key', help='name of key column', default='gene')
+	parser.add_argument('-k', '--key', help='name of key column', default='gene')
 	return parser.parse_args()
 
 def main():
