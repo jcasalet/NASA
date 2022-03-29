@@ -19,12 +19,12 @@ def findMostVaried(df, n):
 	slicedDF = df.iloc[indices]
 	return slicedDF, indices
 
-def findSumGTDelta(df, delta):
+def findSumGTSigma(df, sigma):
 	# first find min sum and print that to stdout
 	cSums = df.sum(axis=1)
 	cList = list()
 	for index, s in cSums.iteritems():
-		if s > delta:
+		if s > sigma:
 			cList.append(index)
 	return df.iloc[cList], cList
 
@@ -34,14 +34,23 @@ def removeAlphaZeros(df, alpha):
 	df = df[(df == 0).sum(axis='columns') <= row_cut_off]
 	return df
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--expr_file', help='expression file', default=None)
-    parser.add_argument('-n', '--num', help='number to reduce to', default=None)
-    parser.add_argument('-d', '--delta', help='delta diff b/w highest and lowest expr value', default=None)
-    parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=None)
+def removeDeltaDiff(df, delta, key):
+	# first find max and min
+	index = df.index
+	tempDF = df.set_index(key)
+	tempDF[tempDF.max(axis=1) - tempDF.min(axis=1) > delta]
+	tempDF.set_index(index, inplace=True)
+	return df.index & tempDF.index
 
-    return parser.parse_args()
+def parse_args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-e', '--expr_file', help='expression file', default=None)
+	parser.add_argument('-n', '--num', help='number to reduce to', default=None)
+	parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
+	parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
+	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=90)
+	parser.add_argument('k', '--key', help='name of key column', default='gene')
+	return parser.parse_args()
 
 def main():
 	args = parse_args()
@@ -49,17 +58,22 @@ def main():
 	n = int(args.num)
 	delta = int(args.delta)
 	alpha = float(int(args.alpha)/100)
+	sigma = int(args.sigma)
 	sep=','
+	key = args.key
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 	print('original size: ', str(len(df)))
 
-	df_subset, cList = findSumGTDelta(df, delta)
+	df_subset, cList = findSumGTSigma(df, sigma)
 	df_subset = df_subset.reset_index()
-	print('after reducing by sum to delta: ', str(delta), str(len(df_subset)))
+	print('after reducing by sum to sigma: ', str(sigma), str(len(df_subset)))
 
 	df_subset = removeAlphaZeros(df_subset, alpha)
 	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), str(len(df_subset)))
+
+	df_subset = removeDeltaDiff(df_subset, delta)
+	print('after reducing by removing when (max - min) is at most delta: ', str(delta), str(len(df_subset)))
 
 	df_subset,indices = findMostVaried(df_subset, n)
 	print('after reducing by n most varied: ', str(n), str(len(df_subset)))
