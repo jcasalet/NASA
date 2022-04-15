@@ -5,12 +5,13 @@ import operator
 import argparse
 
 
-def findMostVaried(df, n):
+def findMostVaried(df, n, key):
 	# df is genes X samples
 	# calculate var, sort cols into n highest vars, drop shape[1]-n cols
 	# first find range of var and print to stdout
 	if n == 0:
 		return df, None
+	index = df.index
 	sdList = df.std(axis=1)
 	sdDict = {k: v for v, k in enumerate(sdList)}
 	sdDictSorted = sorted(sdDict.items(), key=operator.itemgetter(0), reverse=True) 
@@ -21,26 +22,20 @@ def findMostVaried(df, n):
 
 def findSumGTSigma(df, sigma):
 	# first find min sum and print that to stdout
+	df.reset_index(inplace=True)
 	cSums = df.sum(axis=1)
 	cList = list()
 	for index, s in cSums.iteritems():
 		if s > sigma:
 			cList.append(index)
-	return df.iloc[cList], cList
+	temp = df.iloc[cList]
+	return temp, cList
 
 def removeAlphaZeros(df, alpha):
-	# first find max num 0s row and print to stdout
-	row_cut_off = int(alpha * len(df.columns))
-	df = df[(df == 0).sum(axis='columns') <= row_cut_off]
-	return df
+	return df[(df == 0).sum(axis='columns') <= int(alpha * len(df.columns))]
 
-def removeDeltaDiff(df, delta, key):
-	# first find max and min
-	index = df.index
-	tempDF = df.set_index(key)
-	tempDF[tempDF.max(axis=1) - tempDF.min(axis=1) > delta]
-	tempDF.set_index(index, inplace=True)
-	return df.index & tempDF.index
+def removeDeltaDiff(df, delta):
+	return df[df.max(axis=1) - df.min(axis=1) > delta]
 
 def parse_args():
 	parser = argparse.ArgumentParser()
@@ -63,32 +58,23 @@ def main():
 	key = args.key
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
-	print('original size: ', str(len(df)))
+	print('original size: ', str(df.shape))
 
-	df_subset, cList = findSumGTSigma(df, sigma)
-	df_subset = df_subset.reset_index()
-	print('after reducing by sum to sigma: ', str(sigma), str(len(df_subset)))
+	df = removeAlphaZeros(df, alpha)
+	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), str(len(df)))
 
-	df_subset = removeAlphaZeros(df_subset, alpha)
-	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), str(len(df_subset)))
+	df, cList = findSumGTSigma(df, sigma)
+	print('after reducing by sum to sigma: ', str(sigma), str(len(df)))
 
-	df_subset = removeDeltaDiff(df_subset, delta)
-	print('after reducing by removing when (max - min) is at most delta: ', str(delta), str(len(df_subset)))
+	df = removeDeltaDiff(df, delta)
+	print('after reducing by removing when (max - min) is at most delta: ', str(delta), str(len(df)))
 
-	df_subset,indices = findMostVaried(df_subset, n)
-	print('after reducing by n most varied: ', str(n), str(len(df_subset)))
+	df,indices = findMostVaried(df, n, key)
+	print('after reducing by n most varied: ', str(n), str(len(df)))
 
-	df_subset = df_subset.drop(columns=['index'])
-	genes = df_subset['gene']
-	df_subset = df_subset.drop(columns=['gene'])
-
-	df_subset = np.clip(df_subset, 0, a_max=None)
-
-	df_subset.insert(0, 'gene', genes)
-
+	df.drop(columns=['index'], inplace=True)
 	outputFileName = exprFile.split('.csv')[0] + '__reduced_' + str(n) + '_' + str(delta) + '_' + str(alpha) + '.csv'
-
-	df_subset.to_csv(outputFileName, sep=',', index=None)
+	df.to_csv(outputFileName, sep=',', index=None)
 
     
 if __name__ == "__main__":
