@@ -50,11 +50,13 @@ update_plans_iss() {
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
+	#echo "colab-earth,/data/col_0" > ~/crisp/fl_plan/data.yaml
 	echo "colab-iss,/data/col_1" > ~/crisp/fl_plan/data.yaml
 	cat ~/crisp/fl_plan/data.yaml
 	
 	echo "collaborators:" > ~/crisp/fl_plan/cols.yaml	
 	echo "- colab-iss" >> ~/crisp/fl_plan/cols.yaml	
+	#echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
 	
 	if [ "$ROLE" == "agg-iss" ]
@@ -88,11 +90,13 @@ update_plans_earth() {
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
-	echo "colab-earth,/data/col_0" > ~/crisp/fl_plan/data.yaml
+	echo "colab-iss,/data/col_1" > ~/crisp/fl_plan/data.yaml
+	#echo "colab-earth,/data/col_0" >> ~/crisp/fl_plan/data.yaml
 	cat ~/crisp/fl_plan/data.yaml
 	
 	echo "collaborators:" > ~/crisp/fl_plan/cols.yaml	
-	echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
+	#echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
+	echo "- colab-iss" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
 
 	if [ "$ROLE" == "agg-earth" ]
@@ -154,13 +158,13 @@ run_colab_iss() {
 }
 
 run_colab_earth() {
-	ROLE=colab-earth
+	ROLE=colab-iss
 	if [ -d $WORKSPACE_EARTH_COLAB_DIR ]
 	then
 		rm -rf $WORKSPACE_EARTH_COLAB_DIR
 	fi
 	mkdir -p $WORKSPACE_EARTH_COLAB_DIR
-	update_plans_earth colab-earth 
+	update_plans_earth $ROLE 
 	fx collaborator shim  -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 	
