@@ -5,8 +5,10 @@ IMAGE_NAME=crisp
 MYNET=mynet
 SUBNET=192.168.56.0/24
 STATE_DIR=/data/STATE
-WORKSPACE_ISS_DIR=/data/WORKSPACE/ISS
-WORKSPACE_EARTH_DIR=/data/WORKSPACE/EARTH
+WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE/ISS/AGG
+WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE/ISS/COLAB
+WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE/EARTH/AGG
+WORKSPACE_EARTH_COLAB_DIR=/data/WORKSPACE/EARTH/COLAB
 ROUNDS=2
 AGG_ISS_HOST=agg-iss
 AGG_ISS_PORT=8889
@@ -34,15 +36,16 @@ process_args() {
 }
 
 update_plans_iss() {
+	ROLE=$1
 	# update plan.yaml
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_ISS_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_ISS_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
 	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 1/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_ISS_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_ISS_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_ISS_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*rounds_to_train.*/    rounds_to_train: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
 	
 	cat ~/crisp/fl_plan/plan.yaml
@@ -53,16 +56,22 @@ update_plans_iss() {
 	echo "collaborators:" > ~/crisp/fl_plan/cols.yaml	
 	echo "- colab-iss" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
-
-	cd ~/crisp
+	
+	if [ "$ROLE" == "agg-iss" ]
+	then
+		cd $WORKSPACE_ISS_AGG_DIR 
+	else
+		cd $WORKSPACE_ISS_COLAB_DIR
+	fi
 	rm -rf workspace 
 	fx workspace create --prefix workspace --template torch_cnn_mnist 
 	chmod 777 workspace
 	cd workspace 
 
-	cp -r ../fl_plan/* plan/
-	cp -r ../fl_src/* src/
-	fx plan initialize -a $AGG_ISS_HOST
+	cp -r ~/crisp/fl_plan/* plan/
+	cp -r ~/crisp/fl_src/* src/
+	#fx plan initialize -a $AGG_ISS_HOST
+	fx plan initialize
 }	
 
 update_plans_earth() {
@@ -72,9 +81,9 @@ update_plans_earth() {
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
 	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 1/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_EARTH_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_EARTH_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*rounds_to_train.*/    rounds_to_train: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
 	
 	cat ~/crisp/fl_plan/plan.yaml
@@ -86,14 +95,19 @@ update_plans_earth() {
 	echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
 
-	cd ~/crisp
-	rm -rf workspace 
+	if [ "$ROLE" == "agg-earth" ]
+        then
+                cd $WORKSPACE_EARTH_AGG_DIR
+        else
+                cd $WORKSPACE_EARTH_COLAB_DIR
+        fi
+	rm -rf workspace
 	fx workspace create --prefix workspace --template torch_cnn_mnist 
 	chmod 777 workspace
 	cd workspace 
 
-	cp -r ../fl_plan/* plan/
-	cp -r ../fl_src/* src/
+	cp -r ~/crisp/fl_plan/* plan/
+	cp -r ~/crisp/fl_src/* src/
 	fx plan initialize -a $AGG_EARTH_HOST 
 }
 
@@ -108,35 +122,45 @@ activate_conda() {
 
 run_agg_iss() {
 	ROLE=agg-iss
-	if [ -d $WORKSPACE_ISS_DIR ]
+	if [ -d $WORKSPACE_ISS_AGG_DIR ]
 	then
-		rm -rf $WORKSPACE_ISS_DIR
+		rm -rf $WORKSPACE_ISS_AGG_DIR
 	fi
-	mkdir $WORKSPACE_DIR
+	mkdir -p $WORKSPACE_ISS_AGG_DIR
 	update_plans_iss agg-iss 
 	fx aggregator shim
 }
 
 run_agg_earth() {
 	ROLE=agg-earth
-	if [ -d $WORKSPACE_EARTH_DIR ]
+	if [ -d $WORKSPACE_EARTH_AGG_DIR ]
 	then
-		rm -rf $WORKSPACE_EARTH_DIR
+		rm -rf $WORKSPACE_EARTH_AGG_DIR
 	fi
-	mkdir $WORKSPACE_DIR
-	update_plans_iss agg-iss 
+	mkdir -p $WORKSPACE_EARTH_AGG_DIR
+	update_plans_earth agg-earth 
 	fx aggregator start
 }
 
 run_colab_iss() {
 	ROLE=colab-iss
-	update_plans_iss 
+	if [ -d $WORKSPACE_ISS_COLAB_DIR ]
+	then
+		rm -rf $WORKSPACE_ISS_COLAB_DIR
+	fi
+	mkdir -p $WORKSPACE_ISS_COLAB_DIR
+	update_plans_iss colab-iss
 	fx collaborator start -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 
 run_colab_earth() {
 	ROLE=colab-earth
-	update_plans_earth 
+	if [ -d $WORKSPACE_EARTH_COLAB_DIR ]
+	then
+		rm -rf $WORKSPACE_EARTH_COLAB_DIR
+	fi
+	mkdir -p $WORKSPACE_EARTH_COLAB_DIR
+	update_plans_earth colab-earth 
 	fx collaborator shim  -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 	
