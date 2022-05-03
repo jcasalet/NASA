@@ -56,9 +56,13 @@ case $ROLE in
 		HOSTNAME=colab-iss
 		IP_ADDR=192.168.56.103
 		;;
+	colab-shim)
+		HOSTNAME=colab-shim
+		IP_ADDR=192.168.56.104
+		;;
 	colab-earth)
 		HOSTNAME=colab-earth
-		IP_ADDR=192.168.56.104
+		IP_ADDR=192.168.56.105
 		;;
 	root)
 		docker run -it --rm --user 0:0 $IMAGE_NAME /bin/bash
@@ -71,4 +75,4 @@ esac
 
 echo about to run container with role = $ROLE
 
-docker run --net $MYNET -h ${HOSTNAME} --rm  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro --ip ${IP_ADDR}  --add-host agg-iss:192.168.56.101 --add-host agg-earth:192.168.56.102  --add-host colab-iss:192.168.56.103  --add-host colab-earth:192.168.56.104  ${IMAGE_NAME}  /scripts/runCrisp-notls-shim.sh -r $ROLE
+docker run --net $MYNET -h ${HOSTNAME} --rm  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro --ip ${IP_ADDR}  --add-host agg-iss:192.168.56.101 --add-host agg-earth:192.168.56.102  --add-host colab-iss:192.168.56.103  --add-host colab-shim:192.168.56.104 --add-host colab-earth:192.168.56.105  ${IMAGE_NAME}  /scripts/runCrisp-notls-shim.sh -r $ROLE

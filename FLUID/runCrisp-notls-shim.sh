@@ -8,7 +8,8 @@ STATE_DIR=/data/STATE
 WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE/ISS/AGG
 WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE/ISS/COLAB
 WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE/EARTH/AGG
-WORKSPACE_EARTH_COLAB_DIR=/data/WORKSPACE/EARTH/COLAB
+WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE/EARTH/COLAB/SHIM
+WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE/EARTH/COLAB/REAL
 ROUNDS=2
 AGG_ISS_HOST=agg-iss
 AGG_ISS_PORT=8889
@@ -42,7 +43,7 @@ update_plans_iss() {
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_ISS_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
 	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*collaborator_count.*/    collaborator_count: 1/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
@@ -50,13 +51,13 @@ update_plans_iss() {
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
-	#echo "colab-earth,/data/col_0" > ~/crisp/fl_plan/data.yaml
-	echo "colab-iss,/data/col_1" > ~/crisp/fl_plan/data.yaml
+	echo "colab-earth,/data/col_0" > ~/crisp/fl_plan/data.yaml
+	echo "colab-iss,/data/col_1" >> ~/crisp/fl_plan/data.yaml
 	cat ~/crisp/fl_plan/data.yaml
 	
 	echo "collaborators:" > ~/crisp/fl_plan/cols.yaml	
 	echo "- colab-iss" >> ~/crisp/fl_plan/cols.yaml	
-	#echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
+	echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
 	
 	if [ "$ROLE" == "agg-iss" ]
@@ -72,17 +73,18 @@ update_plans_iss() {
 
 	cp -r ~/crisp/fl_plan/* plan/
 	cp -r ~/crisp/fl_src/* src/
-	#fx plan initialize -a $AGG_ISS_HOST
-	fx plan initialize
+	fx plan initialize -a $AGG_ISS_HOST
+	#fx plan initialize
 }	
 
 update_plans_earth() {
+	ROLE=$1
 	# update plan.yaml
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_EARTH_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_EARTH_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
 	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
-	sed -i "s/.*collaborator_count.*/    collaborator_count: 1/" ~/crisp/fl_plan/plan.yaml
+	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
@@ -90,21 +92,29 @@ update_plans_earth() {
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
-	echo "colab-iss,/data/col_1" > ~/crisp/fl_plan/data.yaml
-	#echo "colab-earth,/data/col_0" >> ~/crisp/fl_plan/data.yaml
+	echo "colab-earth,/data/col_0" > ~/crisp/fl_plan/data.yaml
+	echo "colab-iss,/data/col_1" >> ~/crisp/fl_plan/data.yaml
 	cat ~/crisp/fl_plan/data.yaml
 	
 	echo "collaborators:" > ~/crisp/fl_plan/cols.yaml	
-	#echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
+	echo "- colab-earth" >> ~/crisp/fl_plan/cols.yaml	
 	echo "- colab-iss" >> ~/crisp/fl_plan/cols.yaml	
 	cat ~/crisp/fl_plan/cols.yaml
 
 	if [ "$ROLE" == "agg-earth" ]
         then
                 cd $WORKSPACE_EARTH_AGG_DIR
-        else
-                cd $WORKSPACE_EARTH_COLAB_DIR
+        elif [ "$ROLE" == "colab-earth" ]
+	then
+                cd $WORKSPACE_EARTH_COLAB_REAL_DIR
+	elif [ "$ROLE" == "colab-iss" ]
+	then
+		cd $WORKSPACE_EARTH_COLAB_SHIM_DIR
+	else
+		echo wrong role:  $ROLE
+		exit 1
         fi
+
 	rm -rf workspace
 	fx workspace create --prefix workspace --template torch_cnn_mnist 
 	chmod 777 workspace
@@ -144,6 +154,13 @@ run_agg_earth() {
 	mkdir -p $WORKSPACE_EARTH_AGG_DIR
 	update_plans_earth agg-earth 
 	fx aggregator start
+	# now wait for job to be done and then get results ready 
+	while [ ! -f ${WORKSPACE_EARTH_AGG_DIR}/workspace/save/crisp_best_.pbuf ]
+	do
+		sleep 5
+	done
+	fx model save -m save/crisp_best_.pbuf
+		
 }
 
 run_colab_iss() {
@@ -157,15 +174,26 @@ run_colab_iss() {
 	fx collaborator start -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 
-run_colab_earth() {
+run_colab_shim_earth() {
 	ROLE=colab-iss
-	if [ -d $WORKSPACE_EARTH_COLAB_DIR ]
+	if [ -d $WORKSPACE_EARTH_COLAB_SHIM_DIR ]
 	then
-		rm -rf $WORKSPACE_EARTH_COLAB_DIR
+		rm -rf $WORKSPACE_EARTH_COLAB_SHIM_DIR
 	fi
-	mkdir -p $WORKSPACE_EARTH_COLAB_DIR
+	mkdir -p $WORKSPACE_EARTH_COLAB_SHIM_DIR
 	update_plans_earth $ROLE 
 	fx collaborator shim  -n $ROLE -p plan/plan.yaml -d plan/data.yaml
+}
+
+run_colab_real_earth() {
+	ROLE=colab-earth
+	if [ -d $WORKSPACE_EARTH_COLAB_REAL_DIR ]
+	then
+		rm -rf $WORKSPACE_EARTH_COLAB_REAL_DIR
+	fi
+	mkdir -p $WORKSPACE_EARTH_COLAB_REAL_DIR
+	update_plans_earth $ROLE 
+	fx collaborator start  -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 	
 
@@ -188,7 +216,10 @@ main() {
 			run_colab_iss
 			;;
 		colab-earth)
-			run_colab_earth
+			run_colab_real_earth
+			;;
+		colab-shim)
+			run_colab_shim_earth 
 			;;
 		*)
 			echo "wrong usage: $ROLE"
