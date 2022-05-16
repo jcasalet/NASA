@@ -117,7 +117,8 @@ def subjID_sensitive_datasplit_balanced(standardised_df, test_size = 0.25, rando
         ID_list_idcs = np.random.permutation(m)
     else:
         k = m // 5
-        ID_list_idcs = np.arange(m)
+        #ID_list_idcs = np.arange(m)
+        ID_list_idcs = np.random.permutation(m)
         ID_list_idcs = np.roll(ID_list_idcs, -k*(fold_selection-1))
     chosen_IDs = []
     
