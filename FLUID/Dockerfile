@@ -46,7 +46,7 @@ RUN pip install pycodestyle==2.7.0
 RUN pip install -r crisp/requirements.txt
 RUN pip install torch
 RUN pip install torchvision
-RUN conda install tensorflow-gpu cudatoolkit=10.1
+RUN conda install cudatoolkit=10.1
 
 # openfl:
 WORKDIR /home/fluid
