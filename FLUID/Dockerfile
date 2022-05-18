@@ -1,6 +1,5 @@
 #############################
-# FDL US 2021 - Astronaut Health Team
-# 2021 Docker Version:v07
+# Project FLUID 
 # James Casaletto 
 # Mar 2022 
 #############################
@@ -14,9 +13,9 @@ RUN yum install -y  net-tools  bzip2  zip  unzip  git which openssh-server
 
 
 # create fluid user
-RUN groupadd -g 1002 fluid
+RUN groupadd -g 2001 fluid
 RUN echo fluid:fluid > /tmp/pass.txt
-RUN useradd -u 1002 -g 1002 -s /bin/bash -d /home/fluid -m fluid
+RUN useradd -u 2001 -g 2001 -s /bin/bash -d /home/fluid -m fluid
 RUN chpasswd < /tmp/pass.txt
 
 
@@ -25,7 +24,7 @@ USER fluid
 WORKDIR /home/fluid
 RUN git clone -b live_demo https://gitlab.com/frontierdevelopmentlab/astronaut-health/crisp.git
 
-# Install Miniconda and Python 3.8
+# Install Miniconda and Python 3.7
 ENV CONDA_AUTO_UPDATE_CONDA=false
 ENV PATH=/home/fluid/miniconda/bin:$PATH
 RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh \
@@ -33,10 +32,10 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && ~/miniconda.sh -b -p ~/miniconda \
  && rm ~/miniconda.sh \
  && conda install -y python==3.7 
-
-RUN conda create -n venv_3.7 python=3.7 anaconda
+RUN conda create -y -n venv_3.7 python=3.7 anaconda
 SHELL ["conda", "init", "bash"]
 SHELL ["conda", "run", "-n", "venv_3.7", "/bin/bash", "-c"]
+RUN source ~/miniconda/etc/profile.d/conda.sh
 RUN echo "conda activate venv_3.7" > .bash_profile
 
 # Installing neccessary libraries
@@ -47,12 +46,11 @@ RUN pip install pycodestyle==2.7.0
 RUN pip install -r crisp/requirements.txt
 RUN pip install torch
 RUN pip install torchvision
+RUN conda install tensorflow-gpu cudatoolkit=10.1
 
 # openfl:
 WORKDIR /home/fluid
-#RUN git clone --single-branch --branch fdl2021 https://github.com/PDuckworth/openfl.git
-#RUN git clone --branch fluid https://github.com/intel/openfl.git
-RUN git clone --branch fluid_rebase https://github.com/intel/openfl.git
+RUN git clone --branch fdl2021 https://github.com/intel/openfl.git
 RUN pip install /home/fluid/openfl/.
 
 # ssh keys
@@ -65,6 +63,3 @@ ADD ./FILES/authorized_keys .ssh
 
 RUN sh -c 'echo -e IMAGE COMPLETED - READY TO RUN'
 
-# Set the default command to python3
-#CMD ["python3"]
-#CMD tail -f /dev/null
