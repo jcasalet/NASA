@@ -7,7 +7,7 @@ import argparse
 import json
 
 
-def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
+def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols, use_palette=True):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
     for meta_param in list(use_meta_cols['cat']):
@@ -15,8 +15,12 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
 
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
-
-    ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100)
+    uniq_values = set(list(pcaDF[variable]))
+    palette = ['green', 'orange', 'brown', 'blue', 'red', 'purple']
+    if use_palette:
+        ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100, palette=palette[:len(uniq_values)])
+    else:
+        ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100)
 
     ax.set_xlabel('PC 1 ' + '(' + str(round(pca.explained_variance_ratio_[0]*100, 1)) + '% variance)', fontsize=15)
     ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
@@ -36,7 +40,11 @@ def myPlot(x, info_df, output_dir, use_meta_cols):
     #x = standardize(x)
 
     for meta_param in list(use_meta_cols['cat']):
-        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols)
+        if meta_param == 'ORO Positivity (%)':
+            use_palette=False
+        else:
+            use_palette=True
+        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols, use_palette)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -53,12 +61,21 @@ def main():
         use_meta_cols = json.load(f)
     f.close()
     expr_df = pd.read_csv(options.input_expr, index_col=0)
-    x = np.log10(1+ expr_df)
-    x = np.float32(x)
-    # transpose matrix
-    x = x.T
+    if 'env' in expr_df.columns:
+        expr_df.drop(columns=['env'], inplace=True)
+    if 'oro_thresh' in expr_df.columns:
+        expr_df.drop(columns=['oro_thresh'])
+    if not 'Gnai3' in expr_df.columns:
+        x=expr_df.T
+    else:
+        x=expr_df
+
+    #x = np.log10(1+ x)
     # standardize expression data
-    x = (x - x.mean()) / x.std()
+    #x = np.float32(x)
+    #x = (x - x.mean()) / x.std()
+
+
     info_df = pd.read_csv(options.input_meta, header=0, sep=',')
 
     myPlot(x, info_df, options.output_dir, use_meta_cols)

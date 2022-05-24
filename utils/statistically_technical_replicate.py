@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('-cn', '--colName', help='column name to replicate', default=None)
     parser.add_argument('-cv', '--colVal', help='column value to replicate', default=None)
     parser.add_argument("-nc", "--ncpu", help="Number of processes. Default=cpu_count()", default=cpu_count())
+    parser.add_argument("-k", "--key", help="metadata key Default=SAMPLE ID", default='SAMPLE ID')
     parser.add_argument("-s", "--seed", help="Seed for random number generator.", default=23)
 
     return parser.parse_args()
@@ -37,7 +38,7 @@ def getStartAndEnd(partitionSizes, threadID):
 
     return start, end
 
-def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed):
+def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed, key):
 
     results = dict()
     partitionSizes = divide(len(samples), numProcs)
@@ -62,9 +63,9 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
             temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
 
             # add new sample to meta data
-            meta_row = meta_df[meta_df['Sample'] == sample]
+            meta_row = meta_df[meta_df[key] == sample]
             new_meta_row = meta_row.copy(deep=True)
-            new_meta_row['Sample'] = new_sample
+            new_meta_row[key] = new_sample
             temp_meta_df = temp_meta_df.append(new_meta_row, ignore_index=True)
     #return expr_df_T, meta_df
     results['expr_df_T'] = temp_expr_df
@@ -81,6 +82,7 @@ def main():
     colVal = options.colVal
     seed = int(options.seed)
     random.seed(seed)
+    key = options.key
 
     numProcs = int(options.ncpu)
 
@@ -90,7 +92,7 @@ def main():
     if not colName is None:
         col_meta_df = meta_df[meta_df[colName] == colVal]
         # get samples in subset
-        col_samples_list = col_meta_df['Sample']
+        col_samples_list = col_meta_df[key]
     else:
         list_temp = list(expr_df.columns)
         list_temp.remove('gene')
@@ -107,9 +109,7 @@ def main():
     q = Queue()
     processList = list()
     for i in range(numProcs):
-        p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n,
-                                                         var, i, numProcs, seed, ))
-        #expr_df_T, meta_df = process_samples_subset(col_samples_list, expr_samples_df, expr_df_T, meta_df, var)
+        p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n, var, i, numProcs, seed, key, ))
         p.start()
         processList.append(p)
 
