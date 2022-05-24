@@ -1,0 +1,136 @@
+
+Data: 19891 genes x 51 samples
+Found 5 dimensions from PCA
+0.63 seconds elapsed
+
+Running ICA...
+Completed run 1 of 50 on Processor 0
+0.68 seconds elapsed
+Completed run 2 of 50 on Processor 0
+0.61 seconds elapsed
+Completed run 3 of 50 on Processor 0
+0.73 seconds elapsed
+Completed run 4 of 50 on Processor 0
+0.64 seconds elapsed
+Completed run 5 of 50 on Processor 0
+0.77 seconds elapsed
+Completed run 6 of 50 on Processor 0
+0.50 seconds elapsed
+Completed run 7 of 50 on Processor 0
+0.57 seconds elapsed
+Completed run 8 of 50 on Processor 0
+0.63 seconds elapsed
+Completed run 9 of 50 on Processor 0
+0.74 seconds elapsed
+Completed run 10 of 50 on Processor 0
+0.77 seconds elapsed
+Completed run 11 of 50 on Processor 0
+0.56 seconds elapsed
+Completed run 12 of 50 on Processor 0
+0.73 seconds elapsed
+Completed run 13 of 50 on Processor 0
+0.55 seconds elapsed
+Completed run 14 of 50 on Processor 0
+0.64 seconds elapsed
+Completed run 15 of 50 on Processor 0
+0.41 seconds elapsed
+Completed run 16 of 50 on Processor 0
+0.86 seconds elapsed
+Completed run 17 of 50 on Processor 0
+0.68 seconds elapsed
+Completed run 18 of 50 on Processor 0
+0.80 seconds elapsed
+Completed run 19 of 50 on Processor 0
+0.72 seconds elapsed
+Completed run 20 of 50 on Processor 0
+0.88 seconds elapsed
+Completed run 21 of 50 on Processor 0
+0.60 seconds elapsed
+Completed run 22 of 50 on Processor 0
+0.77 seconds elapsed
+Completed run 23 of 50 on Processor 0
+0.74 seconds elapsed
+Completed run 24 of 50 on Processor 0
+0.70 seconds elapsed
+Completed run 25 of 50 on Processor 0
+0.80 seconds elapsed
+Completed run 26 of 50 on Processor 0
+0.62 seconds elapsed
+Completed run 27 of 50 on Processor 0
+0.77 seconds elapsed
+Completed run 28 of 50 on Processor 0
+0.94 seconds elapsed
+Completed run 29 of 50 on Processor 0
+1.07 seconds elapsed
+Completed run 30 of 50 on Processor 0
+0.60 seconds elapsed
+Completed run 31 of 50 on Processor 0
+0.82 seconds elapsed
+Completed run 32 of 50 on Processor 0
+0.80 seconds elapsed
+Completed run 33 of 50 on Processor 0
+0.83 seconds elapsed
+Completed run 34 of 50 on Processor 0
+1.14 seconds elapsed
+Completed run 35 of 50 on Processor 0
+0.58 seconds elapsed
+Completed run 36 of 50 on Processor 0
+0.91 seconds elapsed
+Completed run 37 of 50 on Processor 0
+0.65 seconds elapsed
+Completed run 38 of 50 on Processor 0
+0.44 seconds elapsed
+Completed run 39 of 50 on Processor 0
+0.72 seconds elapsed
+Completed run 40 of 50 on Processor 0
+0.65 seconds elapsed
+Completed run 41 of 50 on Processor 0
+0.98 seconds elapsed
+Completed run 42 of 50 on Processor 0
+1.03 seconds elapsed
+Completed run 43 of 50 on Processor 0
+0.82 seconds elapsed
+Completed run 44 of 50 on Processor 0
+0.85 seconds elapsed
+Completed run 45 of 50 on Processor 0
+0.69 seconds elapsed
+Completed run 46 of 50 on Processor 0
+1.01 seconds elapsed
+Completed run 47 of 50 on Processor 0
+0.73 seconds elapsed
+Completed run 48 of 50 on Processor 0
+1.14 seconds elapsed
+Completed run 49 of 50 on Processor 0
+0.73 seconds elapsed
+Completed run 50 of 50 on Processor 0
+0.74 seconds elapsed
+
+All ICA runs complete!
+46.35 seconds elapsed
+
+Computing clusters...
+
+Distance matrix completed!
+6.21 seconds elapsed
+
+Combining D matrix
+0.02 seconds elapsed
+
+Clustering
+/Users/jcasaletto/anaconda3/lib/python3.7/site-packages/sklearn/neighbors/_base.py:168: EfficiencyWarning: Precomputed sparse input was not sorted by data.
+  EfficiencyWarning)
+/Users/jcasaletto/anaconda3/lib/python3.7/site-packages/sklearn/neighbors/_base.py:168: EfficiencyWarning: Precomputed sparse input was not sorted by data.
+  EfficiencyWarning)
+0.02 seconds elapsed
+
+Identified 5 clusters
+Loading individual S and A matrices
+2.59 seconds elapsed
+
+Gathering final S and A matrices
+
+Final components created
+0.60 seconds elapsed
+Writing files to /Users/jcasaletto/PycharmProjects/NASA/ICA/precise-db/scripts
+0.22 seconds elapsed
+Complete!
