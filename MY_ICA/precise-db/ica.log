@@ -1,0 +1,48 @@
+
+python: can't open file 'random_restart_ica.py': [Errno 2] No such file or directory
+python: can't open file 'random_restart_ica.py': [Errno 2] No such file or directory
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+mpiexec: abort is already in progress...hit ctrl-c again to forcibly terminate
+
+[JCasaletto-E508:21291] *** Process received signal ***
+[JCasaletto-E508:21291] Signal: Segmentation fault: 11 (11)
+[JCasaletto-E508:21291] Signal code: Address not mapped (1)
+[JCasaletto-E508:21291] Failing at address: 0x30
+[JCasaletto-E508:21291] [ 0] 0   libsystem_platform.dylib            0x00007fff73b4042d _sigtramp + 29
+[JCasaletto-E508:21291] [ 1] 0   mca_pmix_pmix3x.so                  0x00000001107cdf80 pmix_util_keyval_yyleng + 9816
+[JCasaletto-E508:21291] [ 2] 0   mca_pmix_pmix3x.so                  0x000000011071650c pmix3x_client_finalize + 839
+[JCasaletto-E508:21291] [ 3] 0   mca_ess_hnp.so                      0x000000010fdbf394 clean_abort + 170
+[JCasaletto-E508:21291] [ 4] 0   libevent_core-2.1.7.dylib           0x000000010fc97a27 event_process_active_single_queue + 635
+[JCasaletto-E508:21291] [ 5] 0   libevent_core-2.1.7.dylib           0x000000010fc94e21 event_base_loop + 1012
+[JCasaletto-E508:21291] [ 6] 0   mpiexec                             0x000000010fae1cf4 orterun + 183
+[JCasaletto-E508:21291] [ 7] 0   libdyld.dylib                       0x00007fff739477fd start + 1
+[JCasaletto-E508:21291] *** End of error message ***
+python: can't open file 'compute_distance.py': [Errno 2] No such file or directory
+python: can't open file 'compute_distance.py': [Errno 2] No such file or directory
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpiexec detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[43659,1],0]
+  Exit code:    2
+--------------------------------------------------------------------------
+python: can't open file 'cluster_components.py': [Errno 2] No such file or directory
+python: can't open file 'cluster_components.py': [Errno 2] No such file or directory
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpiexec detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[43670,1],0]
+  Exit code:    2
+--------------------------------------------------------------------------
