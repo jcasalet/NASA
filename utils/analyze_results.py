@@ -1,4 +1,4 @@
-iimport pandas as pd
+import pandas as pd
 from statistics import median, mean
 import sys
 import matplotlib.pyplot as plt
