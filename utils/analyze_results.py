@@ -15,5 +15,5 @@ for i in range(len(results)):
                 print('min coeff = ', min(coefs))
                 print('max coeff = ', max(coefs))
                 print('mean coeff = ', mean(coefs))
-                plt.hist(coefs)
+                plt.hist(coefs, bins=10)
                 plt.savefig(method + '_hist.png')
