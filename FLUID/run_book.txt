@@ -94,7 +94,7 @@ ONLY DO THIS ON AGG-EARTH
 ==> pip install /home/fluid/openfl/.
 
 
-14. configure password-less ssh from bridge to colab-shim and from bridge to agg-earth
+14. configure password-less ssh from bridge to colab-shim and from bridge to agg-iss
 ==> su - fluid
 ==> ssh-keygen -t rsa (hit <CR> thru prompts)
 ==> concat id_rsa.pub from all 3 hosts into ~/.ssh/authorized_keys on all 3 hosts
@@ -118,6 +118,7 @@ SCRIPT_PATH=/home/fluid/scripts
 IMAGE_NAME=fluid
 AGG_PORT=8888
 
+
 ==> runCrisp-notls-shim.sh
 WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
 WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
@@ -138,7 +139,7 @@ $ cd; rm -rf data/WORKSPACE/workspace
 20. start containers in any order
 agg-earth:
 $ ssh fluid@agg-earth
-$ cd scripts
+cd scripts
 $ ./runDocker-notls-shim.sh -r agg-earth
 
 agg-iss:
