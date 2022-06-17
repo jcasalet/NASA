@@ -1,14 +1,15 @@
 #!/bin/bash -x
 
 # read these from a file, hardcode for now
-DATA_PATH=/Users/jcasalet/Desktop/FLUID/CRISP/data
-SCRIPT_PATH=/Users/jcasalet/Desktop/FLUID/DOCKER/SHIM
-IMAGE_NAME=crisp
-MYNET=mynet
-SUBNET=192.168.56.0/24
+DATA_PATH=/home/fluid/data
+SCRIPT_PATH=/home/fluid/scripts
+IMAGE_NAME=fluid
 AGG_PORT=8888
-DATE=$(date +%s) 
-AGGRUNNING_FILE=/tmp/aggrunning-$DATE
+AGG_EARTH_IP=100.27.49.222
+AGG_ISS_IP=3.239.85.160
+COLAB_EARTH_IP=3.235.222.119
+COLAB_ISS_IP=3.239.83.239
+COLAB_SHIM_IP=3.238.96.18
 
 create_network() {
 	MYNET=$1
@@ -41,28 +42,23 @@ process_args() {
 
 ROLE=$(process_args $@)
 echo my role in runDocker: $ROLE
-create_network $MYNET
+#create_network $MYNET
 
 case $ROLE in
 	agg-iss)
 		HOSTNAME=agg-iss
-		IP_ADDR=192.168.56.101
 		;;
 	agg-earth)
 		HOSTNAME=agg-earth
-		IP_ADDR=192.168.56.102
 		;;
 	colab-iss)
 		HOSTNAME=colab-iss
-		IP_ADDR=192.168.56.103
 		;;
 	colab-shim)
 		HOSTNAME=colab-shim
-		IP_ADDR=192.168.56.104
 		;;
 	colab-earth)
 		HOSTNAME=colab-earth
-		IP_ADDR=192.168.56.105
 		;;
 	root)
 		docker run -it --rm --user 0:0 $IMAGE_NAME /bin/bash
@@ -75,4 +71,4 @@ esac
 
 echo about to run container with role = $ROLE
 
-docker run --net $MYNET -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro --ip ${IP_ADDR}  --add-host agg-iss:192.168.56.101 --add-host agg-earth:192.168.56.102  --add-host colab-iss:192.168.56.103  --add-host colab-shim:192.168.56.104 --add-host colab-earth:192.168.56.105  --restart always ${IMAGE_NAME}  /scripts/runCrisp-notls-shim.sh -r $ROLE
+docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart always  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 

@@ -1,18 +1,14 @@
 #!/bin/bash -x
 
 # read these from a file, hardcode for now
-IMAGE_NAME=crisp
-MYNET=mynet
-SUBNET=192.168.56.0/24
-STATE_DIR=/data/STATE
-WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE/ISS/AGG
-WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE/ISS/COLAB
-WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE/EARTH/AGG
-WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE/EARTH/COLAB/SHIM
-WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE/EARTH/COLAB/REAL
+WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
+WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
 ROUNDS=2
 AGG_ISS_HOST=agg-iss
-AGG_ISS_PORT=8889
+AGG_ISS_PORT=8888
 AGG_EARTH_HOST=agg-earth
 AGG_EARTH_PORT=8888
 
@@ -42,7 +38,8 @@ update_plans_iss() {
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_ISS_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_ISS_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
-	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
+	#sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
+	sed -i 's/.*disable_tls.*/    tls: false/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
@@ -83,7 +80,8 @@ update_plans_earth() {
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_EARTH_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_EARTH_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
-	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
+	#sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
+	sed -i 's/.*disable_tls.*/    tls: false/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
@@ -159,6 +157,7 @@ run_agg_earth() {
 	do
 		sleep 5
 	done
+	cd ${WORKSPACE_EARTH_AGG_DIR}/workspace/
 	fx model save -m save/crisp_best_.pbuf
 		
 }
@@ -182,6 +181,7 @@ run_colab_shim_earth() {
 	fi
 	mkdir -p $WORKSPACE_EARTH_COLAB_SHIM_DIR
 	update_plans_earth $ROLE 
+	mkdir $WORKSPACE_EARTH_COLAB_SHIM_DIR/workspace/proto_path
 	fx collaborator shim  -n $ROLE -p plan/plan.yaml -d plan/data.yaml
 }
 

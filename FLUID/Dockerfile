@@ -50,16 +50,16 @@ RUN conda install cudatoolkit=10.1
 
 # openfl:
 WORKDIR /home/fluid
-RUN git clone --branch fdl2021 https://github.com/intel/openfl.git
+RUN git clone --branch fluid https://github.com/intel/openfl.git
 RUN pip install /home/fluid/openfl/.
 
 # ssh keys
-RUN mkdir .ssh
-RUN chmod 700 .ssh
-ADD ./FILES/id_rsa.pub .ssh
-ADD ./FILES/id_rsa .ssh
-ADD ./FILES/known_hosts .ssh
-ADD ./FILES/authorized_keys .ssh
+#RUN mkdir .ssh
+#RUN chmod 700 .ssh
+#ADD ./FILES/id_rsa.pub .ssh
+#ADD ./FILES/id_rsa .ssh
+#ADD ./FILES/known_hosts .ssh
+#ADD ./FILES/authorized_keys .ssh
 
 RUN sh -c 'echo -e IMAGE COMPLETED - READY TO RUN'
 

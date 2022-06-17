@@ -1,5 +1,5 @@
-PROTOBUF_FILE=/Users/jcasalet/Desktop/FLUID/CRISP/data/WORKSPACE/EARTH/AGG/workspace/save/crisp_best_nlerm.pt
-TRAINDATA_FILE=/Users/jcasalet/Desktop/FLUID/CRISP/data/col_0/train/data.csv
+PROTOBUF_FILE=/Users/jcasalet/Desktop/FLUID/CRISP/crisp/data/WORKSPACE/workspace/save/crisp_best_nlerm.pt
+TRAINDATA_FILE=/Users/jcasalet/Desktop/FLUID/CRISP/crisp/data/col_0/train/data.csv
 
 
 
