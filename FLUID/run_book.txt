@@ -1,0 +1,179 @@
+
+1. create AWS instance template
+- redhat 8.4 hvm x86_64
+- t2.large (2 vcpu, 8gb ram, 0.0928 per hour)
+- jupyterlab key pari
+- jupyterlab security group (open ingress ports 22, 8888 from any ip; allow icmp)
+- 100gb root volume gp2
+
+2. launch 7 instance from template
+- give name in ec2 console to instance (agg-earth, colab-earth, colab-shim,  bridge,  tds,  colab-iss, agg-iss)
+
+3. login to instance as ec2-user
+ssh -i <key> ec2-user@<public-ip>
+
+4. switch user to root
+==> sudo -s
+
+5. set hostname to one of
+- agg-earth
+- colab-earth
+- colab-shim
+- bridge
+- tds
+- colab-iss
+- agg-iss
+
+==> vi /etc/hostname
+==> hostname <name>
+==> vi /etc/hosts (single hosts file for all nodes using public ips)
+127.0.0.1 localhost
+100.27.49.222 agg-earth
+3.239.85.160 agg-iss
+3.235.222.119 colab-earth
+3.238.96.18 colab-shim
+3.239.83.239 colab-iss
+52.5.52.204 bridge
+
+5.5 test hostnames and connectivity
+==> for host in $(cat /etc/hosts); do h=$(echo $host | awk '{print $1}'); ping -c 1 $h; done
+
+6. add docker-ce to yum repo data (else redhat will install podman-docker, and you don't want that)
+==> vi /etc/yum.repos.d/docker-ce.repo
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
+enabled=1
+gpgcheck=0
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+
+7. install software
+ yum install net-tools bzip2 zip unzip git which docker-ce docker-ce-cli docker-compose-plugin -y 
+
+8. verify docker group created  
+==> grep docker /etc/group
+
+9. create fluid group
+==> vi /etc/group
+fluid:x:2001:fluid
+
+10. create fluid user
+==> useradd -u 2001 -g 2001 -G docker -s /bin/bash -d /home/fluid fluid  -m
+==> passwd fluid
+
+
+11. install conda for python 3.7 ( from https://linuxize.com/post/how-to-install-anaconda-on-centos-7)
+ONLY DO THIS ON AGG-EARTH
+==> su - fluid
+
+# Install Miniconda and Python 3.7
+export CONDA_AUTO_UPDATE_CONDA=false
+export PATH=/home/fluid/miniconda/bin:$PATH
+curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh  && chmod +x ~/miniconda.sh  && ~/miniconda.sh -b -p ~/miniconda  && rm ~/miniconda.sh  && conda install -y python==3.7
+conda create -y -n venv_3.7 python=3.7 anaconda
+conda init bash
+conda run -n venv_3.7
+source ~/miniconda/etc/profile.d/conda.sh
+echo "export PATH=/home/fluid/miniconda/bin:$PATH" >> ~/.bash_profile
+echo "conda activate venv_3.7" >> ~/.bash_profile
+echo "conda activate venv_3.7" >> ~/.bash_profile
+
+# Installing neccessary libraries
+==> pip install paramiko scp pyflakes==2.3.0 pycodestyle==2.7.0 torch torchvision 
+==> conda install cudatoolkit=10.1
+
+
+12. install crisp
+==> git clone -b live_demo https://gitlab.com/frontierdevelopmentlab/astronaut-health/crisp.git
+==> pip install -r crisp/requirements.txt
+
+13. install  openfl
+ONLY DO THIS ON AGG-EARTH 
+==> git clone --branch fluid https://github.com/intel/openfl.git
+==> pip install /home/fluid/openfl/.
+
+
+14. configure password-less ssh from bridge to colab-shim and from bridge to agg-earth
+==> su - fluid
+==> ssh-keygen -t rsa (hit <CR> thru prompts)
+==> concat id_rsa.pub from all 3 hosts into ~/.ssh/authorized_keys on all 3 hosts
+==> chmod 600 ~/.ssh/authorized_keys
+==> try ssh b/w 3 hosts (first time will add to known_hosts, subsequently no prompts) 
+
+15. start docker daemon
+==> sudo -s; systemctl start docker
+
+16. transfer Dockerfile, scripts, and datato instance fluid home
+==> scp fluid.zip fluid@...
+==> cd; unzip fluid.zip; unzip data.zip
+
+17. build docker image
+==> docker image build -t fluid .
+
+18. define paths in scripts
+==> runDocker-notls-shim.sh
+DATA_PATH=/home/fluid/data
+SCRIPT_PATH=/home/fluid/scripts
+IMAGE_NAME=fluid
+AGG_PORT=8888
+
+==> runCrisp-notls-shim.sh
+WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
+WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
+ROUNDS=2
+AGG_ISS_HOST=agg-iss
+AGG_ISS_PORT=8888
+AGG_EARTH_HOST=agg-earth
+AGG_EARTH_PORT=8888
+
+19. clean up from previous runs
+agg-earth, colab-shim:
+$ cd; rm -rf data/WORKSPACE/workspace
+
+
+20. start containers in any order
+agg-earth:
+$ ssh fluid@agg-earth
+$ cd scripts
+$ ./runDocker-notls-shim.sh -r agg-earth
+
+agg-iss:
+$ ssh fluid@agg-iss
+$ cd scripts
+$ ./runDocker-notls-shim.sh -r agg-iss
+
+bridge:
+$ ssh fluid@bridge
+$ ./mysync.sh
+
+colab-earth:
+$ ssh fluid@colab-earth
+$ cd scripts
+$ ./runDocker-notls-shim.sh -r colab-earth
+
+colab-iss:
+$ ssh fluid@colab-iss
+$ cd scripts
+$ ./runDocker-notls-shim.sh -r colab-iss
+
+colab-shim:
+$ ssh fluid@colab-shim
+$ cd scripts
+$ ./runDocker-notls-shim.sh -r colab-shim
+
+21. after job is complete, retrieve results (that's why we need fluid on host?)
+
+on ??
+$ ./stopallcontainers.sh
+
+on bridge:
+$ pkill mysync.sh
+
+
+b. run get_results.sh on agg-earth
+==> cd ~/crisp; ./get_results.sh
+
