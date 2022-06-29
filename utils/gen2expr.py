@@ -1,9 +1,17 @@
 import pandas as pd
 import numpy as np
-import sys
+import argparse
 
-fakeDFFile = sys.argv[1]
-realDFFile = sys.argv[2]
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--fake', help='fake expression file name', default=None, required=True)
+    parser.add_argument('-r', '--real', help='real expression file name', default=None, required=True)
+    return parser.parse_args()
+
+args = parse_args()
+fakeDFFile = args.fake
+realDFFile = args.real
 
 fake_df = pd.read_csv(fakeDFFile, sep=',', header=0)
 real_df = pd.read_csv(realDFFile, sep=',', header=0)
