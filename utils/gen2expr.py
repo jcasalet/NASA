@@ -29,7 +29,7 @@ if theMin < 0:
     theMin = -1 * theMin
     fake_df = fake_df.add(theMin)
 
-fake_df = np.power(fake_df, 10)
+fake_df = np.power(fake_df, 2)
 fake_df = fake_df * real_std + real_mean
 
 fake_df.insert(0, 'gene', genes)
