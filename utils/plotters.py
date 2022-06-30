@@ -16,7 +16,8 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols, use_palet
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
     uniq_values = set(list(pcaDF[variable]))
-    palette = ['green', 'orange', 'brown', 'blue', 'red', 'purple']
+    #palette = ['green', 'orange', 'brown', 'blue', 'red', 'purple']
+    palette = sns.color_palette("tab10")
     if use_palette:
         ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100, palette=palette[:len(uniq_values)])
     else:
