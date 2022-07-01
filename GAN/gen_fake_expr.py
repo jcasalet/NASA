@@ -782,14 +782,14 @@ def calculate_close(A, B, delta):
     print('num close = ' + str(arraySum))
     print('num far = ' + str(size - arraySum))
 
-def un_standardize(real_expr, fake_expr):
+def un_standardize(real_expr, fake_expr, exp):
     '''x = np.log10(1+ expr_df)
     x = np.float32(x)
     x = (x - x.mean()) / x.std()'''
     real_mean = real_expr.mean()
     real_std = real_expr.std()
     x = (fake_expr * real_std) + real_mean
-    x = np.power(x)
+    x = np.power(x, exp)
     return x
 
 
@@ -881,7 +881,7 @@ def main():
         expr_df_genes = expr_df.index
         x_gen_df = pd.DataFrame(data=x_gen.T, index=expr_df_genes, columns=expr_df_samples)
         if eval(options.un_standardize):
-            x_gen_df = un_standardize(expr_df, x_gen_df)
+            x_gen_df = un_standardize(expr_df, x_gen_df, exp=10)
         x_gen_df.to_csv(options.output_dir + '/gen.csv', sep=',', header=True, index=True)
         expr_df.to_csv(options.output_dir + '/expr_subset.csv', sep=',', header=True, index=True)
         myPlot(x, x_gen, info_df, options.output_dir, use_meta_cols)
