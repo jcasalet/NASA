@@ -7,11 +7,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fake', help='fake expression file name', default=None, required=True)
     parser.add_argument('-r', '--real', help='real expression file name', default=None, required=True)
+    parser.add_argument('-e', '--exp', help='exponent to raise the df', default=None, required=True)
     return parser.parse_args()
 
 args = parse_args()
 fakeDFFile = args.fake
 realDFFile = args.real
+exponent = int(args.exp)
 
 fake_df = pd.read_csv(fakeDFFile, sep=',', header=0)
 real_df = pd.read_csv(realDFFile, sep=',', header=0)
@@ -29,7 +31,7 @@ if theMin < 0:
     theMin = -1 * theMin
     fake_df = fake_df.add(theMin)
 
-fake_df = np.power(fake_df, 2)
+fake_df = np.power(fake_df, exponent)
 fake_df = fake_df * real_std + real_mean
 
 fake_df.insert(0, 'gene', genes)
