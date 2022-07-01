@@ -789,7 +789,7 @@ def un_standardize(real_expr, fake_expr):
     real_mean = real_expr.mean()
     real_std = real_expr.std()
     x = (fake_expr * real_std) + real_mean
-    x = np.exp(x)
+    x = np.power(x)
     return x
 
 
