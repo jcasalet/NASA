@@ -126,7 +126,10 @@ def get_ensemble_results(to_bucket_results):
                 'test_acc': 0.97 || None
             }
             """
+        if method == 'Linear ICP':
+            continue
         if method not in NON_CAUSAL:
+            print('method: ', method)
             method_names += [method]
             # get feats sorted by highest absolute value; note for nonlinear models these are sensitivities (which should be used on normalized data)
             coefs = pd.DataFrame()
