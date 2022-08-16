@@ -28,7 +28,7 @@ def main():
 
     # initialize expression and meta data from files
     myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr, metaFileList=args.meta, inputDir=args.idir, outputDir=args.odir,
-                              normalize = 'beforeMerge', standardize = 'beforeMerge', oro_thresholds_per_study=True)
+                              normalize = 'beforeMerge', standardize = 'beforeMerge', log_xform=2, oro_thresholds_per_study=True)
 
     # filter only protein-coding genes
     print('dims before filter by type: ', myrnaseqdata.expressionDF.shape)
@@ -66,19 +66,29 @@ def main():
                             env_list = env_list, target='oro_thresh')'''
 
 class RNASeqData():
-    def __init__(self, inputDir ='.', rnaSeqFileList=None, metaFileList=None, outputDir='.',
-                 oro_scale='raw', middle50_samples=True, RScriptPath='/usr/local/bin/Rscript', normalize = 'afterMerge',
-                 standardize='never', oro_thresholds_per_study=True, outputFilePrefix='expr'):
+    def __init__(self, inputDir ='.',
+                 outputDir='.',
+                 outputFilePrefix='expr',
+                 rnaSeqFileList=None,
+                 metaFileList=None,
+                 oro_scale='raw',
+                 oro_thresholds_per_study=True,
+                 middle50_samples=True,
+                 RScriptPath='/usr/local/bin/Rscript',
+                 normalize = 'afterMerge',
+                 standardize='never',
+                 log_xform=None):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
         self.outputDir = outputDir
+        self.outputFilePrefix = outputFilePrefix
         #self.metaFileName = metaFileName
-        self.oro_scale=oro_scale
         self.normalize = normalize
         self.standardize = standardize
+        self.log_xform = log_xform
         self.oro_thresholds_per_study=oro_thresholds_per_study
+        self.oro_scale=oro_scale
         self.env_list = env_list
-        self.outputFilePrefix = outputFilePrefix
 
         # set up metadata
         self.metaFileList = metaFileList.split(',')
@@ -147,6 +157,9 @@ class RNASeqData():
 
         self.genes = list(self.expressionDF['gene'])
 
+        if not self.log_xform is None:
+            self.my_log(base=self.log_xform)
+
         # set up samples
         self.samples = list(self.metaDF['sample'])
         self.oro_thresholds_per_study_dict=dict()
@@ -176,6 +189,25 @@ class RNASeqData():
         print('dims before collapse: ', self.expressionDF.shape)
         self.collapseGeneCounts()
         print('dims after collapse: ', self.expressionDF.shape)
+
+
+    def my_log(self, base=10):
+        genes = list(self.expressionDF['gene'])
+        df_np = np.array(self.expressionDF.drop(columns=['gene']))
+        if base == 10:
+            df_np_log = pd.DataFrame(np.log10(df_np+1))
+        elif base == 2:
+            df_np_log = pd.DataFrame(np.log2(df_np+1))
+        else:
+            print('base unknown: ', base)
+            sys.exit(1)
+        df_np_log['gene'] = genes
+        cols = list(self.expressionDF.columns[1:])
+        df_np_log.columns = cols + ['gene']
+        df_np_log = df_np_log[['gene'] + cols]
+        self.expressionDF = df_np_log
+        self.outputFilePrefix += '_log' + str(base) + '_'
+
 
     def setTargetByKey(self, key):
         valueSet = set(self.metaDF[key])
