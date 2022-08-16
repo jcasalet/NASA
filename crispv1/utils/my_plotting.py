@@ -150,13 +150,16 @@ def get_ensemble_results(to_bucket_results):
             ########################################
             # JC: use coef/stdev
             print(method_dict['coefficients'])
-            coef_stdev = statistics.pstdev(method_dict['coefficients'])
-            print('coef_stdev: ', coef_stdev)
-            if coef_stdev != 0:
-                my_coefs = [n / coef_stdev if n else 1 for n in method_dict['coefficients']]
-                coefs['coefficient'] = my_coefs
-            else:
+            if method_dict['coefficients'] is None:
                 coefs['coefficient'] = method_dict['coefficients']
+            else:
+                coef_stdev = statistics.pstdev(method_dict['coefficients'])
+                print('coef_stdev: ', coef_stdev)
+                if coef_stdev != 0:
+                    my_coefs = [n / coef_stdev if n else 1 for n in method_dict['coefficients']]
+                    coefs['coefficient'] = my_coefs
+                else:
+                    coefs['coefficient'] = method_dict['coefficients']
             print('coefs[coefficient]: ', coefs['coefficient'])
 
             ########################################
