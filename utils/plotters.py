@@ -7,6 +7,7 @@ import argparse
 import json
 
 
+
 def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols, use_palette=True):
     pcaDF = pd.DataFrame(data=pca.fit_transform(df), columns=['PC 1', 'PC 2'])
     pcaDF.index = info_df.index
