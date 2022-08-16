@@ -184,7 +184,7 @@ def run(config):
         FRIRM_options = ensemble_options.get('FRIRM', {})
         FRIRM_args = {
             # Flag for model to use in Non-Linear IRM ['NN': MLP, 'DNN': Deeper MLP]
-            "NN_method": "NN",
+            "NN_method": "DNN",
             "verbose": 1,
             "n_iterations": 1000,
             "seed":  0,

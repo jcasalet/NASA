@@ -131,7 +131,7 @@ class LinearInvariantRiskMinimization(object):
             (self.reg * error + (1 - self.reg) * penalty).backward()
             opt.step()
 
-        for j in range(iteration):
+        '''for j in range(iteration):
             plt.figure()
             x = [i for i in range(len(error_dict[j]))]
             plt.scatter(x, error_dict[j])
@@ -143,7 +143,7 @@ class LinearInvariantRiskMinimization(object):
             plt.scatter(x, penalty_dict[j])
             plt.title('penalties')
             plt.show()
-        print('error: ', error)
+        print('error: ', error)'''
 
 
     def solution(self):

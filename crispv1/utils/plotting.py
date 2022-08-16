@@ -4,11 +4,16 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from sklearn.preprocessing import MinMaxScaler
+import statistics
+import math
+
 
 NON_CAUSAL = ['RF', 'Non-Causal ERM']
 
 
 # takes top_N how big of rank genes want to take (top ten, top twenty), dataframe of data, and output filename fname
+# JC which fig is this?
 def plot_most_predictive(coefficients, fname, top_N=50):
     coefficients['sort'] = coefficients['coefficient'].abs()
     num_nonzero = int(np.sum(coefficients['sort'] > 0))
@@ -29,12 +34,14 @@ def plot_most_predictive(coefficients, fname, top_N=50):
 # plot to get top_N selected features for a single CRISP method
 # takes top_N how big of rank genes want to take (top ten, top twenty), dataframe, and method name making plot for 
 #returns fig object for streamlit
+# JC this is the top 20 features (if any) per method
 def get_fig_most_predictive(coefficients, method_name, top_N=50):
     coefficients['sort'] = coefficients['coefficient'].abs()
     num_nonzero = int(np.sum(coefficients['sort'] > 0))
     dfsorted = coefficients.sort_values('sort', ascending=False)
     dfsorted['pvals'] = [p if p else 1 for p in dfsorted['pvals']]
 
+    # top 20 if any, 
     total_to_plot = min(top_N, num_nonzero)
     top_df = pd.DataFrame(
         {'coefficient': dfsorted['coefficient'][:total_to_plot], 'feature': dfsorted['feature'][:total_to_plot]})
@@ -54,6 +61,7 @@ def get_fig_most_predictive(coefficients, method_name, top_N=50):
 
 
 # plots overall top features for all methods based on weighted_coefficient, saves figure to fname
+# JC which fig is this?
 def plot_overall_most_predictive(coefficients, fname, top_N=50):
     coefficients['sort'] = coefficients['weighted_coefficient'].abs()
     num_nonzero = int(np.sum(coefficients['sort'] > 0))
@@ -77,6 +85,7 @@ def plot_overall_most_predictive(coefficients, fname, top_N=50):
 
 # plots overall top features for all methods based on weighted_coefficient, saves figure to fname
 #returns fig object for streamlit
+# JC this is the top 20 features: ensemble
 def get_fig_overall_most_predictive(coefficients, top_N=50):
     coefficients['sort'] = coefficients['weighted_coefficient'].abs()
     num_nonzero = int(np.sum(coefficients['sort'] > 0))
@@ -118,12 +127,70 @@ def get_ensemble_results(to_bucket_results):
             }
             """
         if method not in NON_CAUSAL:
+            print('method: ', method)
             method_names += [method]
             # get feats sorted by highest absolute value; note for nonlinear models these are sensitivities (which should be used on normalized data)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            coefs['coefficient'] = method_dict['coefficients']
+            #coefs['coefficient'] = method_dict['coefficients']
+            ########################################
+            # JC: use maxmin scaler for coefficients             
+            '''scaler = MinMaxScaler(feature_range=(0,1))
+            coefs_2d = []
+            for c in method_dict['coefficients']:
+                coefs_2d.append([c])
+            my_coefs = scaler.fit_transform(coefs_2d)
+            for i in range(len(method_dict['coefficients'])):
+                if method_dict['coefficients'][i] < 0:
+                    my_coefs[i] = -1.0 * my_coefs[i]
+            coefs['coefficient'] = my_coefs'''
+            ########################################
+
+
+            ########################################
+            # JC: use coef/stdev
+            print(method_dict['coefficients'])
+            if method_dict['coefficients'] is None:
+                coefs['coefficient'] = method_dict['coefficients']
+            else:
+                coef_stdev = statistics.pstdev(method_dict['coefficients'])
+                print('coef_stdev: ', coef_stdev)
+                if coef_stdev != 0:
+                    my_coefs = [n / coef_stdev if n else 1 for n in method_dict['coefficients']]
+                    coefs['coefficient'] = my_coefs
+                else:
+                    coefs['coefficient'] = method_dict['coefficients']
+            print('coefs[coefficient]: ', coefs['coefficient'])
+
+            ########################################
+
+            ########################################
+            # JC: use log
+            ''''my_coefs = list()
+            for i in range(len(method_dict['coefficients'])):
+                x = method_dict['coefficients'][i]
+                if x == 0: 
+                    my_coefs.append(0)
+                else:
+                   my_coefs.append(np.sign(x) * math.log(np.abs(x)))
+            coefs['coefficient'] = my_coefs'''
+            ########################################
+
+            ########################################
+            # JC: use coef/max(coefs) 
+            '''my_coefs = list()
+            theMax = max(np.abs(method_dict['coefficients']))
+            for i in range(len(method_dict['coefficients'])):
+                x = method_dict['coefficients'][i]
+                if x == 0:
+                    my_coefs.append(0)
+                else:
+                    my_coefs.append( x / theMax)
+            coefs['coefficient'] = my_coefs'''
+
+ 
             coefs['pvals'] = method_dict['pvals']
+            # JC sorting based on product of model accuracy * feature coefficient
             coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
             coefs = coefs.sort_values('sort', ascending=False)
             coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
@@ -154,6 +221,7 @@ def get_ensemble_results(to_bucket_results):
 
 
 # returns figure of method accuracies to streamlit
+# JC: accuracy plot
 def get_test_accuracy_figure(results_dict):
     model_names = []
     model_errors = []

@@ -12,7 +12,6 @@ def run(config):
     environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
 
 
-    '''
     ########################### CHECK IF TARGET IS CONSTANT ############################
     from utils.ZeroVarianceChecker import ZeroVarianceCheckerTarget
     from utils.exceptionclasses import TargetHasZeroVarianceError
@@ -20,7 +19,7 @@ def run(config):
     # If target variable is constant for dataset then stop experiment early
     if constant_target.zero_var:
         raise TargetHasZeroVarianceError()
-    '''
+
 
     ######################### LIST CHOSEN ENSEMBLE METHODS #############################
     ensemble_options = config.get('ensemble_options', {})
@@ -32,7 +31,7 @@ def run(config):
     # Initialise empty list to store per method results to outputs to file system/ cloud storage
     to_bucket_results = []
 
-    '''
+
     ############################# Correlation to Target Ranking #########################
     from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
@@ -169,7 +168,7 @@ def run(config):
         print("Finished RF")
         to_bucket = rf_results_dict['to_bucket']
         to_bucket_results.append(to_bucket)
-    '''
+
     #####################################################################################
     ############################# FEATURE REDUCTION 2 ###################################
     #####################################################################################
@@ -258,7 +257,6 @@ def run(config):
         dcf_args.update(dcf_options)
 
         # If we wish to output p vals for each feature, then use reduced feature set
-        original_dimensionality = 501
         if dcf_args["output_pvals"] and (original_dimensionality > 500):
             dcf_args["columns"] = reduced_test_dataset.predictor_columns
             dcf = Deconfounder(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, dcf_args)
@@ -423,20 +421,20 @@ def run(config):
     #####################################################################################
     ############################ SAVE RESULTS TO BUCKET #################################
 
-    '''save_dict_to_json({'zero std columns removed': zero_var_columns},
+    save_dict_to_json({'zero std columns removed': zero_var_columns},
                       config['results_directory'] + 'zero_std_columns.json')
 
-    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')'''
+    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')
 
     save_dict_to_json({"results": to_bucket_results}, config['results_directory'] + 'results_for_bucket.json')
 
     if config['use_cloud']:
-        '''save_json_to_bucket({"zero std columns removed": zero_var_columns},
+        save_json_to_bucket({"zero std columns removed": zero_var_columns},
                             config['bucket_path'] + config['bucket_exp_path'] + 'zero_var_columns.json', config['bucket_project'],
                             config['bucket_name'])
 
         save_dataframe_to_bucket(column_pairs_df, config['bucket_path'] + config['bucket_exp_path'] + 'correlation_pairs.csv',
-                                 config['bucket_project'], config['bucket_name'])'''
+                                 config['bucket_project'], config['bucket_name'])
 
         save_json_to_bucket({"results": to_bucket_results}, config['bucket_path'] + config['bucket_exp_path'] + 'results.json',
                             config['bucket_project'], config['bucket_name'])
