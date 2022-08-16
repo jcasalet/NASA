@@ -374,7 +374,7 @@ def train_gen(z, cc, nc, gen, disc, gen_opt, p_aug=0, norm_scale=1):
 
 def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, score_fn, save_fn,
           gen_opt=None, disc_opt=None, nb_critic=5, verbose=True, checkpoint_dir=None,
-          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None, kappa=1, gpu=0):
+          log_dir=None, patience=10, p_aug=0, norm_scale=0.5, gamma_list=None, kappa=1, tf_version=1):
     """
     Train model
     :param dataset: Numpy matrix with data. Shape=(nb_samples, nb_genes)
@@ -406,7 +406,7 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
     gen_log_dir = log_dir + current_time + '/gen'
     disc_log_dir = log_dir + current_time + '/disc'
 
-    if gpu == 0:
+    if tf_version == 1:
         gen_summary_writer = tf.summary.create_file_writer(gen_log_dir)
         disc_summary_writer = tf.summary.create_file_writer(disc_log_dir)
     else:
@@ -451,13 +451,13 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
                 sys.exit(1)
         # Logs
         with disc_summary_writer.as_default():
-            if gpu == 0:
+            if tf_version == 1:
                 tf.summary.scalar('loss', disc_losses.result(), step=epoch)
             else:
                 tf.summary.scalar('loss', disc_losses.result())
 
         with gen_summary_writer.as_default():
-            if gpu == 0:
+            if tf_version == 1:
                 tf.summary.scalar('loss', gen_losses.result(), step=epoch)
             else:
                 tf.summary.scalar('loss', gen_losses.result())
@@ -596,7 +596,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
 
 def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x,
-             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1, gpu=0):
+             x_test, x_train, checkpoint_dir, gamma_list, odir, kappa=1, tf_version=1):
     # Train on GL liver...
 
     MODELS_DIR = odir + '/models/'
@@ -661,7 +661,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
           checkpoint_dir=checkpoint_dir,
           gamma_list=gamma_list,
           kappa=kappa,
-          gpu=gpu)
+          tf_version=tf_version)
 
     # Evaluate data
     score = score_fn(x_test, cat_covs_test, num_covs_test, kappa=1)(gen)
@@ -820,6 +820,7 @@ def parse_args():
     parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
     parser.add_argument('-tp', '--train_percent', help='percentage to split for training', default=0.80, required=False)
     parser.add_argument('-us', '--un_standardize', help='boolean unstdize gen.csv', default='False', required=False)
+    parser.add_argument('-tf', '--tensorflow', help='version of tf (1 or 2)', default=1, required=False)
     return parser.parse_args()
     
 def main():
@@ -854,7 +855,7 @@ def main():
             gamma_list = None
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
-             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, int(options.gpu))
+             x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, int(options.tf_version))
         gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
         if num_samples == 0:
