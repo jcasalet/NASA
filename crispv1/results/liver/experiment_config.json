@@ -1,0 +1,38 @@
+{
+    "name": "liver",
+    "short_name": "liver",
+    "bucket_project": "<bucket_project>",
+    "bucket_name": "<bucket_name>",
+    "bucket_path": "<bucket_path>",
+    "verbose": 1,
+    "test_val_split": [
+        0.1,
+        0.1
+    ],
+    "data_options": {
+        "dataset_fp": "data/expr_crisp.pkl",
+        "subject_keys": "sample",
+        "targets": [
+            "oro_thresh"
+        ],
+        "predictors": "All",
+        "environments": [
+            "env"
+        ],
+        "exclude": [
+            "sample"
+        ]
+    },
+    "feature_selection_options": {
+        "max_features": 20,
+        "verbose": 0,
+        "seed": 12
+    },
+    "ensemble_options": {
+        "models": [
+            "LIRM"
+        ]
+    },
+    "use_cloud": false,
+    "results_directory": "/Users/jcasalet/Desktop/CODES/NASA/crispv1/results/liver/"
+}
