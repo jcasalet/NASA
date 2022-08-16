@@ -160,7 +160,7 @@ def get_ensemble_results(to_bucket_results):
                 # JC sorting based on product of model accuracy * feature coefficient
                 coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
                 coefs = coefs.sort_values('sort', ascending=False)
-                coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
+                coefs['pvals'] = [p if p else 1 for p in method_dict['pvals']]
             feat_dicts.append(coefs)
             # update all_features with all features seen across all models
             all_features.update(list(coefs['feature'].values))
