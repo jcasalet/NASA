@@ -149,10 +149,24 @@ def get_ensemble_results(to_bucket_results):
             # JC: use coef/stdev 
             coef_stdev = statistics.pstdev(method_dict['coefficients'])
             if coef_stdev != 0:
-                my_coefs = [n / coef_stdev if n else 0 for n in method_dict['coefficients']]
+                my_coefs = [n / coef_stdev if n else 1 for n in method_dict['coefficients']]
                 coefs['coefficient'] = my_coefs
             else:
                 coefs['coefficient'] = method_dict['coefficients']
+
+            pval_stdev = statistics.pstdev(method_dict['pvals'])
+            if pval_stdev != 0:
+                my_coefs = [n / pval_stdev if n else 1 for n in method_dict['pvals']]
+                coefs['pvals'] = my_coefs
+            else:
+                coefs['pvals'] = method_dict['pvals']
+            # JC sorting based on product of model accuracy * feature coefficient
+            coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
+            coefs = coefs.sort_values('sort', ascending=False)
+            coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
+            feat_dicts.append(coefs)
+            # update all_features with all features seen across all models
+            all_features.update(list(coefs['feature'].values))
             ########################################
 
             ########################################
@@ -180,14 +194,14 @@ def get_ensemble_results(to_bucket_results):
             coefs['coefficient'] = my_coefs'''
 
  
-            coefs['pvals'] = method_dict['pvals']
+            '''coefs['pvals'] = method_dict['pvals']
             # JC sorting based on product of model accuracy * feature coefficient
             coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
             coefs = coefs.sort_values('sort', ascending=False)
             coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
             feat_dicts.append(coefs)
             # update all_features with all features seen across all models
-            all_features.update(list(coefs['feature'].values))
+            all_features.update(list(coefs['feature'].values))'''
 
     # create df with coefficients each method, and the 'selected' parameter which is proportional to the number of
     # models that feature intersected with
