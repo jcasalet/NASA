@@ -157,6 +157,8 @@ def get_ensemble_results(to_bucket_results):
                     coefs['coefficient'] = method_dict['coefficients']
                 print('coefs[coefficient]: ', coefs['coefficient'])
             if not method_dict['pvals'] is None:
+                print('method_dict[pvals] type is : ', str(type(method_dict['pvals'])))
+                print('method_dict[pvals]: ', method_dict['pvals'])
                 pval_stdev = statistics.pstdev(method_dict['pvals'])
                 if pval_stdev != 0:
                     my_coefs = [n / pval_stdev if n else 1 for n in method_dict['pvals']]
