@@ -158,6 +158,7 @@ def get_ensemble_results(to_bucket_results):
                 print('coefs[coefficient]: ', coefs['coefficient'])
             if not method_dict['pvals'] is None:
                 # JC sorting based on product of model accuracy * feature coefficient
+                coefs['pvals'] = method_dict['pvals']
                 coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
                 coefs = coefs.sort_values('sort', ascending=False)
                 coefs['pvals'] = [p if p else 1 for p in method_dict['pvals']]
