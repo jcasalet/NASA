@@ -171,7 +171,7 @@ $ open /tmp/gan-out/mission*.png
 ```
 
 ## NOTES
-We've found the following values to be optimal when generating RAN-seq data on NASA GLDS samples:
+We've found the following values to be optimal when generating RNA-seq data on NASA GLDS samples:
 
 ```console
  -ld 64 -bs 16 -nl 2 -hd 256 -lr 5e-04 -nb 5
