@@ -820,7 +820,7 @@ def parse_args():
     parser.add_argument('-x', '--excl', help='list of meta params to exclude', default=None, required=False)
     parser.add_argument('-tp', '--train_percent', help='percentage to split for training', default=0.80, required=False)
     parser.add_argument('-us', '--un_standardize', help='boolean unstdize gen.csv', default='False', required=False)
-    parser.add_argument('-tf', '--tensorflow', help='version of tf (1 or 2)', default=1, required=False)
+    parser.add_argument('-tf', '--tf_version', help='version of tf (1 or 2)', default=1, required=False)
     return parser.parse_args()
     
 def main():
