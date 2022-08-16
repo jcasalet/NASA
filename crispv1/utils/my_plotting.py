@@ -149,6 +149,7 @@ def get_ensemble_results(to_bucket_results):
 
             ########################################
             # JC: use coef/stdev
+            print(method_dict['coefficients'])
             coef_stdev = statistics.pstdev(method_dict['coefficients'])
             print('coef_stdev: ', coef_stdev)
             if coef_stdev != 0:
