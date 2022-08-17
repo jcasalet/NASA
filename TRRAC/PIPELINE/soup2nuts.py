@@ -28,15 +28,22 @@ def main():
 
     # initialize expression and meta data from files
     myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr, metaFileList=args.meta, inputDir=args.idir, outputDir=args.odir,
-                              normalize = 'beforeMerge', standardize = 'beforeMerge', log_xform=2, oro_thresholds_per_study=True)
+                              normalize = 'afterMerge', standardize = 'never', log_xform=None, oro_thresholds_per_study=True)
+
+    # convert gene ids to gene names
+    print('dims before converting to names: ', myrnaseqdata.expressionDF.shape)
+    myrnaseqdata.convertIdsToNames()
+    print('dims after converting to names: ', myrnaseqdata.expressionDF.shape)
 
     # filter only protein-coding genes
     print('dims before filter by type: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.filterGenesByType(gene_type='protein_coding')
+    myrnaseqdata.filterGenesByType(gene_type='protein_coding', id='gene')
     print('dims after filter by type: ', myrnaseqdata.expressionDF.shape)
 
-    # convert gene ids to gene names
-    myrnaseqdata.convertIdsToNames()
+    # filter genes with 0 count in at least n samples
+    print('dims before filter 0: ', myrnaseqdata.expressionDF.shape)
+    myrnaseqdata.filterGenesByPercentZeroCount(n=80)
+    print('dims after filter 0: ', myrnaseqdata.expressionDF.shape)
 
     # reduce number of genes to n
     print('dims before filter by top n: ', myrnaseqdata.expressionDF.shape)
@@ -48,22 +55,18 @@ def main():
     myrnaseqdata.amplify_expr(n=0, var=50, seed=23, key='sample', numProcs=4)
     print('dims after amplify: ', myrnaseqdata.expressionDF.shape)
 
-    # filter genes with 0 count in at least n samples
-    print('dims before filter 0: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.filterGenesByPercentZeroCount(n=0.8)
-    print('dims after filter 0: ', myrnaseqdata.expressionDF.shape)
+    # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
+    # use DESeq to shrink data with vsd, rld, and ntd transformations
+    myrnaseqdata.shrinkExpression('vsd', myrnaseqdata.outputDir + '/expr_vsd.csv')
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
                             outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '.pkl',
                             env_list=env_list, target='oro_thresh')
 
-    # vst can only be run on count data, NOT on zscores
-    # use DESeq to shrink data with vsd, rld, and ntd transformations
-    '''myrnaseqdata.shrinkExpression('vsd', myrnaseqdata.outputDir + '/expr_vsd.csv')
     myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_vsd.csv',
                             outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_vsd.pkl',
-                            env_list = env_list, target='oro_thresh')'''
+                            env_list = env_list, target='oro_thresh')
 
 class RNASeqData():
     def __init__(self, inputDir ='.',
@@ -281,20 +284,22 @@ class RNASeqData():
         self.metaDF.to_csv(fileName, sep=',', index=None)
 
     def convertIdsToNames(self):
-        input_for_R = self.outputDir + '/expr_input.csv'
+        input_to_R = self.outputDir + '/expr_input.csv'
         output_from_R = self.outputDir + '/expr_output.csv'
-        self.save_expr(input_for_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
-        R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/convert_id_to_gene.R', '--args', input_for_R, output_from_R]
+        self.save_expr(input_to_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
+        R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/convert_id_to_gene.R', '--args', input_to_R, output_from_R]
         self.callR(R_cmd)
         self.expressionDF = self.read_expr(output_from_R)
 
     def shrinkExpression(self, transformation, fileName):
         if not transformation in ['vsd', 'rld', 'ntd']:
             print('transformation: ' + transformation + ' not known')
+            sys.exit(1)
         input_to_R = self.outputDir + '/expr_before_shrink.csv'
         output_from_R = fileName
         meta_file = self.outputDir + '/meta.csv'
         self.save_expr(input_to_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
+        #self.save_expr(input_to_R)
         self.save_meta(meta_file)
         R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/shrink.R', '--args', input_to_R, meta_file, output_from_R,
                 transformation, '--no-save']
@@ -379,8 +384,8 @@ class RNASeqData():
         # join env dictionary to data frame
         self.expressionDF['env'] = self.expressionDF['sample'].map(env_dict)
 
-    def filterGenesByPercentZeroCount(self, n=None):
-        if n is None:
+    def filterGenesByPercentZeroCount(self, n=0):
+        if n == 0:
             pass
         else:
             df = self.transpose_df(self.expressionDF, 'sample', 'gene')
@@ -388,7 +393,7 @@ class RNASeqData():
             self.expressionDF = self.transpose_df(df, 'gene', 'sample')
             self.genes = list(self.expressionDF.columns)[1:]
 
-    def filterGenesByType(self, gene_type='protein_coding'):
+    def filterGenesByType(self, gene_type='protein_coding', id='id'):
         gene_types = {'ribozyme', 'protein_coding', 'rRNA', 'TEC', 'IG_D_pseudogene', 'snRNA', 'IG_LV_gene', 'pseudogene',
                       'IG_J_gene', 'transcribed_unitary_pseudogene', 'processed_pseudogene', 'IG_V_gene', 'Mt_tRNA',
                       'TR_J_pseudogene', 'miRNA', 'Mt_rRNA', 'sRNA', 'IG_C_pseudogene', 'IG_C_gene', 'TR_J_gene',
@@ -402,13 +407,19 @@ class RNASeqData():
         server = Server(host='http://www.ensembl.org')
         dataset = (server.marts['ENSEMBL_MART_ENSEMBL'].datasets['mmusculus_gene_ensembl'])
         gene_info = dataset.query(attributes=['ensembl_gene_id', 'external_gene_name', 'gene_biotype'])
-        filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene stable ID'])
-        filter_columns = ['sample'] + filter_genes
-        self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(filter_columns)]
-        new_columns = list(self.expressionDF.drop(columns=['sample']))
-        #gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene name'])
-        gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene stable ID'])
-        self.expressionDF.columns = ['sample'] + gene_names
+
+        if id == 'id':
+            filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene stable ID'])
+            filter_columns = ['sample'] + filter_genes
+            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(filter_columns)]
+            new_columns = list(self.expressionDF.drop(columns=['sample']))
+            #gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene name'])
+            gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene stable ID'])
+            self.expressionDF.columns = ['sample'] + gene_names
+        elif id == 'gene':
+            filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
+            filter_columns = ['sample'] + filter_genes
+            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(filter_columns)]
         self.expressionDF = self.expressionDF.loc[:, self.expressionDF.columns.notna()]
         self.genes = list(self.expressionDF.columns)[1:]
         self.outputFilePrefix += '_protein-coding_'
@@ -421,6 +432,7 @@ class RNASeqData():
             pass
         else:
             df = self.transpose_df(self.expressionDF, 'sample', 'gene')
+            #sdList = df.std(axis=1)
             sdList = df.var(axis=1)
             sdDict = {k: v for v, k in enumerate(sdList)}
             if n < 0:
