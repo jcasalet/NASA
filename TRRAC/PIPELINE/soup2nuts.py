@@ -28,7 +28,8 @@ def main():
 
     # initialize expression and meta data from files
     myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr, metaFileList=args.meta, inputDir=args.idir, outputDir=args.odir,
-                              normalize = 'afterMerge', standardize = 'never', log_xform=None, oro_thresholds_per_study=True)
+                              normalize = 'afterMerge', standardize = 'afterMerge', log_xform=2, vst=None,
+                              oro_thresholds_per_study=True)
 
     # convert gene ids to gene names
     print('dims before converting to names: ', myrnaseqdata.expressionDF.shape)
@@ -57,16 +58,17 @@ def main():
 
     # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
     # use DESeq to shrink data with vsd, rld, and ntd transformations
-    myrnaseqdata.shrinkExpression('vsd', myrnaseqdata.outputDir + '/expr_vsd.csv')
+    if not myrnaseqdata.vst is None:
+        myrnaseqdata.shrinkExpression(myrnaseqdata.vst, myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv')
+        myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv',
+                                outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_'  +
+                                           myrnaseqdata.vst + '.pkl', env_list=env_list, target='oro_thresh')
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
                             outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '.pkl',
                             env_list=env_list, target='oro_thresh')
 
-    myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_vsd.csv',
-                            outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_vsd.pkl',
-                            env_list = env_list, target='oro_thresh')
 
 class RNASeqData():
     def __init__(self, inputDir ='.',
@@ -80,6 +82,7 @@ class RNASeqData():
                  RScriptPath='/usr/local/bin/Rscript',
                  normalize = 'afterMerge',
                  standardize='never',
+                 vst=None,
                  log_xform=None):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
@@ -89,6 +92,7 @@ class RNASeqData():
         self.normalize = normalize
         self.standardize = standardize
         self.log_xform = log_xform
+        self.vst=vst
         self.oro_thresholds_per_study=oro_thresholds_per_study
         self.oro_scale=oro_scale
         self.env_list = env_list
@@ -116,9 +120,23 @@ class RNASeqData():
             cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', inputFile, metaFile, outputFile]
             self.callR(cmd)
             self.expressionDF = pd.read_csv(outputFile, sep=',', header=0)
+            if 'gene' in self.expressionDF.columns and 'Unnamed: 0' in self.expressionDF.columns:
+                self.expressionDF.drop(columns=['Unnamed: 0'], inplace=True)
             self.outputFilePrefix += '_norm-after-merge_'
+            if not self.log_xform is None:
+                self.expressionDF = self.my_log(base=self.log_xform, expr=self.expressionDF)
+                self.outputFilePrefix += '_log-' + str(self.log_xform)
+            if self.standardize == 'afterMerge':
+                genes = list(self.expressionDF['gene'])
+                self.expressionDF.drop(columns=['gene'], inplace=True)
+                numeric_cols = list(self.expressionDF.columns)
+                # self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
+                self.expressionDF = self.expressionDF.apply(zscore, axis=0)
+                self.expressionDF['gene'] = genes
+                self.expressionDF = self.expressionDF[['gene'] + numeric_cols]
+                self.outputFilePrefix += '_std_'
 
-        elif self.normalize == 'beforeMerge' and self.standardize == 'beforeMerge':
+        elif self.normalize == 'beforeMerge' and self.standardize == 'beforeMerge' and not self.log_xform is None:
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', self.inputDir + '/' + e,
                        self.inputDir + '/' + m, self.outputDir + '/mor_' + e]
@@ -127,17 +145,21 @@ class RNASeqData():
                 # there's an issue in R where it writes  either  an unnamed column for genes or 2 columns: one named 'gene' and one named 'Unnamed: 0'
                 if 'gene' in self.rnaExprDataDict[e].columns and 'Unnamed: 0' in self.rnaExprDataDict[e].columns:
                     self.rnaExprDataDict[e].drop(columns=['Unnamed: 0'], inplace=True)
+
+            for e in self.rnaExprDataDict.keys():
+                self.rnaExprDataDict[e] = self.my_log(base=self.log_xform, expr=self.rnaExprDataDict[e])
+
             for e in self.rnaExprDataDict.keys():
                 genes=list(self.rnaExprDataDict[e]['gene'])
                 self.rnaExprDataDict[e].drop(columns=['gene'], inplace=True)
                 numeric_cols = list(self.rnaExprDataDict[e].columns)
-                self.rnaExprDataDict[e] = self.rnaExprDataDict[e].apply(zscore)
+                #self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
+                self.rnaExprDataDict[e] = self.rnaExprDataDict[e].apply(zscore, axis=0)
                 self.rnaExprDataDict[e]['gene'] = genes
                 self.rnaExprDataDict[e] = self.rnaExprDataDict[e][['gene'] + numeric_cols]
-                #self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
 
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            self.outputFilePrefix += '_norm-before-merge_std-before-merge_'
+            self.outputFilePrefix += '_norm-before-merge_log-before-merge_std-before-merge_'
 
         elif self.normalize == 'beforeMerge':
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
@@ -158,10 +180,17 @@ class RNASeqData():
             print('no such normalize value: ', self.normalize)
             sys.exit(1)
 
+
+        if 'Unnamed: 0' in self.expressionDF.columns:
+            if not 'gene' in self.expressionDF.columns:
+                self.expressionDF.rename(columns={'Unnamed: 0': 'gene'}, inplace=True)
+            else:
+                self.expressionDF.drop(columns=['Unnamed: 0'], inplace=True)
+
         self.genes = list(self.expressionDF['gene'])
 
-        if not self.log_xform is None:
-            self.my_log(base=self.log_xform)
+
+
 
         # set up samples
         self.samples = list(self.metaDF['sample'])
@@ -194,9 +223,9 @@ class RNASeqData():
         print('dims after collapse: ', self.expressionDF.shape)
 
 
-    def my_log(self, base=10):
-        genes = list(self.expressionDF['gene'])
-        df_np = np.array(self.expressionDF.drop(columns=['gene']))
+    def my_log(self, base=10, expr=None):
+        genes = list(expr['gene'])
+        df_np = np.array(expr.drop(columns=['gene']))
         if base == 10:
             df_np_log = pd.DataFrame(np.log10(df_np+1))
         elif base == 2:
@@ -205,11 +234,11 @@ class RNASeqData():
             print('base unknown: ', base)
             sys.exit(1)
         df_np_log['gene'] = genes
-        cols = list(self.expressionDF.columns[1:])
+        cols = list(expr.columns[1:])
         df_np_log.columns = cols + ['gene']
         df_np_log = df_np_log[['gene'] + cols]
-        self.expressionDF = df_np_log
-        self.outputFilePrefix += '_log' + str(base) + '_'
+        #self.outputFilePrefix += '_log' + str(base) + '_'
+        return df_np_log
 
 
     def setTargetByKey(self, key):
