@@ -23,7 +23,7 @@ $ cd NASA
 ```
 
 ## Permute the expression data and the metadata 
-Run the following steps to permute the data and metadata so that the samples are in the same order.  Subsequent software in this pipeline requires this.
+IMPORTANT: Run the following steps to permute the data and metadata so that the samples are in the same order in both the expression file and the metadata file.  The GAN training algorithm assumes the samples are in the same order, and if they are not, it will produce jibberish results.
 
 1. Examine the first column of the original expression data and first row of the original meta data.  Note that they are not the same.
 ```console
