@@ -12,6 +12,7 @@ import functools as ft
 import random
 from multiprocessing import Process, Queue, cpu_count
 from scipy.stats import zscore
+from pyrolite.util.synthetic import normal_frame, random_cov_matrix
 
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -28,7 +29,7 @@ def main():
 
     # initialize expression and meta data from files
     myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr, metaFileList=args.meta, inputDir=args.idir, outputDir=args.odir,
-                              normalize = 'afterMerge', standardize = 'afterMerge', log_xform=2, vst=None,
+                              normalize = 'afterMerge', standardize = 'afterMerge', log_xform='CLR', vst=None,
                               oro_thresholds_per_study=True)
 
     # convert gene ids to gene names
@@ -108,6 +109,9 @@ class RNASeqData():
         # set up expression df dict
         self.rnaSeqFileList = rnaSeqFileList.split(',')
         self.rnaExprDataDict = dict()
+
+        # case: normalize and optionally log-transform then standardize, all after merge
+        # first, normalize
         if self.normalize == 'afterMerge':
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
@@ -123,9 +127,18 @@ class RNASeqData():
             if 'gene' in self.expressionDF.columns and 'Unnamed: 0' in self.expressionDF.columns:
                 self.expressionDF.drop(columns=['Unnamed: 0'], inplace=True)
             self.outputFilePrefix += '_norm-after-merge_'
+
+            # second, log transform
             if not self.log_xform is None:
-                self.expressionDF = self.my_log(base=self.log_xform, expr=self.expressionDF)
+                if self.log_xform == 2 or self.log_xform == 10:
+                    self.expressionDF = self.my_log(base=self.log_xform, expr=self.expressionDF)
+                elif self.log_xform == 'ILR':
+                    self.expressionDF = self.my_log_ratio(lr_type='ILR')
+                elif self.log_xform == 'CLR':
+                    self.expressionDF = self.my_log_ratio(lr_type='CLR')
                 self.outputFilePrefix += '_log-' + str(self.log_xform)
+
+            # third, standardize
             if self.standardize == 'afterMerge':
                 genes = list(self.expressionDF['gene'])
                 self.expressionDF.drop(columns=['gene'], inplace=True)
@@ -136,7 +149,9 @@ class RNASeqData():
                 self.expressionDF = self.expressionDF[['gene'] + numeric_cols]
                 self.outputFilePrefix += '_std_'
 
+        # case: normalize, log, and standardize, all before merge
         elif self.normalize == 'beforeMerge' and self.standardize == 'beforeMerge' and not self.log_xform is None:
+            # first normalize
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', self.inputDir + '/' + e,
                        self.inputDir + '/' + m, self.outputDir + '/mor_' + e]
@@ -146,9 +161,11 @@ class RNASeqData():
                 if 'gene' in self.rnaExprDataDict[e].columns and 'Unnamed: 0' in self.rnaExprDataDict[e].columns:
                     self.rnaExprDataDict[e].drop(columns=['Unnamed: 0'], inplace=True)
 
+            # second, log transforms
             for e in self.rnaExprDataDict.keys():
                 self.rnaExprDataDict[e] = self.my_log(base=self.log_xform, expr=self.rnaExprDataDict[e])
 
+            # third, standardize
             for e in self.rnaExprDataDict.keys():
                 genes=list(self.rnaExprDataDict[e]['gene'])
                 self.rnaExprDataDict[e].drop(columns=['gene'], inplace=True)
@@ -161,6 +178,8 @@ class RNASeqData():
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
             self.outputFilePrefix += '_norm-before-merge_log-before-merge_std-before-merge_'
 
+
+        # case: just normalize (no log transform or standardization) before merge
         elif self.normalize == 'beforeMerge':
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', self.inputDir + '/' + e,
@@ -170,6 +189,7 @@ class RNASeqData():
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
             self.outputFilePrefix += '_norm-before-merge_'
 
+        # case: no transformations, just merge data
         elif self.normalize == 'never':
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
@@ -222,6 +242,24 @@ class RNASeqData():
         self.collapseGeneCounts()
         print('dims after collapse: ', self.expressionDF.shape)
 
+
+    def my_log_ratio(self, lr_type=None):
+        import pyrolite
+        # expr needs to be samples x genes and strictly positive
+        samples = list(self.expressionDF.columns)[1:]
+        genes = list(self.expressionDF['gene'])
+        df=self.expressionDF.drop(columns=['gene'])
+        df=df.T
+        df=df+1
+        if lr_type=='CLR':
+            df = df.pyrocomp.CLR()
+        elif lr_type == 'ILR':
+            df = df.pyrocomp.ILR()
+        df = df.T
+        df['gene'] = genes
+        df = df[['gene'] + samples]
+        df = df.reset_index().drop(columns=['index'])
+        return df
 
     def my_log(self, base=10, expr=None):
         genes = list(expr['gene'])
