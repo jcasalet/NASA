@@ -21,6 +21,8 @@ class NonLinearInvariantRiskMinimization(object):
             self.input_dim = environment_datasets[0].get_feature_dim()
             self.output_dim = environment_datasets[0].get_output_dim()
             self.model = MLP(self.args, self.input_dim, self.output_dim)
+            # JC
+            self.model.train()
             if self.cuda:
                 self.model.cuda()
         if method == 'DNN':
