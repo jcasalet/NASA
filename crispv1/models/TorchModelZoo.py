@@ -16,16 +16,24 @@ class TorchLinearRegressionModule(torch.nn.Module):
 class MLP(torch.nn.Module):
     def __init__(self, flags, input_dim, output_dim):
         super(MLP, self).__init__()
+        dropout_p_low = 0.4
+        dropout_p_high = 0.4
         lin1 = torch.nn.Linear(input_dim, flags['hidden_dim'], bias=True)
+        d1 = torch.nn.Dropout(dropout_p_low)
         lin2 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
+        d2 = torch.nn.Dropout(dropout_p_low)
+        #lin3 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
         lin3 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
+        d3 = torch.nn.Dropout(dropout_p_high)
         lin4 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
 
         for lin in [lin1, lin2, lin3, lin4]:
             torch.nn.init.xavier_uniform_(lin.weight)
             torch.nn.init.zeros_(lin.bias)
-        self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), lin2, torch.nn.ReLU(True), lin3,
-                                         torch.nn.ReLU(True), lin4)
+        self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), d1,
+                                         lin2, torch.nn.ReLU(True), d2,
+                                         lin3, torch.nn.ReLU(True), d3,
+                                         lin4)
         self.input_dim = input_dim
         self.output_dim = output_dim
 
