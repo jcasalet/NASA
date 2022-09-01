@@ -25,7 +25,7 @@ class MLP(torch.nn.Module):
             torch.nn.init.xavier_uniform_(lin.weight)
             torch.nn.init.zeros_(lin.bias)
         self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), lin2, torch.nn.ReLU(True), lin3,
-                                         torch.nn.ReLu(True, lin4))
+                                         torch.nn.ReLU(True, lin4))
         self.input_dim = input_dim
         self.output_dim = output_dim
 
