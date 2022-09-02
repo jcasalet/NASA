@@ -17,7 +17,7 @@ from pyrolite.util.synthetic import normal_frame, random_cov_matrix
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-env_list= ['study', 'dissection', 'libprep']
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -28,9 +28,17 @@ def main():
     args = parser.parse_args()
 
     # initialize expression and meta data from files
-    myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr, metaFileList=args.meta, inputDir=args.idir, outputDir=args.odir,
-                              normalize = 'afterMerge', standardize = 'afterMerge', log_xform='CLR', vst=None,
-                              oro_thresholds_per_study=True)
+    myrnaseqdata = RNASeqData(rnaSeqFileList=args.expr,
+                              metaFileList=args.meta,
+                              inputDir=args.idir,
+                              outputDir=args.odir,
+                              normalize = 'afterMerge',
+                              standardize = 'never',
+                              log_xform=None, vst=None,
+                              oro_thresholds_per_study=True,
+                              sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
+                              env_list= ['study', 'dissection', 'libprep'],
+                              target='oro_thresh')
 
     # convert gene ids to gene names
     print('dims before converting to names: ', myrnaseqdata.expressionDF.shape)
@@ -63,12 +71,14 @@ def main():
         myrnaseqdata.shrinkExpression(myrnaseqdata.vst, myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv')
         myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv',
                                 outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_'  +
-                                           myrnaseqdata.vst + '.pkl', env_list=env_list, target='oro_thresh')
+                                myrnaseqdata.vst + '.pkl',
+                                env_list=myrnaseqdata.env_list,
+                                target=myrnaseqdata.target)
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
                             outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '.pkl',
-                            env_list=env_list, target='oro_thresh')
+                            env_list=myrnaseqdata.env_list, target=myrnaseqdata.target)
 
 
 class RNASeqData():
@@ -84,19 +94,30 @@ class RNASeqData():
                  normalize = 'afterMerge',
                  standardize='never',
                  vst=None,
-                 log_xform=None):
+                 log_xform=None,
+                 sample_subsets=None,
+                 env_list=None,
+                 target=None):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.outputFilePrefix = outputFilePrefix
         #self.metaFileName = metaFileName
-        self.normalize = normalize
-        self.standardize = standardize
-        self.log_xform = log_xform
         self.vst=vst
         self.oro_thresholds_per_study=oro_thresholds_per_study
         self.oro_scale=oro_scale
         self.env_list = env_list
+        self.normalize = normalize
+        self.standardize = standardize
+        self.log_xform = log_xform
+        self.sample_subsets = sample_subsets
+        self.env_list = env_list
+        self.target = target
+
+        # append subsets to file name
+        for group in self.sample_subsets:
+            self.outputFilePrefix += '-' + group
+        self.outputFilePrefix += '_'
 
         # set up metadata
         self.metaFileList = metaFileList.split(',')
@@ -105,6 +126,11 @@ class RNASeqData():
             self.metaDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
         self.metaDF = pd.concat(list(self.metaDict.values()), ignore_index=True)
         self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
+        print('dims before filtering out groups: ', self.metaDF.shape)
+        self.metaDF = self.metaDF[self.metaDF['group'].isin(self.sample_subsets)]
+        print('dims after filtering out groups: ', self.metaDF.shape)
+        self.samples=list(self.metaDF['sample'])
+
 
         # set up expression df dict
         self.rnaSeqFileList = rnaSeqFileList.split(',')
@@ -115,6 +141,7 @@ class RNASeqData():
         if self.normalize == 'afterMerge':
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
+                self.rnaExprDataDict[f] = self.rnaExprDataDict[f][self.rnaExprDataDict[f].columns.intersection(['gene'] + self.samples)]
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
             inputFile=self.outputDir + '/expr_before_normalize.csv'
             outputFile=self.outputDir + '/expr_after_normalize.csv'
@@ -157,6 +184,7 @@ class RNASeqData():
                        self.inputDir + '/' + m, self.outputDir + '/mor_' + e]
                 self.callR(cmd)
                 self.rnaExprDataDict[e] = pd.read_csv(self.outputDir + '/mor_' + e, sep=',', header=0)
+                self.rnaExprDataDict[e] = self.rnaExprDataDict[e][self.rnaExprDataDict[e].columns.intersection(['gene'] + self.samples)]
                 # there's an issue in R where it writes  either  an unnamed column for genes or 2 columns: one named 'gene' and one named 'Unnamed: 0'
                 if 'gene' in self.rnaExprDataDict[e].columns and 'Unnamed: 0' in self.rnaExprDataDict[e].columns:
                     self.rnaExprDataDict[e].drop(columns=['Unnamed: 0'], inplace=True)
@@ -187,6 +215,7 @@ class RNASeqData():
                 self.callR(cmd)
                 self.rnaExprDataDict[e] = pd.read_csv(self.outputDir + '/mor_' + e, sep=',', header=0)
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
             self.outputFilePrefix += '_norm-before-merge_'
 
         # case: no transformations, just merge data
@@ -194,6 +223,7 @@ class RNASeqData():
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
             self.outputFilePrefix += '_unnorm_'
 
         else:
@@ -209,11 +239,7 @@ class RNASeqData():
 
         self.genes = list(self.expressionDF['gene'])
 
-
-
-
         # set up samples
-        self.samples = list(self.metaDF['sample'])
         self.oro_thresholds_per_study_dict=dict()
         if middle50_samples or self.oro_thresholds_per_study:
             for group in set(self.metaDF['group']):
