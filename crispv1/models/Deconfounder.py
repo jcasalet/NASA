@@ -41,7 +41,8 @@ class Deconfounder(object):
         # Fix the seed
         random.seed(self.seed)
         np.random.seed(self.seed)
-        tf.set_random_seed(self.seed)
+        #tf.set_random_seed(self.seed)
+        tf.random.set_seed(self.seed)
 
         # Set up test set df
         columns = args["columns"]
