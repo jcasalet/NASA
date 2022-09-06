@@ -268,7 +268,8 @@ class Deconfounder(object):
 
 
         elbo = energy + entropy
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
+        #optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
+        optimizer = tf.optimizers.Adam(learning_rate=0.05)
         train = optimizer.minimize(-elbo)
 
         '''elbo = None
