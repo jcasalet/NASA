@@ -265,16 +265,17 @@ class Deconfounder(object):
 
         energy = target(qb, qw, qw2, qz)
         entropy = -target_q(qb, qw, qw2, qz)
-        # elbo = energy + entropy
-        elbo = None
+
+
+        elbo = energy + entropy
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
+        train = optimizer.minimize(-elbo)
+
+        '''elbo = None
         def cost():
             return -1 * (energy + entropy)
-       # elbo = energy + entropy
-
-        #optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
         optimizer = tf.optimizers.Adam(learning_rate=0.05)
-        #train = optimizer.minimize(-elbo)
-        train = optimizer.minimize(loss=cost, var_list=[qb, qw])
+        train = optimizer.minimize(loss=cost, var_list=[qb, qw])'''
 
         init = tf.global_variables_initializer()
 
