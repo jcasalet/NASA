@@ -2,7 +2,9 @@ import os
 import numpy as np
 import numpy.random as npr
 import pandas as pd
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v2 as tf
+tf.enable_v2_behavior()
 import statsmodels.api as sm
 #from tensorflow_probability import edward2 as ed
 import edward2 as ed
@@ -263,7 +265,7 @@ class Deconfounder(object):
 
         energy = target(qb, qw, qw2, qz)
         entropy = -target_q(qb, qw, qw2, qz)
-
+        # elbo = energy + entropy
         elbo = None
         def cost():
             return -1 * (energy + entropy)
