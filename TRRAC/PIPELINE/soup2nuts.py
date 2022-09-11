@@ -17,7 +17,7 @@ from pyrolite.util.synthetic import normal_frame, random_cov_matrix
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-
+R_SCRIPTS_DIR='/Users/jcasalet/Desktop/CODES/NASA/TRRAC/PIPELINE/R_SCRIPTS/'
 
 def main():
     parser = argparse.ArgumentParser()
@@ -34,36 +34,19 @@ def main():
                               outputDir=args.odir,
                               normalize = 'afterMerge',
                               standardize = 'never',
-                              log_xform=None, vst=None,
+                              log_xform=None,
+                              vst=None,
                               oro_thresholds_per_study=True,
                               sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
                               env_list= ['study', 'dissection', 'libprep'],
-                              target='oro_thresh')
-
-    # convert gene ids to gene names
-    print('dims before converting to names: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.convertIdsToNames()
-    print('dims after converting to names: ', myrnaseqdata.expressionDF.shape)
-
-    # filter only protein-coding genes
-    print('dims before filter by type: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.filterGenesByType(gene_type='protein_coding', id='gene')
-    print('dims after filter by type: ', myrnaseqdata.expressionDF.shape)
-
-    # filter genes with 0 count in at least n samples
-    print('dims before filter 0: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.filterGenesByPercentZeroCount(n=80)
-    print('dims after filter 0: ', myrnaseqdata.expressionDF.shape)
-
-    # reduce number of genes to n
-    print('dims before filter by top n: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.filterGenesByTopNSD(n=0)
-    print('dims after filter by top n: ', myrnaseqdata.expressionDF.shape)
-
-    # amplify number of samples by n more samples
-    print('dims before amplify: ', myrnaseqdata.expressionDF.shape)
-    myrnaseqdata.amplify_expr(n=0, var=50, seed=23, key='sample', numProcs=4)
-    print('dims after amplify: ', myrnaseqdata.expressionDF.shape)
+                              target='oro_thresh',
+                              gene_filter = 'protein_coding',
+                              zero_count_percent = 0.80,
+                              low_count_threshold = 5,
+                              low_count_percent = 0.80,
+                              top_n_var = 0,
+                              amplify = {'n':2, 'var':10, 'seed':23}
+                              )
 
     # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
     # use DESeq to shrink data with vsd, rld, and ntd transformations
@@ -77,7 +60,7 @@ def main():
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
-                            outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '.pkl',
+                            outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_crisp.pkl',
                             env_list=myrnaseqdata.env_list, target=myrnaseqdata.target)
 
 
@@ -89,23 +72,30 @@ class RNASeqData():
                  metaFileList=None,
                  oro_scale='raw',
                  oro_thresholds_per_study=True,
-                 middle50_samples=True,
+                 middle50_samples=False,
                  RScriptPath='/usr/local/bin/Rscript',
-                 normalize = 'afterMerge',
+                 normalize = 'never',
                  standardize='never',
                  vst=None,
                  log_xform=None,
                  sample_subsets=None,
                  env_list=None,
-                 target=None):
+                 target=None,
+                 gene_filter='protein_coding',
+                 zero_count_percent=0.8,
+                 low_count_threshold = 5,
+                 low_count_percent = 0.8,
+                 top_n_var = 0,
+                 amplify={'n': 0, 'var': 10, 'seed': 23}
+                 ):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.outputFilePrefix = outputFilePrefix
-        #self.metaFileName = metaFileName
         self.vst=vst
         self.oro_thresholds_per_study=oro_thresholds_per_study
         self.oro_scale=oro_scale
+        self.middle50_samples = middle50_samples
         self.env_list = env_list
         self.normalize = normalize
         self.standardize = standardize
@@ -113,6 +103,13 @@ class RNASeqData():
         self.sample_subsets = sample_subsets
         self.env_list = env_list
         self.target = target
+        self.gene_filter = gene_filter
+        self.zero_count_percent = zero_count_percent
+        self.low_count_threshold = low_count_threshold
+        self.low_count_percent = low_count_percent
+        self.top_n_var = top_n_var
+        self.amplify = amplify
+
 
         # append subsets to file name
         for group in self.sample_subsets:
@@ -126,11 +123,11 @@ class RNASeqData():
             self.metaDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
         self.metaDF = pd.concat(list(self.metaDict.values()), ignore_index=True)
         self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
-        print('dims before filtering out groups: ', self.metaDF.shape)
+        print('meta dims before filtering out groups: ', self.metaDF.shape)
         self.metaDF = self.metaDF[self.metaDF['group'].isin(self.sample_subsets)]
-        print('dims after filtering out groups: ', self.metaDF.shape)
+        print('meta dims after filtering out groups: ', self.metaDF.shape)
         self.samples=list(self.metaDF['sample'])
-
+        self.save_meta(self.metaDF, self.outputDir + '/metadata.csv')
 
         # set up expression df dict
         self.rnaSeqFileList = rnaSeqFileList.split(',')
@@ -139,21 +136,17 @@ class RNASeqData():
         # case: normalize and optionally log-transform then standardize, all after merge
         # first, normalize
         if self.normalize == 'afterMerge':
+            self.outputFilePrefix += '_norm-after-merge_'
+            if self.standardize == 'beforeMerge':
+                # MOR doesn't work on negative count data
+                print('incompatible: ', 'normalize:' + self.normalize, 'standardize: ' + self.standardize)
+                sys.exit(1)
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
-                self.rnaExprDataDict[f] = self.rnaExprDataDict[f][self.rnaExprDataDict[f].columns.intersection(['gene'] + self.samples)]
+                # self.rnaExprDataDict[f] = self.rnaExprDataDict[f][self.rnaExprDataDict[f].columns.intersection(['gene'] + self.samples)]
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            inputFile=self.outputDir + '/expr_before_normalize.csv'
-            outputFile=self.outputDir + '/expr_after_normalize.csv'
-            metaFile=self.outputDir + '/meta.csv'
-            self.save_expr(inputFile)
-            self.save_meta(metaFile)
-            cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', inputFile, metaFile, outputFile]
-            self.callR(cmd)
-            self.expressionDF = pd.read_csv(outputFile, sep=',', header=0)
-            if 'gene' in self.expressionDF.columns and 'Unnamed: 0' in self.expressionDF.columns:
-                self.expressionDF.drop(columns=['Unnamed: 0'], inplace=True)
-            self.outputFilePrefix += '_norm-after-merge_'
+            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+            self.expressionDF = self.my_normalize(self.expressionDF, self.metaDF)
 
             # second, log transform
             if not self.log_xform is None:
@@ -167,69 +160,103 @@ class RNASeqData():
 
             # third, standardize
             if self.standardize == 'afterMerge':
-                genes = list(self.expressionDF['gene'])
-                self.expressionDF.drop(columns=['gene'], inplace=True)
-                numeric_cols = list(self.expressionDF.columns)
-                # self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
-                self.expressionDF = self.expressionDF.apply(zscore, axis=0)
-                self.expressionDF['gene'] = genes
-                self.expressionDF = self.expressionDF[['gene'] + numeric_cols]
-                self.outputFilePrefix += '_std_'
+                #self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
+                self.expressionDF = self.my_standardize(self.expressionDF)
+                self.outputFilePrefix += '_stdize-after-merge_'
 
-        # case: normalize, log, and standardize, all before merge
-        elif self.normalize == 'beforeMerge' and self.standardize == 'beforeMerge' and not self.log_xform is None:
+        # case: normalize, log, standardize before merge
+        elif self.normalize == 'beforeMerge':
+            self.outputFilePrefix += '_norm-before-merge_'
+            self.meta_dict = dict()
             # first normalize
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
-                cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', self.inputDir + '/' + e,
-                       self.inputDir + '/' + m, self.outputDir + '/mor_' + e]
-                self.callR(cmd)
-                self.rnaExprDataDict[e] = pd.read_csv(self.outputDir + '/mor_' + e, sep=',', header=0)
-                self.rnaExprDataDict[e] = self.rnaExprDataDict[e][self.rnaExprDataDict[e].columns.intersection(['gene'] + self.samples)]
-                # there's an issue in R where it writes  either  an unnamed column for genes or 2 columns: one named 'gene' and one named 'Unnamed: 0'
-                if 'gene' in self.rnaExprDataDict[e].columns and 'Unnamed: 0' in self.rnaExprDataDict[e].columns:
-                    self.rnaExprDataDict[e].drop(columns=['Unnamed: 0'], inplace=True)
+                self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
+                self.meta_dict[e] = pd.read_csv(self.inputDir + '/' + m, sep=',', header=0)
+                self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e])
+                self.rnaExprDataDict[e] = self.my_normalize(self.rnaExprDataDict[e], self.meta_dict[e])
 
             # second, log transforms
-            for e in self.rnaExprDataDict.keys():
-                self.rnaExprDataDict[e] = self.my_log(base=self.log_xform, expr=self.rnaExprDataDict[e])
+            if not self.log_xform is None:
+                for e in self.rnaExprDataDict.keys():
+                    self.rnaExprDataDict[e] = self.my_log(base=self.log_xform, expr=self.rnaExprDataDict[e])
+                self.outputFilePrefix += '_log' + str(self.log_xform) + '-before-merge_'
 
             # third, standardize
-            for e in self.rnaExprDataDict.keys():
-                genes=list(self.rnaExprDataDict[e]['gene'])
-                self.rnaExprDataDict[e].drop(columns=['gene'], inplace=True)
-                numeric_cols = list(self.rnaExprDataDict[e].columns)
-                #self.rnaExprDataDict[e] = (self.rnaExprDataDict[e] - self.rnaExprDataDict[e].mean(axis=1)) / self.rnaExprDataDict[e].std(axis=1)
-                self.rnaExprDataDict[e] = self.rnaExprDataDict[e].apply(zscore, axis=0)
-                self.rnaExprDataDict[e]['gene'] = genes
-                self.rnaExprDataDict[e] = self.rnaExprDataDict[e][['gene'] + numeric_cols]
+            if self.standardize == 'beforeMerge':
+                for e in self.rnaExprDataDict.keys():
+                    self.rnaExprDataDict[e] = self.my_standardize(self.rnaExprDataDict[e])
+                self.outputFilePrefix += '_stdize-before-merge_'
 
+            # now merge all the data
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            self.outputFilePrefix += '_norm-before-merge_log-before-merge_std-before-merge_'
+
+            # case that norm before merge and then stdize after merge?
+            if self.standardize == 'afterMerge':
+                self.expressionDF = self.my_standardize(self.expressionDF)
+                self.outputFilePrefix += '_stdize-after-merge_'
+
+            self.metaDF = pd.concat(list(self.meta_dict.values()))
+            self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
 
 
-        # case: just normalize (no log transform or standardization) before merge
-        elif self.normalize == 'beforeMerge':
+        # case: just standardize (no normalize) and potentially log before or after merge
+        elif self.standardize != 'never':
+            self.meta_dict = dict()
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
-                cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/normalize.R', '--args', self.inputDir + '/' + e,
-                       self.inputDir + '/' + m, self.outputDir + '/mor_' + e]
-                self.callR(cmd)
-                self.rnaExprDataDict[e] = pd.read_csv(self.outputDir + '/mor_' + e, sep=',', header=0)
-            self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
-            self.outputFilePrefix += '_norm-before-merge_'
+                self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
+                self.meta_dict[e] = pd.read_csv(self.inputDir + '/' + m, sep=',', header=0)
 
-        # case: no transformations, just merge data
-        elif self.normalize == 'never':
+            if self.standardize == 'afterMerge':
+                self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+                self.metaDF = pd.concat(list(self.meta_dict.values()))
+                self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
+                self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+                if not self.log_xform is None:
+                    self.expressionDF = self.my_log(self.log_xform, self.expressionDF)
+                self.expressionDF = self.my_standardize(self.expressionDF)
+                self.outputFilePrefix += 'stdize-after-merge'
+
+            elif self.standardize == 'beforeMerge':
+                for e, m in zip(self.rnaSeqFileList, self.metaFileList):
+                    self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
+                    self.meta_dict[e] = pd.read_csv(self.inputDir + '/' + m, sep=',', header=0)
+                    self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e])
+                    if not self.log_xform is None:
+                        self.rnaExprDataDict[e] = self.my_log(self.log_xform, self.rnaExprDataDict[e])
+                    self.rnaExprDataDict[e] = self.my_standardize(self.rnaExprDataDict[e])
+                self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+                self.metaDF = pd.concat(list(self.meta_dict.values()))
+                self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
+                self.outputFilePrefix += 'stdize-before-merge'
+
+        # case: only log xform
+        elif not self.log_xform is None:
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
-            self.outputFilePrefix += '_unnorm_'
+            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+            self.expressionDF = self.my_log(self.log_xform, self.expressionDF)
+            self.outputFilePrefix += '_log' + str(self.log_xform) + '_'
+
+        # case: no transformations, just merge data
+        elif self.normalize == 'never' and self.standardize == 'never' and self.log_xform is None:
+            for f in self.rnaSeqFileList:
+                self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
+            self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+            #self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
+            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
 
         else:
-            print('no such normalize value: ', self.normalize)
+            print('no such transformation combination value: ', 'normalize = ', self.normalize, 'standardize = ', self.standardize, 'log = ', self.log_xform)
             sys.exit(1)
 
+        # create and save merged, untransformed data for deseq2
+        dataDict = dict()
+        for f in self.rnaSeqFileList:
+            dataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
+        self.expressionDF_raw = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
+        self.expressionDF_raw = self.expressionDF_raw[self.expressionDF_raw.columns.intersection(['gene'] + self.samples)]
+        self.expressionDF_raw.to_csv(self.outputDir + '/merged_for_deseq2.csv', sep=',', index=None)
 
         if 'Unnamed: 0' in self.expressionDF.columns:
             if not 'gene' in self.expressionDF.columns:
@@ -241,15 +268,18 @@ class RNASeqData():
 
         # set up samples
         self.oro_thresholds_per_study_dict=dict()
-        if middle50_samples or self.oro_thresholds_per_study:
+        keep_samples = []
+        if self.oro_thresholds_per_study:
             for group in set(self.metaDF['group']):
                 for study in set(self.metaDF['study']):
                     m50,u25,l75 = self.getMiddle50('sample', group, study)
                     self.oro_thresholds_per_study_dict[study] = (u25 + l75) / 2
-                    self.samples += m50
+                    keep_samples += m50
 
         # subset expressionDF based on sample list
-        self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(self.samples)]
+        if self.middle50_samples:
+            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(keep_samples)]
+            #self.metaDF = self.metaDF[]
 
         # add back the gene column
         self.expressionDF['gene'] = self.genes
@@ -261,13 +291,80 @@ class RNASeqData():
         self.permuteSamples()
 
         # convert genes x samples to samples x genes
-        self.expressionDF = self.transpose_df(self.expressionDF, 'gene', 'sample')
+        self.expressionDF = self.transpose_df(df=self.expressionDF, cur_index_col='gene', new_index_col='sample')
+
 
         # combine same gene ids into one row
         print('dims before collapse: ', self.expressionDF.shape)
         self.collapseGeneCounts()
         print('dims after collapse: ', self.expressionDF.shape)
 
+    def my_normalize(self, df, meta):
+        inputFile = self.outputDir + '/expr_before_normalize.csv'
+        outputFile = self.outputDir + '/expr_after_normalize.csv'
+        metaFile = self.outputDir + '/meta.csv'
+        self.save_expr(df, inputFile)
+        self.save_meta(meta, metaFile)
+        cmd = ['/usr/local/bin/R', '-f', R_SCRIPTS_DIR + '/normalize.R', '--args', inputFile, metaFile, outputFile]
+        self.callR(cmd)
+        self.expressionDF = pd.read_csv(outputFile, sep=',', header=0)
+        if 'gene' in df.columns and 'Unnamed: 0' in df.columns:
+            df.drop(columns=['Unnamed: 0'], inplace=True)
+        return df
+
+    def my_standardize(self, df):
+        # this method requires df in samples x genes
+        if 'gene' in list(df.columns):
+            transpose=True
+            df = self.transpose_df(df, cur_index_col='gene', new_index_col='sample')
+        numeric_cols = list(df.columns[1:])
+        samples = list(df['sample'])
+        df.drop(columns=['sample'], inplace=True)
+        df = df.apply(zscore, axis=0)
+        # self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=1)) / self.expressionDF.std(axis=1)
+        df['sample'] = samples
+        df = df[['sample'] + numeric_cols]
+        if transpose:
+            return self.transpose_df(df, cur_index_col='sample', new_index_col='gene')
+        else:
+            return df
+
+    def apply_filter(self, df, meta_df):
+        # do all the filtering on raw data before normalizing or standardizing or log-xforming
+        # convert gene ids to gene names
+        print('dims before converting to names: ', df.shape)
+        df = self.convertIdsToNames(df=df)
+        print('dims after converting to names: ', df.shape)
+
+        # filter only protein-coding genes
+        print('dims before filter by type: ', df.shape)
+        df = self.filterGenesByType(df=df, gene_type=self.gene_filter, id='gene')
+        print('dims after filter by type: ', df.shape)
+
+        # filter genes with 0 count in at least p % samples
+        print('dims before filter 0: ', df.shape)
+        df = self.filterGenesByPercentZeroCount(df, p=self.zero_count_percent)
+        print('dims after filter 0: ', df.shape)
+
+        # filter genes with count < n in at least p % samples
+        print('dims before filter low: ', df.shape)
+        df = self.filterGenesByPercentLowCount(df, n=self.low_count_threshold, p=self.low_count_percent)
+        print('dims after filter low: ', df.shape)
+
+        # reduce number of genes to n top variance
+        print('dims before filter by top n: ', df.shape)
+        df= self.filterGenesByTopNSD(df, n=self.top_n_var)
+        print('dims after filter by top n: ', df.shape)
+
+        # amplify number of samples by n more samples
+        print('expr dims before amplify: ', df.shape)
+        print('meta dims before amplify: ', meta_df.shape)
+        df, meta_df = self.amplify_expr(df=df, metaDF=meta_df, amplify=self.amplify, key='sample', numProcs=4)
+        print('dims after amplify: ', df.shape)
+        print('meta dims after amplify: ', meta_df.shape)
+
+
+        return self.transpose_df(df, cur_index_col='sample', new_index_col='gene'), meta_df
 
     def my_log_ratio(self, lr_type=None):
         import pyrolite
@@ -338,7 +435,7 @@ class RNASeqData():
             self.add_oro()
         else:
             self.setTargetByKey(target)
-        self.save_expr(outputFile)
+        self.save_expr(self.expressionDF, outputFile)
 
     def mergeExprData(self, dataDict):
         self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
@@ -353,9 +450,13 @@ class RNASeqData():
 
         return self.transpose_df(df, cur_index_col='gene', new_index_col='sample')
 
-    def save_expr(self, fileName, transpose=False, dropCols=[], cur_index_col=None, new_index_col=None):
+    def save_expr(self, inputDF=None, fileName=None, transpose=False, dropCols=[], cur_index_col=None, new_index_col=None):
+        if inputDF is None:
+            df = self.expressionDF
+        else:
+            df = inputDF
         if transpose:
-            df = self.transpose_df(self.expressionDF.drop(columns=dropCols), cur_index_col, new_index_col)
+            df = self.transpose_df(df.drop(columns=dropCols), cur_index_col, new_index_col)
             if fileName.endswith('.csv'):
                 df.to_csv(fileName, sep=',', index=None)
             elif fileName.endswith('.pkl'):
@@ -364,7 +465,7 @@ class RNASeqData():
                 print('unknown filename extension: ', fileName)
                 sys.exit(1)
         else:
-            df = self.expressionDF.drop(columns=dropCols)
+            df = df.drop(columns=dropCols)
             if fileName.endswith('.csv'):
                 df.to_csv(fileName, sep=',', index=None)
             elif fileName.endswith('.pkl'):
@@ -373,16 +474,18 @@ class RNASeqData():
                 print('unknown filename extension: ', fileName)
                 sys.exit(1)
 
-    def save_meta(self, fileName):
-        self.metaDF.to_csv(fileName, sep=',', index=None)
+    def save_meta(self, df=None, fileName=None):
+        if df is None:
+            df = self.metaDF
+        df.to_csv(fileName, sep=',', index=None)
 
-    def convertIdsToNames(self):
+    def convertIdsToNames(self, df):
         input_to_R = self.outputDir + '/expr_input.csv'
         output_from_R = self.outputDir + '/expr_output.csv'
-        self.save_expr(input_to_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
+        self.save_expr(inputDF=df, fileName = input_to_R)
         R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/convert_id_to_gene.R', '--args', input_to_R, output_from_R]
         self.callR(R_cmd)
-        self.expressionDF = self.read_expr(output_from_R)
+        return self.read_expr(output_from_R)
 
     def shrinkExpression(self, transformation, fileName):
         if not transformation in ['vsd', 'rld', 'ntd']:
@@ -391,9 +494,9 @@ class RNASeqData():
         input_to_R = self.outputDir + '/expr_before_shrink.csv'
         output_from_R = fileName
         meta_file = self.outputDir + '/meta.csv'
-        self.save_expr(input_to_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
+        self.save_expr(fileName = input_to_R, transpose=True, dropCols=[], cur_index_col='sample', new_index_col='gene')
         #self.save_expr(input_to_R)
-        self.save_meta(meta_file)
+        self.save_meta(fileName = meta_file)
         R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/shrink.R', '--args', input_to_R, meta_file, output_from_R,
                 transformation, '--no-save']
         self.callR(R_cmd)
@@ -410,14 +513,6 @@ class RNASeqData():
         if str(proc.returncode) != '0':
             print('error in callR: exiting')
             sys.exit(1)
-
-    def my_standardize(self, by):
-        self.outputFilePrefix += '_std_'
-        #self.expressionDF = (self.expressionDF - self.expressionDF.mean())/self.expressionDF.std()
-        if by == 'col':
-            self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=1)) / self.expressionDF.std(axis=1)
-        elif by == 'row':
-            self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=0)) / self.expressionDF.std(axis=0)
 
     def plotDict(self, ymin, ymax, myDict):
         fig, ax = plt.subplots()
@@ -477,16 +572,29 @@ class RNASeqData():
         # join env dictionary to data frame
         self.expressionDF['env'] = self.expressionDF['sample'].map(env_dict)
 
-    def filterGenesByPercentZeroCount(self, n=0):
-        if n == 0:
+    def filterGenesByPercentZeroCount(self, df=None, p=0):
+        if p == 0:
+            # this filtering assumes raw or normalized counts, not z-scores or log_xform
             pass
         else:
-            df = self.transpose_df(self.expressionDF, 'sample', 'gene')
-            df = df[(df == 0).sum(axis='columns') <= int(n * len(df.columns))]
-            self.expressionDF = self.transpose_df(df, 'gene', 'sample')
-            self.genes = list(self.expressionDF.columns)[1:]
+            df = self.transpose_df(df, 'sample', 'gene')
+            df = df[(df == 0).sum(axis='columns') <= int(p * len(df.columns))]
+            df = self.transpose_df(df, 'gene', 'sample')
+        return df
 
-    def filterGenesByType(self, gene_type='protein_coding', id='id'):
+    def filterGenesByPercentLowCount(self, df, n=0, p=0):
+        if df is None:
+            df = self.expressionDF
+        if n == 0 or p == 0:
+            # this filtering assumes raw or normalized counts, not z-scores or log_xform
+            pass
+        else:
+            df = self.transpose_df(df, 'sample', 'gene')
+            df = df[(df.loc[:, df.columns != 'gene'] < n).sum(axis='columns') <= int(p * len(df.columns))]
+            df= self.transpose_df(df, 'gene', 'sample')
+        return df
+
+    def filterGenesByType(self, df, gene_type='protein_coding', id='id'):
         gene_types = {'ribozyme', 'protein_coding', 'rRNA', 'TEC', 'IG_D_pseudogene', 'snRNA', 'IG_LV_gene', 'pseudogene',
                       'IG_J_gene', 'transcribed_unitary_pseudogene', 'processed_pseudogene', 'IG_V_gene', 'Mt_tRNA',
                       'TR_J_pseudogene', 'miRNA', 'Mt_rRNA', 'sRNA', 'IG_C_pseudogene', 'IG_C_gene', 'TR_J_gene',
@@ -504,27 +612,26 @@ class RNASeqData():
         if id == 'id':
             filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene stable ID'])
             filter_columns = ['sample'] + filter_genes
-            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(filter_columns)]
-            new_columns = list(self.expressionDF.drop(columns=['sample']))
+            df = df[df.columns.intersection(filter_columns)]
+            new_columns = list(df.drop(columns=['sample']))
             #gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene name'])
             gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene stable ID'])
-            self.expressionDF.columns = ['sample'] + gene_names
+            df.columns = ['sample'] + gene_names
         elif id == 'gene':
             filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
             filter_columns = ['sample'] + filter_genes
-            self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(filter_columns)]
-        self.expressionDF = self.expressionDF.loc[:, self.expressionDF.columns.notna()]
-        self.genes = list(self.expressionDF.columns)[1:]
-        self.outputFilePrefix += '_protein-coding_'
+            df = df[df.columns.intersection(filter_columns)]
+        df = df.loc[:, df.columns.notna()]
+        return df
 
-    def filterGenesByTopNSD(self, n):
+    def filterGenesByTopNSD(self, df=None, n=0):
         # df is genes X samples
         # calculate var, sort cols into n highest vars, drop shape[1]-n cols
         # first find range of var and print to stdout
         if n == 0:
             pass
         else:
-            df = self.transpose_df(self.expressionDF, 'sample', 'gene')
+            df = self.transpose_df(df, 'sample', 'gene')
             #sdList = df.std(axis=1)
             sdList = df.var(axis=1)
             sdDict = {k: v for v, k in enumerate(sdList)}
@@ -535,9 +642,8 @@ class RNASeqData():
             topN = sdDictSorted[0:abs(n)]
             indices = [x[1] for x in topN]
             df = df.iloc[indices]
-            self.expressionDF = self.transpose_df(df, 'gene', 'sample')
-        self.genes = list(self.expressionDF.columns)[1:]
-        self.outputFilePrefix += '_top-' + str(n) + '_'
+            df = self.transpose_df(df, 'gene', 'sample')
+        return df
 
     def collapseGeneCounts(self):
         df = self.transpose_df(self.expressionDF, 'sample', 'gene')
@@ -560,7 +666,6 @@ class RNASeqData():
             index=len(df)-1
             df.loc[index, 'gene'] = gene
         self.expressionDF = self.transpose_df(df, 'gene', 'sample')
-        self.genes = list(self.expressionDF.columns)[1:]
 
 
     def getMiddle50(self, key, group, study):
@@ -666,7 +771,9 @@ class RNASeqData():
                     myRand = random.randint(0, 1000000)
                 myRands.append(myRand)
                 new_sample = sample + '_' + str(threadID) + '_' + str(myRand)
+                self.samples.append(new_sample)
                 #new_sample = sample + '_' + str((i+1) * n * threadID)
+
                 noised_expr_row['sample'] = new_sample
                 temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
 
@@ -680,19 +787,20 @@ class RNASeqData():
         results['meta_df'] = temp_meta_df
         q.put(results)
 
-    def amplify_expr(self, n, var, seed=0, key='sample', numProcs=1):
-        if n == 0:
-            return
+    def amplify_expr(self, df=None, metaDF = None, amplify = None, key='sample', numProcs=1):
+        if amplify['n'] == 0:
+            return df, metaDF
 
-        expr_df = self.expressionDF
-        meta_df = self.metaDF
-        random.seed(seed)
+        expr_df = df
+        meta_df = metaDF
+        random.seed(amplify['seed'])
 
         # amplify set of samples that match column value
         q = Queue()
         processList = list()
         for i in range(numProcs):
-            p = Process(target=self.process_samples_subset, args=(q,list(expr_df['sample']), expr_df['sample'], expr_df, meta_df, n, var, i, numProcs, seed, key, ))
+            p = Process(target=self.process_samples_subset, args=(q,list(expr_df['sample']), expr_df['sample'], expr_df,
+                                                                  meta_df, amplify['n'], amplify['var'], i, numProcs, amplify['seed'], key, ))
             p.start()
             processList.append(p)
 
@@ -706,13 +814,12 @@ class RNASeqData():
             print('joining thread: ', str(i))
             processList[i].join()
 
-        '''genes = expr_df['gene']
-        expr_df = expr_df.drop(columns=['gene'])
-        expr_df = np.clip(expr_df, 0, a_max=None)
-        expr_df.insert(0, 'gene', genes)'''
-        self.expressionDF = expr_df
-        self.metaDF = meta_df
-        self.outputFilePrefix += '_amplify-' + str(n) + '-' + str(var) + '_'
+        self.save_meta(meta_df, self.outputDir + '/metadata_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '.csv')
+        self.save_expr(expr_df, self.outputDir + '/' + self.outputFilePrefix + '_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '_crisp.csv',
+                       transpose=True, cur_index_col='sample', new_index_col='gene')
+        self.outputFilePrefix += '_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '_'
+
+        return expr_df, meta_df
 
 if __name__ == "__main__":
     main()

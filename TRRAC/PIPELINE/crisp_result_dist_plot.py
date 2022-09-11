@@ -51,15 +51,16 @@ crisp_y = list()
 print(means_dict)
 
 for gene in crispGenes:
-	#crisp_x.append(np.log10(1+means_dict[gene]))
+	crisp_x.append(np.log10(1+means_dict[gene]))
 	#crisp_x.append(means_dict[gene])
-	#crisp_y.append(np.log10(1+vars_dict[gene]))
+	crisp_y.append(np.log10(1+vars_dict[gene]))
 	#crisp_y.append(vars_dict[gene])
-	x = np.log10(1+means_dict[gene])
-	y = np.log10(1+vars_dict[gene])
-	plt.text(x, y, gene)
+	#x = np.log10(1+means_dict[gene])
+	#y = np.log10(1+vars_dict[gene])
+	#plt.text(x, y, gene, color='red', )
 
-#plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
+plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
+
 
 plt.savefig(plotName + '.png')
 #####################
