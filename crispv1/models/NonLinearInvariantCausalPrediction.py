@@ -163,6 +163,8 @@ class NonLinearInvariantCausalPrediction(object):
             self.test(loader=self.test_loader)
         else:
             print('no accepted sets found for nonlinear ICP')
+            print('but JC trying to run test in order to instantiate self.test_logits')
+            self.test(loader=self.test_loader)
 
     def leveneAndWilcoxTest(self, residuals, e_all):
         residuals = np.array(residuals)
