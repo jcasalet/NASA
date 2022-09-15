@@ -848,7 +848,7 @@ def main():
     # -g 0 -e 1 -ld 8 -bs 16 -nl 2 -hd 256 -lr 1e-03 -nb 5 -ng 0 -pg False -s 23 -ns 112 \
     # -ie expanded_expr_df.csv -im expanded_info_df.csv
 
-    # -t False -m MODELS/gamma_0.983_ld_8_bs_2_nl_2_hd_64_lr_1e-04.h5 -ns 112 -gd /tmp
+    # -t False -m MODELS/gamma_0.983_ld_8_bs_2_nl_2_hd_64_lr_1e-04.h5 -ns 112 -od /tmp
     options = parse_args()
     CONFIG = {'gpu': int(options.gpu), 'epochs': int(options.epochs), 'latent_dim': int(options.latent_dim),
               'batch_size': int(options.batch_size), 'nb_layers': int(options.nb_layers), 'hdim': int(options.hdim),
