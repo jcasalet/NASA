@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import random
 from multiprocessing import Process, Queue, cpu_count
+import sys
 
 
 def parse_args():
@@ -88,6 +89,10 @@ def main():
 
     expr_df = pd.read_csv(expr_df_file, header=0, sep=',')
     meta_df = pd.read_csv(meta_df_file, header=0, sep=',')
+
+    if not key in meta_df.columns:
+        print('no such key: ', key)
+        sys.exit(1)
 
     if not colName is None:
         col_meta_df = meta_df[meta_df[colName] == colVal]
