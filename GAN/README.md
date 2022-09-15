@@ -35,9 +35,11 @@ $ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 2. Run the `permuteSamples.py` script.  
 * `-e` option specifies the expression data file 
 * `-m` option specifies the metadata file
+* `-mk` option specifies the metadata key 
+* `-ek` option specifies the expression data key 
 
 ```console
-$ python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv
+$ python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv -mk Sample -ek gene
 ```
 
 
@@ -66,12 +68,12 @@ $ wc -l examples/data/expr_permuted.csv
 * `-e` option specifies the input expression file.
 
 ```console
-$ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 29000 -d 10 -a 90
+$ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 25000 -d 10 -a 90
 ```
 
 3. Run the `wc` command to determine number of genes after reduction. 
 ```console
-$ wc -l examples/data/expr_permuted__reduced_29000_10_0.9.csv 
+$ wc -l examples/data/expr_permuted__reduced_25000_10_0.9.csv 
 ```
 
 ## Increase the number of technical replicates  
@@ -90,7 +92,7 @@ $ wc -l examples/data/meta_permuted.csv
 
 ```console
 $ python utils/statistically_technical_replicate.py \
--e examples/data/expr_permuted__reduced_29000_10_0.9.csv \
+-e examples/data/expr_permuted__reduced_25000_10_0.9.csv \
 -m examples/data/meta_permuted.csv \
 -n 50 \
 -v 10
@@ -126,7 +128,7 @@ $ mkdir /tmp/gan-out
 
 ```console
 $ python GAN/gen_fake_expr.py \
--ie examples/data/expr_permuted__reduced_29000_10_0.9__expanded_50_10.0.csv  \
+-ie examples/data/expr_permuted__reduced_25000_10_0.9__expanded_50_10.0.csv  \
 -im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
