@@ -89,6 +89,7 @@ $ wc -l examples/data/meta_permuted.csv
 * `-m` specifies the input metadata file
 * `-n` specifies the number of times more samples to create
 * `-v` specifies the variance to use for the zero-mean gaussian sampling
+* `-k` specifies the metadata key
 
 ```console
 $ python utils/statistically_technical_replicate.py \
