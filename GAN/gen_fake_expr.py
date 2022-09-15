@@ -11,6 +11,8 @@ import pandas as pd
 from numpy import linalg as LA
 import json
 import sys
+from scipy.stats import zscore
+
 
 tfk = tf.keras
 tfkl = tf.keras.layers
@@ -531,6 +533,24 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF, indices
 
+def my_standardize(self, df):
+    # this method requires df in samples x genes
+    if 'gene' in list(df.columns):
+        transpose=True
+        df = self.transpose_df(df, cur_index_col='gene', new_index_col='sample')
+    numeric_cols = list(df.columns[1:])
+    samples = list(df['sample'])
+    df.drop(columns=['sample'], inplace=True)
+    df = df.apply(zscore, axis=0)
+    # self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=1)) / self.expressionDF.std(axis=1)
+    df['sample'] = samples
+    df = df[['sample'] + numeric_cols]
+    if transpose:
+        return self.transpose_df(df, cur_index_col='sample', new_index_col='gene')
+    else:
+        return df
+
+
 def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
     # Process categorical metadata
@@ -576,9 +596,9 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
-    #x = np.log2(1+ expr_df)
-    #x = np.float32(x)
-    x = expr_df
+    x = np.log2(1+ expr_df)
+    x = np.float32(x)
+    #x = expr_df
 
     # transpose matrix
     x = x.T
