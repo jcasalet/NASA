@@ -576,8 +576,9 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     print('num covs: ', num_covs.shape)
 
     # Log-transform data
-    x = np.log2(1+ expr_df)
-    x = np.float32(x)
+    #x = np.log2(1+ expr_df)
+    #x = np.float32(x)
+    x = expr_df
 
     # transpose matrix
     x = x.T
@@ -585,7 +586,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     #x, indices = my_find_mostvaried(x, n)
 
     # standardize expression data
-    #x = (x - x.mean()) / x.std()
+    x = (x - x.mean()) / x.std()
 
     # Train/test split
     x_train, x_test = split_train_test(x=x, train_rate=train_percent)
