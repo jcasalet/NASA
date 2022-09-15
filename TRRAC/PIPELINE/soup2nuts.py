@@ -32,13 +32,13 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              normalize = 'afterMerge',
-                              standardize = 'never',
+                              normalize = None,
+                              standardize = 'afterMerge',
                               log_xform=None,
                               vst=None,
                               oro_thresholds_per_study=True,
                               sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
-                              env_list= ['study', 'dissection', 'libprep'],
+                              env_list= ['dataset', 'libprep'],
                               target='oro_thresh',
                               gene_filter = 'protein_coding',
                               zero_count_percent = 0.80,
@@ -74,8 +74,8 @@ class RNASeqData():
                  oro_thresholds_per_study=True,
                  middle50_samples=False,
                  RScriptPath='/usr/local/bin/Rscript',
-                 normalize = 'never',
-                 standardize='never',
+                 normalize = None,
+                 standardize=None,
                  vst=None,
                  log_xform=None,
                  sample_subsets=None,
@@ -143,10 +143,13 @@ class RNASeqData():
                 sys.exit(1)
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
+                # TODO add support for filtering samples?
                 # self.rnaExprDataDict[f] = self.rnaExprDataDict[f][self.rnaExprDataDict[f].columns.intersection(['gene'] + self.samples)]
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+            # TODO apply filter before or after merge?
             self.expressionDF = self.my_normalize(self.expressionDF, self.metaDF)
+            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+
 
             # second, log transform
             if not self.log_xform is None:
@@ -172,8 +175,10 @@ class RNASeqData():
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
                 self.meta_dict[e] = pd.read_csv(self.inputDir + '/' + m, sep=',', header=0)
-                self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e])
+                # TODO which first? normalize or filter?
                 self.rnaExprDataDict[e] = self.my_normalize(self.rnaExprDataDict[e], self.meta_dict[e])
+                self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e])
+
 
             # second, log transforms
             if not self.log_xform is None:
@@ -190,7 +195,7 @@ class RNASeqData():
             # now merge all the data
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
 
-            # case that norm before merge and then stdize after merge?
+            # sub-case that norm before merge and then stdize after merge?
             if self.standardize == 'afterMerge':
                 self.expressionDF = self.my_standardize(self.expressionDF)
                 self.outputFilePrefix += '_stdize-after-merge_'
@@ -200,7 +205,7 @@ class RNASeqData():
 
 
         # case: just standardize (no normalize) and potentially log before or after merge
-        elif self.standardize != 'never':
+        elif not self.standardize is None:
             self.meta_dict = dict()
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
@@ -238,31 +243,18 @@ class RNASeqData():
             self.expressionDF = self.my_log(self.log_xform, self.expressionDF)
             self.outputFilePrefix += '_log' + str(self.log_xform) + '_'
 
-        # case: no transformations, just merge data
-        elif self.normalize == 'never' and self.standardize == 'never' and self.log_xform is None:
+        # case: no transformations, just merge and filter data
+        elif self.normalize is None and self.standardize is None and self.log_xform is None:
             for f in self.rnaSeqFileList:
                 self.rnaExprDataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            #self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(['gene'] + self.samples)]
-            self.expressionDF, self.metaDF = self.apply_filter(self.expressionDF, self.metaDF)
+            self.expressionDF, self.metaDF = self.apply_filter(df=self.expressionDF, meta_df=self.metaDF, mask=[])
 
         else:
             print('no such transformation combination value: ', 'normalize = ', self.normalize, 'standardize = ', self.standardize, 'log = ', self.log_xform)
             sys.exit(1)
 
-        # create and save merged, untransformed data for deseq2
-        dataDict = dict()
-        for f in self.rnaSeqFileList:
-            dataDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
-        self.expressionDF_raw = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
-        self.expressionDF_raw = self.expressionDF_raw[self.expressionDF_raw.columns.intersection(['gene'] + self.samples)]
-        self.expressionDF_raw.to_csv(self.outputDir + '/merged_for_deseq2.csv', sep=',', index=None)
-
-        if 'Unnamed: 0' in self.expressionDF.columns:
-            if not 'gene' in self.expressionDF.columns:
-                self.expressionDF.rename(columns={'Unnamed: 0': 'gene'}, inplace=True)
-            else:
-                self.expressionDF.drop(columns=['Unnamed: 0'], inplace=True)
+        # create and save merged, untransformed data for deseq2??
 
         self.genes = list(self.expressionDF['gene'])
 
@@ -281,18 +273,11 @@ class RNASeqData():
             self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(keep_samples)]
             #self.metaDF = self.metaDF[]
 
-        # add back the gene column
-        self.expressionDF['gene'] = self.genes
-        cols = list(self.expressionDF.columns)
-        cols = [cols[-1]] + cols[:-1]
-        self.expressionDF = self.expressionDF[cols]
-
         # permute samples to be in same order in expr as in meta
         self.permuteSamples()
 
         # convert genes x samples to samples x genes
         self.expressionDF = self.transpose_df(df=self.expressionDF, cur_index_col='gene', new_index_col='sample')
-
 
         # combine same gene ids into one row
         print('dims before collapse: ', self.expressionDF.shape)
@@ -329,39 +314,45 @@ class RNASeqData():
         else:
             return df
 
-    def apply_filter(self, df, meta_df):
-        # do all the filtering on raw data before normalizing or standardizing or log-xforming
+    def apply_filter(self, df, meta_df, mask=[]):
+        # do all the filtering on raw data before normalizing or standardizing or log-xforming?
         # convert gene ids to gene names
-        print('dims before converting to names: ', df.shape)
-        df = self.convertIdsToNames(df=df)
-        print('dims after converting to names: ', df.shape)
+        if not 'convertIdsToNames' in mask:
+            print('dims before converting to names: ', df.shape)
+            df = self.convertIdsToNames(df=df)
+            print('dims after converting to names: ', df.shape)
 
         # filter only protein-coding genes
-        print('dims before filter by type: ', df.shape)
-        df = self.filterGenesByType(df=df, gene_type=self.gene_filter, id='gene')
-        print('dims after filter by type: ', df.shape)
+        if not 'filterGenesByType' in mask:
+            print('dims before filter by type: ', df.shape)
+            df = self.filterGenesByType(df=df, gene_type=self.gene_filter, id='gene')
+            print('dims after filter by type: ', df.shape)
 
         # filter genes with 0 count in at least p % samples
-        print('dims before filter 0: ', df.shape)
-        df = self.filterGenesByPercentZeroCount(df, p=self.zero_count_percent)
-        print('dims after filter 0: ', df.shape)
+        if not 'filterGenesByPercentZeroCount' in mask:
+            print('dims before filter 0: ', df.shape)
+            df = self.filterGenesByPercentZeroCount(df, p=self.zero_count_percent)
+            print('dims after filter 0: ', df.shape)
 
         # filter genes with count < n in at least p % samples
-        print('dims before filter low: ', df.shape)
-        df = self.filterGenesByPercentLowCount(df, n=self.low_count_threshold, p=self.low_count_percent)
-        print('dims after filter low: ', df.shape)
+        if not 'filterGenesByPercentLowCount' in mask:
+            print('dims before filter low: ', df.shape)
+            df = self.filterGenesByPercentLowCount(df, n=self.low_count_threshold, p=self.low_count_percent)
+            print('dims after filter low: ', df.shape)
 
         # reduce number of genes to n top variance
-        print('dims before filter by top n: ', df.shape)
-        df= self.filterGenesByTopNSD(df, n=self.top_n_var)
-        print('dims after filter by top n: ', df.shape)
+        if not 'filterGenesByTopNSD' in mask:
+            print('dims before filter by top n: ', df.shape)
+            df= self.filterGenesByTopNSD(df, n=self.top_n_var)
+            print('dims after filter by top n: ', df.shape)
 
         # amplify number of samples by n more samples
-        print('expr dims before amplify: ', df.shape)
-        print('meta dims before amplify: ', meta_df.shape)
-        df, meta_df = self.amplify_expr(df=df, metaDF=meta_df, amplify=self.amplify, key='sample', numProcs=4)
-        print('dims after amplify: ', df.shape)
-        print('meta dims after amplify: ', meta_df.shape)
+        if not 'amplify_expr' in mask:
+            print('expr dims before amplify: ', df.shape)
+            print('meta dims before amplify: ', meta_df.shape)
+            df, meta_df = self.amplify_expr(df=df, metaDF=meta_df, amplify=self.amplify, key='sample', numProcs=4)
+            print('dims after amplify: ', df.shape)
+            print('meta dims after amplify: ', meta_df.shape)
 
 
         return self.transpose_df(df, cur_index_col='sample', new_index_col='gene'), meta_df
@@ -563,10 +554,10 @@ class RNASeqData():
                 counter = 0
                 for e in env_list:
                     if counter == 0:
-                        value = self.metaDF.iloc[i][e]
+                        value = str(self.metaDF.iloc[i][e])
                         counter+=1
                     else:
-                        value = value + ':' + self.metaDF.iloc[i][e]
+                        value = value + ':' + str(self.metaDF.iloc[i][e])
             env_dict[key] = value
 
         # join env dictionary to data frame
