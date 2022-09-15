@@ -96,7 +96,8 @@ $ python utils/statistically_technical_replicate.py \
 -e examples/data/expr_permuted__reduced_25000_10_0.9.csv \
 -m examples/data/meta_permuted.csv \
 -n 50 \
--v 10
+-v 10 \
+-k 'Sample'
 ```
 
 3. Determine the number of samples in the amplified data set.
