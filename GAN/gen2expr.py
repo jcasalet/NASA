@@ -32,12 +32,12 @@ if theMin < 0:
     fake_df = fake_df.add(theMin)
 
 # 1. un-standardize
-fake_df = fake_df * real_std + real_mean
+fake_unstdize = fake_df * real_std + real_mean
+fake_unstdize.insert(0, 'gene', genes)
+fake_unstdize.to_csv(fakeDFFile.split('.csv')[0] + '_unstdize.csv', sep=',', index=False)
 
 # 2. unlog
-fake_df = np.exp2(fake_df)
-
-
+fake_unlog = np.exp2(fake_df)
 fake_df.insert(0, 'gene', genes)
 fake_df.to_csv(fakeDFFile.split('.csv')[0] + '_shifted.csv', sep=',', index=False)
 
