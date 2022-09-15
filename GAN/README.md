@@ -68,7 +68,7 @@ $ wc -l examples/data/expr_permuted.csv
 * `-e` option specifies the input expression file.
 
 ```console
-$ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 29000 -d 10 -a 90
+$ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 25000 -d 10 -a 90
 ```
 
 3. Run the `wc` command to determine number of genes after reduction. 
