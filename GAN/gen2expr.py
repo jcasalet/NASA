@@ -39,5 +39,5 @@ fake_unstdize.to_csv(fakeDFFile.split('.csv')[0] + '_unstdize.csv', sep=',', ind
 # 2. unlog
 fake_unlog = np.exp2(fake_df)
 fake_df.insert(0, 'gene', genes)
-fake_df.to_csv(fakeDFFile.split('.csv')[0] + '_shifted.csv', sep=',', index=False)
+fake_df.to_csv(fakeDFFile.split('.csv')[0] + '_unlog.csv', sep=',', index=False)
 
