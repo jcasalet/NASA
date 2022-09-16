@@ -600,13 +600,15 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     x = np.float32(x)
     #x = expr_df
 
+    # standardize expression data
+    x = (x - x.mean()) / x.std()
+
     # transpose matrix
     x = x.T
     # find n most varied genes
     #x, indices = my_find_mostvaried(x, n)
 
-    # standardize expression data
-    x = (x - x.mean()) / x.std()
+
 
     # Train/test split
     x_train, x_test = split_train_test(x=x, train_rate=train_percent)
