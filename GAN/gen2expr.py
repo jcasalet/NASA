@@ -41,3 +41,8 @@ fake_unlog = np.exp2(fake_df)
 fake_df.insert(0, 'gene', genes)
 fake_df.to_csv(fakeDFFile.split('.csv')[0] + '_unlog.csv', sep=',', index=False)
 
+# both
+fake_ready = np.exp2(fake_df)
+fake_ready = fake_ready * real_std + real_mean
+fake_ready.insert(0, 'gene', genes)
+fake_ready.to_csv(fakeDFFile.split('.csv')[0] + '_ready.csv', sep=',', index=False)
