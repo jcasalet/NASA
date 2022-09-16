@@ -595,15 +595,16 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
     num_covs = np.float32(num_covs)
     print('num covs: ', num_covs.shape)
 
-    # Log-transform data
-    x = np.log2(1+ expr_df)
-    x = np.float32(x)
+    # 1. Log-transform data
+    #x = np.log2(1+ expr_df)
+    #x = np.float32(x)
     #x = expr_df
 
-    # standardize expression data
-    x = (x - x.mean()) / x.std()
+    # 2. standardize expression data
+    #x = (x - x.mean()) / x.std()
+    x = (expr_df - expr_df.mean()) / expr_df.std()
 
-    # transpose matrix
+    # 3. transpose matrix
     x = x.T
     # find n most varied genes
     #x, indices = my_find_mostvaried(x, n)
