@@ -1,16 +1,7 @@
 #!/bin/bash -x
 
-# read these from a file, hardcode for now
-WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
-WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
-WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE
-WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
-WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
-ROUNDS=2
-AGG_ISS_HOST=agg-iss
-AGG_ISS_PORT=8888
-AGG_EARTH_HOST=agg-earth
-AGG_EARTH_PORT=8888
+# Load crisp working directories and other runtim configurations
+source /scripts/crisp-config.sh
 
 process_args() {
 	ARGS=$1
@@ -159,6 +150,7 @@ run_agg_earth() {
 	done
 	cd ${WORKSPACE_EARTH_AGG_DIR}/workspace/
 	fx model save -m save/crisp_best_.pbuf
+	sleep 10
 		
 }
 

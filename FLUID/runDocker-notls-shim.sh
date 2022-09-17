@@ -1,15 +1,7 @@
 #!/bin/bash -x
 
-# read these from a file, hardcode for now
-DATA_PATH=/home/fluid/data
-SCRIPT_PATH=/home/fluid/scripts
-IMAGE_NAME=fluid
-AGG_PORT=8888
-AGG_EARTH_IP=100.27.49.222
-AGG_ISS_IP=3.239.85.160
-COLAB_EARTH_IP=3.235.222.119
-COLAB_ISS_IP=3.239.83.239
-COLAB_SHIM_IP=3.238.96.18
+#configure the paths and IP addresses of the FLUID network
+source ./fluid-network.sh
 
 create_network() {
 	MYNET=$1
@@ -71,4 +63,5 @@ esac
 
 echo about to run container with role = $ROLE
 
-docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart always  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
+#docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart always  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
+docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart no  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
