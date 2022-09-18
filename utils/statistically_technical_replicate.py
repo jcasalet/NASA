@@ -39,7 +39,23 @@ def getStartAndEnd(partitionSizes, threadID):
 
     return start, end
 
-def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed, key):
+def get_variance_dict(df):
+    # assumed gene x sample
+    gene_var_list = list(df.var(axis=1))
+    gene_var_dict=dict()
+    for i in range(len(gene_var_list)):
+        gene = df.iloc[i]['gene']
+        gene_var_dict[gene] = gene_var_list[i]
+
+    return gene_var_dict
+
+def create_noise_list(gene_var):
+    noise_list = list()
+    for gene in gene_var:
+        noise_list.append(np.random.normal(0, gene_var[gene]))
+    return noise_list
+
+def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, var, threadID, numProcs, seed, key, gene_variance):
 
     results = dict()
     partitionSizes = divide(len(samples), numProcs)
@@ -48,13 +64,14 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
     temp_meta_df = pd.DataFrame(columns=meta_df.columns)
     temp_expr_df = pd.DataFrame(columns=expr_df_T.columns)
     myRands = list()
+
     for i in range(n):
         for sample in samples[start:end]:
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
-            # TODO instead of a single fixed gaussian, maybe use a gaussian per gene where mean is still 0 but variance is
-            # some fraction of gene variance?
-            noise = np.random.normal(0, var, expr_row.shape)
+            # TODO instead of a single fixed gaussian, maybe use a gaussian per gene where mean is still 0 but variance is some fraction of gene variance?
+            #noise = np.random.normal(0, var, expr_row.shape)
+            noise = create_noise_list(gene_variance)
             noised_expr_row = expr_row + noise
             myRand = random.randint(0, 1000000)
             while myRand in myRands:
@@ -112,11 +129,14 @@ def main():
     # transpose expr_df to have rows be samples
     expr_df_T = expr_df.T
 
+    # find variance per gene stored in dict
+    gene_variance = get_variance_per_gene(expr_df)
+
     # amplify set of samples that match column value
     q = Queue()
     processList = list()
     for i in range(numProcs):
-        p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n, var, i, numProcs, seed, key, ))
+        p = Process(target=process_samples_subset, args=(q,col_samples_list, expr_samples_df, expr_df_T, meta_df, n, var, i, numProcs, seed, key,gene_variance,  ))
         p.start()
         processList.append(p)
 
