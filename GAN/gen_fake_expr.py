@@ -535,21 +535,9 @@ def my_find_mostvaried(df, n):
 
 def my_standardize(df):
     # this method requires df in samples x genes
-    # this method requires df in samples x genes
-    if 'gene' in list(df.columns):
-        transpose = True
-        df = transpose_df(df, cur_index_col='gene', new_index_col='sample')
-    numeric_cols = list(df.columns[1:])
-    samples = list(df['sample'])
-    df.drop(columns=['sample'], inplace=True)
-    df = df.apply(zscore, axis=0)
-    # self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=1)) / self.expressionDF.std(axis=1)
-    df['sample'] = samples
-    df = df[['sample'] + numeric_cols]
-    if transpose:
-        return transpose_df(df, cur_index_col='sample', new_index_col='gene')
-    else:
-        return df
+    df = df.T
+    df = zscore(df, axis=0)
+    return df
 
 def transpose_df(df, cur_index_col, new_index_col):
     df = df.set_index(cur_index_col).T
