@@ -28,7 +28,7 @@ then
 	if [ -d $TO_BRIDGE_FROM_COLABSHIM ]
 	then
 		mv $TO_BRIDGE_FROM_COLABSHIM ~/DONE/$TS
-`	fi
+	fi
 	if [ -d $TO_BRIDGE_FROM_TDS ]
 	then
 		mv $TO_BRIDGE_FROM_TDS ~/DONE/$TS
@@ -40,10 +40,10 @@ then
 	while true
 	do
 		ssh fluid@colab-shim [ -d /home/fluid/data/WORKSPACE/workspace/proto_path ]
-		colab-shim_running=$(echo $?)
+		colabshim_running=$(echo $?)
 		ssh fluid@tds [ -d $TO_TDS_FROM_ISS ]
 		tds_running=$(echo $?)
-		if [ $colab-shim_running == 0 -a $tds_running == 0 ]
+		if [ $colabshim_running == 0 -a $tds_running == 0 ]
 		then
 			break
 		else
@@ -55,14 +55,18 @@ then
 
 	while true
 	do
+		# get stuff from colab-shim
 		rsync -a fluid@colab-shim:/home/fluid/data/WORKSPACE/workspace/proto_path/ $TO_BRIDGE_FROM_COLABSHIM
+		# then push that to tds
 		rsync -a $TO_BRIDGE_FROM_COLABSHIM/ fluid@tds:$TO_TDS_FROM_BRIDGE
+		# get stuff from tds and push to colab-shim
 		rsync -a $TO_BRIDGE_FROM_TDS/ fluid@colab-shim:/home/fluid/data/WORKSPACE/workspace/proto_path
 		sleep 5 
 	done
 
+fi
 
-elif [ $MYHOSTNAME == "tds" ]
+if [ $MYHOSTNAME == "tds" ]
 then
 	TS=$(date +%s)
 	mkdir -p ~/DONE/$TS
@@ -70,8 +74,9 @@ then
 	if [ -d $TO_TDS_FROM_BRIDGE ]
 	then
 		mv $TO_TDS_FROM_BRIDGE ~/DONE/$TS
-`	fi
-	if [ -d $TO_TDS_FROM_ISS]
+	fi
+
+	if [ -d $TO_TDS_FROM_ISS ]
 	then
 		mv $TO_TDS_FROM_ISS ~/DONE/$TS
 	fi
@@ -95,8 +100,12 @@ then
 
 	while true
 	do
+		# get stuff from bridge 
 		rsync -a fluid@bridge:$TO_BRIDGE_FROM_COLABSHIM $TO_TDS_FROM_BRIDGE
-		rsync -a $TO_TDS_FROM_BRIDGE/ $TO_ISS_FROM_BRIDGE/ 
+		# and push it to ISS
+		rsync -a $TO_TDS_FROM_BRIDGE/ fluid@agg-iss:/home/fluid/data/WORKSPACE/workspace/proto_path
+		# get stuff from ISS
+		rsync -a fluid@agg-iss:/home/fluid/data/WORKSPACE/workspace/proto_path/ $TO_TDS_FROM_ISS	
 		rsync -a $TO_TDS_FROM_ISS/ fluid@bridge:$TO_BRIDGE_FROM_TDS
 		sleep 5 
 	done
