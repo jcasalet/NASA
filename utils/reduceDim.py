@@ -81,10 +81,10 @@ def main():
 	if 'index' in list(df.columns):
 		df.drop(columns=['index'], inplace=True)
 	outputFileName = exprFile.split('.csv')[0] + "__reduced_" +  \
-					 "_a=" + str(alpha) + \
-					 "_s=" + str(sigma) +  \
-					 "_d=" + str(delta) + \
-					 "_n=" + str(n)  + \
+					 "_a\=" + str(alpha) + \
+					 "_s\=" + str(sigma) +  \
+					 "_d\=" + str(delta) + \
+					 "_n\=" + str(n)  + \
 					 ".csv"
 
 	print('filename is ', outputFileName)
