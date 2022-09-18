@@ -21,9 +21,9 @@ def findMostVaried(df, n, key):
 	return slicedDF, indices
 
 def findSumGTSigma(df, sigma):
-	# first find min sum and print that to stdout
 	if sigma == 0:
-		return df, [i for i in range(len(df))]
+		return df, None
+	# first find min sum and print that to stdout
 	df.reset_index(inplace=True)
 	cSums = df.sum(axis=1)
 	cList = list()
@@ -34,9 +34,13 @@ def findSumGTSigma(df, sigma):
 	return temp, cList
 
 def removeAlphaZeros(df, alpha):
+	if alpha == 0:
+		return df
 	return df[(df == 0).sum(axis='columns') <= int(alpha * len(df.columns))]
 
 def removeDeltaDiff(df, delta):
+	if delta == 0:
+		return df
 	return df[df.max(axis=1) - df.min(axis=1) > delta]
 
 def parse_args():
@@ -45,7 +49,7 @@ def parse_args():
 	parser.add_argument('-n', '--num', help='number to reduce to', default=None)
 	parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
 	parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
-	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=90)
+	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=0)
 	parser.add_argument('-k', '--key', help='name of key column', default='gene')
 	return parser.parse_args()
 
@@ -74,7 +78,8 @@ def main():
 	df,indices = findMostVaried(df, n, key)
 	print('after reducing by n most varied: ', str(n), str(len(df)))
 
-	df.drop(columns=['index'], inplace=True)
+	if 'index' in list(df.columns):
+		df.drop(columns=['index'], inplace=True)
 	outputFileName = exprFile.split('.csv')[0] + '__reduced_' + str(n) + '_' + str(delta) + '_' + str(alpha) + '.csv'
 	df.to_csv(outputFileName, sep=',', index=None)
 
