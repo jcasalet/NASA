@@ -533,18 +533,10 @@ def my_find_mostvaried(df, n):
     slicedDF = df[:,indices]
     return slicedDF, indices
 
-def my_standardize(self, df):
+def my_standardize(self, df, transpose=True):
     # this method requires df in samples x genes
-    if 'gene' in list(df.columns):
-        transpose=True
-        df = self.transpose_df(df, cur_index_col='gene', new_index_col='sample')
-    numeric_cols = list(df.columns[1:])
-    samples = list(df['sample'])
-    df.drop(columns=['sample'], inplace=True)
+    df = df.T
     df = df.apply(zscore, axis=0)
-    # self.expressionDF = (self.expressionDF - self.expressionDF.mean(axis=1)) / self.expressionDF.std(axis=1)
-    df['sample'] = samples
-    df = df[['sample'] + numeric_cols]
     if transpose:
         return self.transpose_df(df, cur_index_col='sample', new_index_col='gene')
     else:
@@ -602,11 +594,13 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
     # 2. standardize expression data
     #x = (x - x.mean()) / x.std()
-    x = (x - x.mean()) / x.std()
+    #x = (x - x.mean()) / x.std()
+    x = my_standardize(x, transpose=True)
 
-    # 3. transpose matrix
-    x = x.T
-    # find n most varied genes
+    # 3. transpose matrix (don't need to do this step if in previous step you did the transpose
+    #x = x.T
+
+    # 4. find n most varied genes
     #x, indices = my_find_mostvaried(x, n)
 
 
