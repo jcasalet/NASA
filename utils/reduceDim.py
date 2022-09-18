@@ -80,7 +80,7 @@ def main():
 
 	if 'index' in list(df.columns):
 		df.drop(columns=['index'], inplace=True)
-	outputFileName = exprFile.split('.csv')[0] + '__reduced_n=' + str(n) + '_d=' + str(delta) + '_a=' + str(alpha) + '_s=' + str(sigma) + '.csv'
+	outputFileName = exprFile.split('.csv')[0] + '__reduced_' +  '_a=' + str(alpha) + '_s=' + str(sigma) +  '_d=' + str(delta) + '_n=' + str(n)  + '.csv'
 	df.to_csv(outputFileName, sep=',', index=None)
 
     
