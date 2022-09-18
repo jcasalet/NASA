@@ -70,8 +70,8 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
             # TODO instead of a single fixed gaussian, maybe use a gaussian per gene where mean is still 0 but variance is some fraction of gene variance?
-            #noise = np.random.normal(0, var, expr_row.shape)
-            noise = create_noise_list(gene_variance)
+            noise = np.random.normal(0, var, expr_row.shape)
+            #noise = create_noise_list(gene_variance)
             noised_expr_row = expr_row + noise
             myRand = random.randint(0, 1000000)
             while myRand in myRands:
