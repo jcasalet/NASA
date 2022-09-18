@@ -87,8 +87,6 @@ def main():
 					 "_n_" + str(n)  + \
 					 ".csv"
 
-	print('filename is ', outputFileName)
-
 	df.to_csv(outputFileName, sep=',', index=None)
 
     
