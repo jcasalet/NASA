@@ -22,6 +22,8 @@ def findMostVaried(df, n, key):
 
 def findSumGTSigma(df, sigma):
 	# first find min sum and print that to stdout
+	if sigma == 0:
+		return df, [i for i in range(len(df))]
 	df.reset_index(inplace=True)
 	cSums = df.sum(axis=1)
 	cList = list()
