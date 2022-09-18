@@ -130,7 +130,7 @@ def main():
     expr_df_T = expr_df.T
 
     # find variance per gene stored in dict
-    gene_variance = get_variance_per_gene(expr_df)
+    gene_variance = get_variance_dict(expr_df)
 
     # amplify set of samples that match column value
     q = Queue()
