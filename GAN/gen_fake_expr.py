@@ -535,7 +535,6 @@ def my_find_mostvaried(df, n):
 
 def my_standardize(df):
     # this method requires df in samples x genes
-    df = df.T
     df = zscore(df, axis=0)
     return df
 
@@ -597,8 +596,7 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
     # 2. standardize expression data
     #x = (x - x.mean()) / x.std()
-    #x = (x - x.mean()) / x.std()
-    x = my_standardize(df=x)
+    x = my_standardize(df=x.T)
 
     # 3. transpose matrix (don't need to do this step if in previous step you did the transpose
     #x = x.T
