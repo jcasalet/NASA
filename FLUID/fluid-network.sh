@@ -1,9 +1,4 @@
-DATA_PATH=/home/fluid/data
-SCRIPT_PATH=/home/fluid/scripts
-IMAGE_NAME=fluid
-AGG_PORT=8888
-AGG_EARTH_IP=18.205.238.164
-AGG_ISS_IP=54.162.133.104
-COLAB_EARTH_IP=54.221.144.192
-COLAB_SHIM_IP=54.235.225.15
-COLAB_ISS_IP=62.90.67.80
+export DATA_PATH=/home/fluid/data
+export SCRIPT_PATH=/home/fluid/scripts
+export IMAGE_NAME=fluid
+export AGG_PORT=8888
