@@ -45,7 +45,7 @@ def get_variance_dict(df):
     gene_var_dict=dict()
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
-        gene_var_dict[gene] = gene_var_list[i]
+        gene_var_dict[gene] = np.float32(gene_var_list[i]/100)
 
     return gene_var_dict
 
@@ -124,8 +124,6 @@ def main():
     # subset the expr_df with samples
     expr_samples_df = expr_df[expr_df.columns.intersection(col_samples_list)].T
 
-    # save gene list
-    genes = expr_df['gene']
     # transpose expr_df to have rows be samples
     expr_df_T = expr_df.T
 
