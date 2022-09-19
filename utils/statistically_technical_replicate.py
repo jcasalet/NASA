@@ -49,7 +49,7 @@ def get_variance_dict(df, var):
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
         tempVar = np.float32(gene_var_list[i])
-        gene_var_dict[gene] = max(max(0.1, tempVar), min(tempVar, 1000))
+        gene_var_dict[gene] = min(max(0.1, tempVar), min(tempVar, 1000))
         print(gene_var_dict[gene])
     return gene_var_dict
 
