@@ -50,7 +50,6 @@ def get_variance_dict(df, var):
         gene = df.iloc[i]['gene']
         tempVar = np.float32(gene_var_list[i])
         gene_var_dict[gene] = min(max(0.1, tempVar), min(tempVar, 1000))
-        print(gene_var_dict[gene])
     return gene_var_dict
 
 def create_noise_list(gene_var):
@@ -73,8 +72,8 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
         for sample in samples[start:end]:
             # add new sample to expr data
             expr_row = expr_samples_df[expr_samples_df.index == sample]
-            noise = np.random.normal(0, var, expr_row.shape)
-            #noise = create_noise_list(gene_variance)
+            #noise = np.random.normal(0, var, expr_row.shape)
+            noise = create_noise_list(gene_variance)
             noised_expr_row = expr_row + noise
             myRand = random.randint(0, 1000000)
             while myRand in myRands:
