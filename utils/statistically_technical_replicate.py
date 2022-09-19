@@ -48,14 +48,9 @@ def get_variance_dict(df, var):
     gene_var_dict=dict()
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
-        #gene_var_dict[gene] = np.float32(gene_var_list[i])
         tempVar = np.float32(gene_var_list[i])
-        if tempVar > maxVar:
-            maxVar = tempVar
-        if tempVar < minVar:
-            minVar = tempVar
-    print('min var: ', minVar)
-    print('max var: ', maxVar)
+        gene_var_dict[gene] = max(max(0.1, tempVar), min(tempVar, 1000))
+        print(gene_var_dict[gene])
     return gene_var_dict
 
 def create_noise_list(gene_var):
