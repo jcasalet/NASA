@@ -4,6 +4,7 @@ import argparse
 import random
 from multiprocessing import Process, Queue, cpu_count
 import sys
+import math
 
 
 def parse_args():
@@ -45,7 +46,9 @@ def get_variance_dict(df):
     gene_var_dict=dict()
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
-        gene_var_dict[gene] = np.float32(gene_var_list[i]/100)
+        #gene_var_dict[gene] = np.float32(gene_var_list[i])
+        tempVar = np.float32(gene_var_list[i])
+        gene_var_dict[gene] = min(10, math.sqrt(tempVar))
 
     return gene_var_dict
 
