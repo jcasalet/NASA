@@ -40,16 +40,22 @@ def getStartAndEnd(partitionSizes, threadID):
 
     return start, end
 
-def get_variance_dict(df):
+def get_variance_dict(df, var):
     # assumed gene x sample
+    maxVar = 0
+    minVar = 1000
     gene_var_list = list(df.var(axis=1))
     gene_var_dict=dict()
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
         #gene_var_dict[gene] = np.float32(gene_var_list[i])
         tempVar = np.float32(gene_var_list[i])
-        gene_var_dict[gene] = min(10, math.sqrt(tempVar))
-
+        if tempVar > maxVar:
+            maxVar = tempVar
+        if tempVar < minVar:
+            minVar = tempVar
+    print('min var: ', minVar)
+    print('max var: ', maxVar)
     return gene_var_dict
 
 def create_noise_list(gene_var):
