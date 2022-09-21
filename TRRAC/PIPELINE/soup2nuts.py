@@ -32,8 +32,8 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              normalize = None,
-                              standardize = 'afterMerge',
+                              normalize = 'afterMerge',
+                              standardize = None,
                               log_xform=None,
                               vst=None,
                               oro_thresholds_per_study=True,
@@ -42,10 +42,10 @@ def main():
                               target='oro_thresh',
                               gene_filter = 'protein_coding',
                               zero_count_percent = 0.80,
-                              low_count_threshold = 5,
-                              low_count_percent = 0.80,
-                              top_n_var = 0,
-                              amplify = {'n':2, 'var':10, 'seed':23}
+                              low_count_threshold = 0,
+                              low_count_percent = 0,
+                              top_n_var = 20000,
+                              amplify = {'n':4, 'var':10, 'seed':23}
                               )
 
     # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
@@ -53,14 +53,14 @@ def main():
     if not myrnaseqdata.vst is None:
         myrnaseqdata.shrinkExpression(myrnaseqdata.vst, myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv')
         myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv',
-                                outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_'  +
-                                myrnaseqdata.vst + '.pkl',
+                                outputFileBase=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_'  +
+                                myrnaseqdata.vst,
                                 env_list=myrnaseqdata.env_list,
                                 target=myrnaseqdata.target)
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
-                            outputFile=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_crisp.pkl',
+                            outputFileBase=myrnaseqdata.outputDir + '/' + myrnaseqdata.outputFilePrefix + '_crisp',
                             env_list=myrnaseqdata.env_list, target=myrnaseqdata.target)
 
 
@@ -418,7 +418,7 @@ class RNASeqData():
         sample_list = list(self.metaDF[metaKey])
         self.expressionDF = df[[exprKey] + sample_list]
 
-    def prep4Crisp(self, inputFile, outputFile, env_list, target):
+    def prep4Crisp(self, inputFile, outputFileBase, env_list, target):
         if not inputFile is None:
             self.expressionDF = self.read_expr(inputFile)
         self.add_env(env_list=env_list)
@@ -426,7 +426,8 @@ class RNASeqData():
             self.add_oro()
         else:
             self.setTargetByKey(target)
-        self.save_expr(self.expressionDF, outputFile)
+        self.save_expr(self.expressionDF, outputFileBase + '.csv')
+        self.save_expr(self.expressionDF, outputFileBase + '.pkl')
 
     def mergeExprData(self, dataDict):
         self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
@@ -806,7 +807,7 @@ class RNASeqData():
             processList[i].join()
 
         self.save_meta(meta_df, self.outputDir + '/metadata_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '.csv')
-        self.save_expr(expr_df, self.outputDir + '/' + self.outputFilePrefix + '_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '_crisp.csv',
+        self.save_expr(expr_df, self.outputDir + '/' + self.outputFilePrefix + '_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '.csv',
                        transpose=True, cur_index_col='sample', new_index_col='gene')
         self.outputFilePrefix += '_amplify-' + str(amplify['n']) + '-' + str(amplify['var']) + '_'
 

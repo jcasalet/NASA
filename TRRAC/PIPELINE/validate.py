@@ -75,7 +75,8 @@ for gene in genes:
 		results[gene][comparison]['t-test'] = float('%.3f' % (stats.ttest_ind(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 		results[gene][comparison]['wilcoxon'] = float('%.3f' % (stats.ranksums(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 		results[gene][comparison]['ks-test'] = float('%.3f' % (stats.kstest(np.log(results[gene]['flight']['normalized']), np.log(results[gene][group]['normalized'])).pvalue))
-		#results[gene][comparison]['chisq-test'] = float('%.3f' % (stats.chisquare(np.log(results[gene]['flight']['normalized']), np.log(results[gene][group]['normalized'])).pvalue))
+		results[gene][comparison]['levene'] = float('%.3f' % (stats.levene(np.log(results[gene]['flight']['normalized']), np.log(results[gene][group]['normalized'])).pvalue))
+	#results[gene][comparison]['chisq-test'] = float('%.3f' % (stats.chisquare(np.log(results[gene]['flight']['normalized']), np.log(results[gene][group]['normalized'])).pvalue))
 
 
 

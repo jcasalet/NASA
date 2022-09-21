@@ -591,25 +591,27 @@ def my_prep_data(n, expr_df, info_df, seed, use_meta_cols, train_percent):
 
     # 1. Log-transform data
     x = np.log2(1+ expr_df)
+
+    # 2. convert df to array
     x = np.float32(x)
     #x = expr_df
 
-    # 2. standardize expression data
+    # 3. standardize expression data
     #x = (x - x.mean()) / x.std()
     x = my_standardize(df=x.T)
 
-    # 3. transpose matrix (don't need to do this step if in previous step you did the transpose
+    # 4. transpose matrix (don't need to do this step if in previous step you did the transpose
     #x = x.T
 
-    # 4. find n most varied genes
+    # 5. find n most varied genes
     #x, indices = my_find_mostvaried(x, n)
 
 
 
     # Train/test split
-    x_train, x_test = split_train_test(x=x, train_rate=train_percent)
-    num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=train_percent)
-    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=train_percent)
+    x_train, x_test = split_train_test(x=x, train_rate=train_percent, seed=seed)
+    num_covs_train, num_covs_test = split_train_test(x=num_covs, train_rate=train_percent, seed=seed)
+    cat_covs_train, cat_covs_test = split_train_test(x=cat_covs, train_rate=train_percent, seed=seed)
 
     return cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, x_test, x_train
 
