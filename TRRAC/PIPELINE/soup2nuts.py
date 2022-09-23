@@ -114,6 +114,7 @@ class RNASeqData():
         self.amplify = amplify
         self.stack_xformations = stack_xformations
         self.xformation_stack = dict()
+        self.meta_stack = dict()
 
 
         # append subsets to file name
@@ -271,9 +272,11 @@ class RNASeqData():
             sys.exit(1)
 
         # combine all xformation_stack into a single expr matrix
-        self.xformation_stack['all'] = self.combine_xformation_stack()
+        self.combine_xformation_stack()
 
         self.save_xformation_stack()
+
+        self.save_meta_stack()
 
         # create and save merged, untransformed data for deseq2??
 
@@ -294,26 +297,38 @@ class RNASeqData():
             self.expressionDF = self.expressionDF[self.expressionDF.columns.intersection(keep_samples)]
             #self.metaDF = self.metaDF[]
 
+
         # permute samples to be in same order in expr as in meta
-        self.permuteSamples()
+        self.permuteSamples(expr_df=self.expressionDF, meta_df=self.metaDF, fileSuffix='_exprdf_')
+        self.permuteSamples(expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'], fileSuffix='_xformation-stack_')
 
         # convert genes x samples to samples x genes
         self.expressionDF = self.transpose_df(df=self.expressionDF, cur_index_col='gene', new_index_col='sample')
+        self.xformation_stack['all'] = self.transpose_df(df=self.xformation_stack['all'], cur_index_col='gene', new_index_col='sample')
 
         # combine same gene ids into one row
         print('dims before collapse: ', self.expressionDF.shape)
         self.collapseGeneCounts()
         print('dims after collapse: ', self.expressionDF.shape)
 
+    def save_meta_stack(self):
+        for xformation in self.meta_stack:
+            self.save_meta(self.meta_stack[xformation], fileName=self.outputDir + '/' + xformation + '-xformation-meta-stack.csv')
+
     def save_xformation_stack(self):
         for xformation in self.xformation_stack:
-            self.save_expr(self.xformation_stack[xformation], fileName=self.outputDir + '/xformation-expr-stack.csv')
+            self.save_expr(self.xformation_stack[xformation], fileName=self.outputDir + '/' + xformation + '-xformation-expr-stack.csv')
 
-    def change_sampleNames_perXformation(self, xformation):
+    def update_samples_in_xformation(self, xformation):
+        meta_df = pd.DataFrame()
         for i in range(len(self.xformation_stack[xformation])):
-            new_name = self.xformation_stack[xformation].iloc[i]['sample'] + '-' + xformation
+            old_name = self.xformation_stack[xformation].iloc[i]['sample']
+            new_name =  old_name + '-' + xformation
             self.xformation_stack[xformation].iloc[i, self.xformation_stack[xformation].columns.get_loc('sample')] = new_name
-        return self.xformation_stack[xformation]
+            meta_data = self.metaDF[self.metaDF['sample'] == old_name]
+            meta_data['sample'] = new_name
+            meta_df = meta_df.append(meta_data)
+        return self.xformation_stack[xformation], meta_df
 
     def combine_xformation_stack(self):
         # 1. tranpose to samples x genes
@@ -322,7 +337,7 @@ class RNASeqData():
         counter=0
         for xformation in self.xformation_stack:
             self.xformation_stack[xformation] = self.transpose_df(self.xformation_stack[xformation], cur_index_col='gene', new_index_col='sample')
-            self.xformation_stack[xformation] = self.change_sampleNames_perXformation(xformation)
+            self.xformation_stack[xformation], self.meta_stack[xformation] = self.update_samples_in_xformation(xformation)
             if counter == 0:
                 columns = self.xformation_stack[xformation].columns
                 counter = 1
@@ -334,11 +349,14 @@ class RNASeqData():
         # 3. concatenate the expr from each xformation into one
         df = pd.concat([v for k,v in self.xformation_stack.items()])
 
-        # 4. intersect genes
+        # 4. concatenate the meta from each xformation into one
+        self.meta_stack['all'] = pd.concat([v for k,v in self.meta_stack.items()])
+
+        # 5. intersect genes
         df = df[df.columns.intersection(list(columns))]
 
-        # 5. transpose back to genes x samples
-        return self.transpose_df(df, cur_index_col='sample', new_index_col='gene')
+        # 6. transpose back to genes x samples
+        self.xformation_stack['all'] = self.transpose_df(df, cur_index_col='sample', new_index_col='gene')
 
 
     def my_normalize(self, df, meta):
@@ -462,32 +480,36 @@ class RNASeqData():
             targetDict[myKey] = myValue
         self.expressionDF[key] = self.expressionDF['sample'].map(targetDict)
 
-    def permuteSamples(self, metaKey='sample', exprKey='gene'):
+    def permuteSamples(self, expr_df, meta_df, metaKey='sample', exprKey='gene', fileSuffix=None):
         sample2index_dict = dict()
-        df = self.expressionDF
-        for i in range(self.metaDF.shape[0]):
+        for i in range(meta_df.shape[0]):
             sample = self.metaDF.iloc[i][metaKey]
-            j = df.columns.get_loc(sample)
+            j = expr_df.columns.get_loc(sample)
             sample2index_dict[sample] = (i, j)
 
-        self.metaDF = self.metaDF.sample(frac=1)
-        sample_list = list(self.metaDF[metaKey])
-        self.expressionDF = df[[exprKey] + sample_list]
+        meta_df = meta_df.sample(frac=1)
+        sample_list = list(meta_df[metaKey])
+        expr_df = expr_df[[exprKey] + sample_list]
         self.expr_outputfile_prefix += '_permuted_'
-        self.save_meta(self.metaDF, fileName=self.outputDir + '/meta-' + self.expr_outputfile_prefix + '.csv')
-        self.save_expr(inputDF=self.expressionDF, fileName=self.outputDir + '/' + self.expr_outputfile_prefix + '.csv')
+        self.save_meta(meta_df, fileName=self.outputDir + '/meta-' + self.expr_outputfile_prefix + fileSuffix + '.csv')
+        self.save_expr(inputDF=expr_df, fileName=self.outputDir + '/' + self.expr_outputfile_prefix + fileSuffix + '.csv')
 
     def prep4Crisp(self, inputFile, outputFileBase, env_list, target):
         if not inputFile is None:
             self.expressionDF = self.read_expr(inputFile)
-        self.expressionDF = self.add_env(env_list=env_list, expr_df=self.expressionDF, meta_df=self.meta_Df)
-        #self.xformation_stack['all'] = self.add_env(env_list=env_list, expr_df=self.xformation_stack['all'], meta_df=self.meta_stack)
+        self.expressionDF = self.add_env(env_list=env_list, expr_df=self.expressionDF, meta_df=self.metaDF)
+        self.xformation_stack['all'] = self.add_env(env_list=env_list, expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'])
         if target == 'oro_thresh':
-            self.add_oro()
+            self.expressionDF = self.add_oro(df=self.expressionDF, meta_df=self.metaDF)
+            if self.stack_xformations:
+                self.xformation_stack['all'] = self.add_oro(df=self.xformation_stack['all'], meta_df=self.meta_stack['all'])
         else:
             self.setTargetByKey(target)
         self.save_expr(self.expressionDF, outputFileBase + '.csv')
         self.save_expr(self.expressionDF, outputFileBase + '.pkl')
+        if self.stack_xformations:
+            self.save_expr(self.xformation_stack['all'], outputFileBase + 'xformation_stack.csv')
+            self.save_expr(self.xformation_stack['all'], outputFileBase + 'xformation_stack.pkl')
 
     def mergeExprData(self, dataDict):
         self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
@@ -574,7 +596,7 @@ class RNASeqData():
         fig.set_size_inches(12, 4)
         plt.show()
 
-    def add_oro(self, threshold=18):
+    def add_oro(self, df, meta_df, threshold=18):
         # create oro threshold dictionary with arbitrary threshold
         # >18 = 0 which is the 70% oro value, and there are 70% gc and 30% flight
         # or use 50% (median) oro value to be un-biased (13.96)
@@ -582,9 +604,9 @@ class RNASeqData():
         # threshold=18 #70% oro value
         orothresh_dict = dict()
         for i in range(len(self.metaDF)):
-            key = self.metaDF.iloc[i]['sample']
-            oro = self.metaDF.iloc[i]['oro positivity (%)']
-            study = self.metaDF.iloc[i]['study']
+            key = meta_df.iloc[i]['sample']
+            oro = meta_df.iloc[i]['oro positivity (%)']
+            study = meta_df.iloc[i]['study']
             if not self.oro_thresholds_per_study:
                 thresh = self.oro_thresholds_per_study_dict[study]
             else:
@@ -595,7 +617,11 @@ class RNASeqData():
                 orothresh_dict[key] = 1
 
         # join oro threshold dictionary to data frame
-        self.expressionDF['oro_thresh'] = self.expressionDF['sample'].map(orothresh_dict)
+        df['oro_thresh'] = df['sample'].map(orothresh_dict)
+
+        return df
+
+
 
     def transpose_df(self, df, cur_index_col, new_index_col):
         df = df.set_index(cur_index_col).T
