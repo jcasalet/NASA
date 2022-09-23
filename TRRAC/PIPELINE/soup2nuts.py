@@ -38,7 +38,7 @@ def main():
                               vst=None,
                               oro_thresholds_per_study=True,
                               sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
-                              env_list= ['dataset', 'libprep'],
+                              env_list= ['study', 'dissection', 'libprep'],
                               target='oro_thresh',
                               gene_filter = 'protein_coding',
                               zero_count_percent = 0.80,
@@ -286,11 +286,10 @@ class RNASeqData():
         self.oro_thresholds_per_study_dict=dict()
         keep_samples = []
         if self.oro_thresholds_per_study:
-            for group in set(self.metaDF['group']):
-                for study in set(self.metaDF['study']):
-                    m50,u25,l75 = self.getMiddle50('sample', group, study)
-                    self.oro_thresholds_per_study_dict[study] = (u25 + l75) / 2
-                    keep_samples += m50
+            for study in set(self.metaDF['study']):
+                m50,u25,l75 = self.getMiddle50('sample', study)
+                self.oro_thresholds_per_study_dict[study] = (u25 + l75) / 2
+                keep_samples += m50
 
         # subset expressionDF based on sample list
         if self.middle50_samples:
@@ -327,6 +326,7 @@ class RNASeqData():
             self.xformation_stack[xformation].iloc[i, self.xformation_stack[xformation].columns.get_loc('sample')] = new_name
             meta_data = self.metaDF[self.metaDF['sample'] == old_name]
             meta_data['sample'] = new_name
+            meta_data['env'] = xformation
             meta_df = meta_df.append(meta_data)
         return self.xformation_stack[xformation], meta_df
 
@@ -483,7 +483,7 @@ class RNASeqData():
     def permuteSamples(self, expr_df, meta_df, metaKey='sample', exprKey='gene', fileSuffix=None):
         sample2index_dict = dict()
         for i in range(meta_df.shape[0]):
-            sample = self.metaDF.iloc[i][metaKey]
+            sample = meta_df.iloc[i][metaKey]
             j = expr_df.columns.get_loc(sample)
             sample2index_dict[sample] = (i, j)
 
@@ -497,8 +497,9 @@ class RNASeqData():
     def prep4Crisp(self, inputFile, outputFileBase, env_list, target):
         if not inputFile is None:
             self.expressionDF = self.read_expr(inputFile)
-        self.expressionDF = self.add_env(env_list=env_list, expr_df=self.expressionDF, meta_df=self.metaDF)
-        self.xformation_stack['all'] = self.add_env(env_list=env_list, expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'])
+        self.expressionDF = self.add_env(env_list=env_list, expr_df=self.expressionDF, meta_df=self.metaDF, create=True)
+        if self.stack_xformations:
+            self.xformation_stack['all'] = self.add_env(env_list=env_list, expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'], create=False)
         if target == 'oro_thresh':
             self.expressionDF = self.add_oro(df=self.expressionDF, meta_df=self.metaDF)
             if self.stack_xformations:
@@ -603,11 +604,11 @@ class RNASeqData():
         # threshold=13.96 # median oro value
         # threshold=18 #70% oro value
         orothresh_dict = dict()
-        for i in range(len(self.metaDF)):
+        for i in range(len(meta_df)):
             key = meta_df.iloc[i]['sample']
             oro = meta_df.iloc[i]['oro positivity (%)']
             study = meta_df.iloc[i]['study']
-            if not self.oro_thresholds_per_study:
+            if self.oro_thresholds_per_study:
                 thresh = self.oro_thresholds_per_study_dict[study]
             else:
                 thresh = threshold
@@ -630,23 +631,29 @@ class RNASeqData():
         df.columns=cols
         return df
 
-    def add_env(self, env_list=None, expr_df=None, meta_df=None):
-        # create dictionary with sample id as key and concatenated column strings as value
+    def add_env(self, env_list=None, expr_df=None, meta_df=None, create=True):
         env_dict = dict()
-        for i in range(len(meta_df)):
-            key = meta_df.iloc[i]['sample']
-            if not env_list:
-                value = meta_df.iloc[i]['study'] + ':' + meta_df.iloc[i]['dissection'] + ':' + meta_df.iloc[i]['libprep']
-            else:
-                counter = 0
-                for e in env_list:
-                    if counter == 0:
-                        value = str(meta_df.iloc[i][e])
-                        counter+=1
-                    else:
-                        value = value + ':' + str(meta_df.iloc[i][e])
-            env_dict[key] = value
+        if create:
+            # create dictionary with sample id as key and concatenated column strings as value
+            for i in range(len(meta_df)):
+                key = meta_df.iloc[i]['sample']
+                if not env_list:
+                    value = meta_df.iloc[i]['study'] + ':' + meta_df.iloc[i]['dissection'] + ':' + meta_df.iloc[i]['libprep']
+                else:
+                    counter = 0
+                    for e in env_list:
+                        if counter == 0:
+                            value = str(meta_df.iloc[i][e])
+                            counter+=1
+                        else:
+                            value = value + ':' + str(meta_df.iloc[i][e])
+                env_dict[key] = value
 
+        else:
+            for i in range(len(expr_df)):
+                sample = expr_df.iloc[i]['sample']
+                env = meta_df[meta_df['sample'] == sample]['env'].values[0]
+                env_dict[sample] = env
         # join env dictionary to data frame
         expr_df['env'] = expr_df['sample'].map(env_dict)
 
@@ -748,14 +755,14 @@ class RNASeqData():
         self.expressionDF = self.transpose_df(df, 'gene', 'sample')
 
 
-    def getMiddle50(self, key, group, study):
+    def getMiddle50(self, key, study):
         # group_25=float(df[(df['Group']==group) & (df['Study']==study)].describe().loc['25%']['ORO Positivity (%)'])
         # group_75=float(df[(df['Group']==group) & (df['Study']==study)].describe().loc['75%']['ORO Positivity (%)'])
-        if len(self.metaDF[(self.metaDF['group'] == group) & (self.metaDF['study'] == study)]) == 0:
+        if len(self.metaDF['study'] == study) == 0:
             return [], 0, 0
-        group_25 = np.quantile(self.metaDF[(self.metaDF['group'] == group) & (self.metaDF['study'] == study)]['oro positivity (%)'], q=0.25)
-        group_75 = np.quantile(self.metaDF[(self.metaDF['group'] == group) & (self.metaDF['study'] == study)]['oro positivity (%)'], q=0.75)
-        group_df = self.metaDF[(self.metaDF['group'] == group) & (self.metaDF['study'] == study)]
+        group_25 = np.quantile(self.metaDF[self.metaDF['study'] == study]['oro positivity (%)'], q=0.25)
+        group_75 = np.quantile(self.metaDF[self.metaDF['study'] == study]['oro positivity (%)'], q=0.75)
+        group_df = self.metaDF[self.metaDF['study'] == study]
 
         middle_group_samples = group_df[(group_df['oro positivity (%)'] >= group_25) & (group_df['oro positivity (%)'] <= group_75)][key]
 
