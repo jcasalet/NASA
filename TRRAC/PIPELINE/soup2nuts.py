@@ -37,8 +37,8 @@ def main():
                               log_xform=2,
                               vst=None,
                               oro_thresholds_per_study=True,
-                              sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
-                              env_list= ['study', 'dissection', 'libprep'],
+                              sample_subsets=['Flight', 'Ground', 'Vivarium'],
+                              env_list= ['dataset', 'libprep'],
                               target='oro_thresh',
                               gene_filter = 'protein_coding',
                               zero_count_percent = 0.80,
@@ -124,34 +124,29 @@ class RNASeqData():
 
         # set up metadata
         self.metaFileList = metaFileList.split(',')
-        self.metaDict = dict()
-        for f in self.metaFileList:
-            self.metaDict[f] = pd.read_csv(self.inputDir + '/' + f, sep=',', header=0)
-        self.metaDF = pd.concat(list(self.metaDict.values()), ignore_index=True)
-        self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
-        print('meta dims before filtering out groups: ', self.metaDF.shape)
-        self.metaDF = self.metaDF[self.metaDF['group'].isin(self.sample_subsets)]
-        print('meta dims after filtering out groups: ', self.metaDF.shape)
-        self.samples=list(self.metaDF['sample'])
-        #self.save_meta(self.metaDF, self.outputDir + '/metadata.csv')
 
         # set up expression df dict
         self.rnaSeqFileList = rnaSeqFileList.split(',')
-
-
 
         # first read all data into the expr and meta dicts and apply filters
         self.meta_dict = dict()
         self.rnaExprDataDict = dict()
         for e, m in zip(self.rnaSeqFileList, self.metaFileList):
+            # read in expr data from file
             self.rnaExprDataDict[e] = pd.read_csv(self.inputDir + '/' + e, sep=',', header=0)
+            # read in meta data from file
             self.meta_dict[e] = pd.read_csv(self.inputDir + '/' + m, sep=',', header=0)
+            self.meta_dict[e].columns = list(map(lambda i: i.lower(), self.meta_dict[e].columns))
+            # filter out any samples from meta data that are not in sample_subsets
+            self.meta_dict[e] = self.meta_dict[e][self.meta_dict[e]['group'].isin(self.sample_subsets)]
             self.rnaExprDataDict[e] = self.transpose_df(self.rnaExprDataDict[e], cur_index_col='gene', new_index_col='sample')
+            # filter out any samples from expr data that are not in meta_data
+            self.rnaExprDataDict[e] = self.rnaExprDataDict[e][self.rnaExprDataDict[e]['sample'].isin(list(self.meta_dict[e]['sample']))]
+            # apply filters on each expr data in dict
             self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e], mask=[])
 
         # combine all meta dicts into single df
         self.metaDF = pd.concat(list(self.meta_dict.values()))
-        self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
 
         # case: normalize and optionally log-transform then standardize, all after merge
         # first, normalize
@@ -211,12 +206,12 @@ class RNASeqData():
             # now merge all the data
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
             if self.stack_xformations:
-                self.xformation_stack['raw-beforeMerge'] = self.expressionDF
+                self.xformation_stack['final'] = self.expressionDF
             # sub-case that norm before merge and then stdize after merge?
             if self.standardize == 'afterMerge':
                 self.expressionDF = self.my_standardize(self.expressionDF)
                 if self.stack_xformations:
-                    self.xformation_stack['raw-beforeMerge_stdize-afterMerge']
+                    self.xformation_stack['final-stdize']
                 self.expr_outputfile_prefix += '_stdize-after-merge_'
 
             #self.metaDF = pd.concat(list(self.meta_dict.values()))
@@ -631,29 +626,32 @@ class RNASeqData():
         df.columns=cols
         return df
 
-    def add_env(self, env_list=None, expr_df=None, meta_df=None, create=True):
+    def create_env(self, env_list, meta_df):
         env_dict = dict()
-        if create:
-            # create dictionary with sample id as key and concatenated column strings as value
-            for i in range(len(meta_df)):
-                key = meta_df.iloc[i]['sample']
-                if not env_list:
-                    value = meta_df.iloc[i]['study'] + ':' + meta_df.iloc[i]['dissection'] + ':' + meta_df.iloc[i]['libprep']
+        # create dictionary with sample id as key and concatenated column strings as value
+        for i in range(len(meta_df)):
+            key = meta_df.iloc[i]['sample']
+            counter = 0
+            for e in env_list:
+                if counter == 0:
+                    value = str(meta_df.iloc[i][e])
+                    counter += 1
                 else:
-                    counter = 0
-                    for e in env_list:
-                        if counter == 0:
-                            value = str(meta_df.iloc[i][e])
-                            counter+=1
-                        else:
-                            value = value + ':' + str(meta_df.iloc[i][e])
-                env_dict[key] = value
+                    value = value + ':' + str(meta_df.iloc[i][e])
+            env_dict[key] = value
+        return env_dict
 
+    def add_env(self, env_list=['study', 'dissection', 'libprep'], expr_df=None, meta_df=None, create=True):
+        if create:
+            env_dict = self.create_env(env_list, meta_df)
         else:
+            env_dict = self.create_env(env_list, meta_df)
+            # add previously constructed env for xformation stack to env
             for i in range(len(expr_df)):
                 sample = expr_df.iloc[i]['sample']
                 env = meta_df[meta_df['sample'] == sample]['env'].values[0]
-                env_dict[sample] = env
+                env_dict[sample] += env
+
         # join env dictionary to data frame
         expr_df['env'] = expr_df['sample'].map(env_dict)
 
@@ -858,7 +856,7 @@ class RNASeqData():
                     myRand = random.randint(0, 1000000)
                 myRands.append(myRand)
                 new_sample = sample + '_' + str(threadID) + '_' + str(myRand)
-                self.samples.append(new_sample)
+                #self.samples.append(new_sample)
                 #new_sample = sample + '_' + str((i+1) * n * threadID)
 
                 noised_expr_row['sample'] = new_sample
