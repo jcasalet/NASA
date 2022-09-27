@@ -37,16 +37,17 @@ def main():
                               log_xform=2,
                               vst=None,
                               oro_thresholds_per_study=True,
-                              sample_subsets=['Flight', 'Ground', 'Vivarium'],
-                              env_list= ['dataset', 'libprep'],
+                              sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
+                              env_list= ['dataset'],
                               target='oro_thresh',
                               gene_filter = 'protein_coding',
                               zero_count_percent = 0.80,
                               low_count_threshold = 5,
                               low_count_percent = 0.80,
-                              top_n_var = 20000,
+                              top_n_var = 0,
                               amplify = {'n':0, 'var':10, 'seed':23},
-                              stack_xformations = True
+                              stack_xformations = True,
+                              use_raw_in_xformation_stack = False
                               )
 
     # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
@@ -89,7 +90,8 @@ class RNASeqData():
                  low_count_percent = 0.8,
                  top_n_var = 0,
                  amplify={'n': 0, 'var': 10, 'seed': 23},
-                 stack_xformations=False
+                 stack_xformations=False,
+                 use_raw_in_xformation_stack=False
                  ):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
@@ -113,6 +115,7 @@ class RNASeqData():
         self.top_n_var = top_n_var
         self.amplify = amplify
         self.stack_xformations = stack_xformations
+        self.use_raw_in_xformation_stack = use_raw_in_xformation_stack
         self.xformation_stack = dict()
         self.meta_stack = dict()
 
@@ -145,8 +148,28 @@ class RNASeqData():
             # apply filters on each expr data in dict
             self.rnaExprDataDict[e], self.meta_dict[e] = self.apply_filter(self.rnaExprDataDict[e], self.meta_dict[e], mask=[])
 
-        # combine all meta dicts into single df
+        # combine all meta dicts into single df and save in file for deseq2
         self.metaDF = pd.concat(list(self.meta_dict.values()))
+        self.save_meta(self.metaDF, self.outputDir + '/meta-4-deseq2.csv')
+
+        # combine all expr dicts into single df and save in file for deseq2
+        self.save_expr(inputDF=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values())),
+                       fileName = self.outputDir + '/expr-4-deseq2.csv',
+                       transpose=True,
+                       cur_index_col='gene',
+                       new_index_col='sample')
+
+        # combine all raw expr data into single df for xformation stack
+        if self.stack_xformations and self.use_raw_in_xformation_stack:
+            self.xformation_stack['raw-merged'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+
+
+        # perform each transformation on raw data in xformation stack and stack it
+        if self.stack_xformations:
+            self.xformation_stack['merged-normalized'] = self.my_normalize(ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values())), pd.concat(list(self.meta_dict.values())))
+            self.xformation_stack['merged-logxformed'] = self.my_log(base=self.log_xform, expr=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values())))
+            self.xformation_stack['merged-stdized'] = self.my_standardize(ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values())))
+
 
         # case: normalize and optionally log-transform then standardize, all after merge
         # first, normalize
@@ -158,11 +181,9 @@ class RNASeqData():
                 sys.exit(1)
             # merge first
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            if self.stack_xformations:
-                self.xformation_stack['raw-beforeMerge'] = self.expressionDF
             self.expressionDF = self.my_normalize(self.expressionDF, self.metaDF)
-            if self.stack_xformations:
-                self.xformation_stack['raw-beforeMerge_normalized-beforeMerge'] = self.expressionDF
+            '''if self.stack_xformations:
+                self.xformation_stack['raw-beforeMerge_normalized-beforeMerge'] = self.expressionDF'''
 
             # second, log transform
             if not self.log_xform is None:
@@ -172,24 +193,24 @@ class RNASeqData():
                     self.expressionDF = self.my_log_ratio(lr_type='ILR')
                 elif self.log_xform == 'CLR':
                     self.expressionDF = self.my_log_ratio(lr_type='CLR')
+                '''if self.stack_xformations:
+                    self.xformation_stack['raw-beforeMerge_normalized-beforeMerge_log-beforeMerge'] = self.expressionDF'''
                 self.expr_outputfile_prefix += '_log-' + str(self.log_xform)
-                if self.stack_xformations:
-                    self.xformation_stack['raw-beforeMerge_normalized-beforeMerge_log-beforeMerge'] = self.expressionDF
 
             # third, standardize
             if self.standardize == 'afterMerge':
                 self.expressionDF = self.my_standardize(self.expressionDF)
-                if self.stack_xformations:
-                    self.xformation_stack['raw-beforeMerge_normalized-beforeMerge_log-beforeMerge_stdize-afterMerge'] = self.expressionDF
+                '''if self.stack_xformations:
+                    self.xformation_stack['raw-beforeMerge_normalized-beforeMerge_log-beforeMerge_stdize-afterMerge'] = self.expressionDF'''
                 self.expr_outputfile_prefix += '_stdize-after-merge_'
 
         # case: normalize, log, standardize before merge
         elif self.normalize == 'beforeMerge':
-            self.expr_outputfile_prefix += '_norm-before-merge_'
             self.meta_dict = dict()
             # first normalize
             for e, m in zip(self.rnaSeqFileList, self.metaFileList):
                 self.rnaExprDataDict[e] = self.my_normalize(self.rnaExprDataDict[e], self.meta_dict[e])
+            self.expr_outputfile_prefix += '_norm-before-merge_'
 
             # second, log transforms
             if not self.log_xform is None:
@@ -205,17 +226,15 @@ class RNASeqData():
 
             # now merge all the data
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            if self.stack_xformations:
-                self.xformation_stack['final'] = self.expressionDF
+            '''if self.stack_xformations:
+                self.xformation_stack['final'] = self.expressionDF'''
             # sub-case that norm before merge and then stdize after merge?
             if self.standardize == 'afterMerge':
                 self.expressionDF = self.my_standardize(self.expressionDF)
-                if self.stack_xformations:
-                    self.xformation_stack['final-stdize']
+                '''if self.stack_xformations:
+                    self.xformation_stack['final-stdize']'''
                 self.expr_outputfile_prefix += '_stdize-after-merge_'
 
-            #self.metaDF = pd.concat(list(self.meta_dict.values()))
-            #self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
 
 
         # case: just standardize (no normalize) and potentially log before or after merge
@@ -223,15 +242,15 @@ class RNASeqData():
 
             if self.standardize == 'afterMerge':
                 self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-                if self.stack_xformations:
-                    self.xformation_stack['raw-afterMerge'] = self.expressionDF
+                '''if self.stack_xformations:
+                    self.xformation_stack['raw-afterMerge'] = self.expressionDF'''
                 if not self.log_xform is None:
                     self.expressionDF = self.my_log(self.log_xform, self.expressionDF)
-                    if self.stack_xformations:
-                        self.xformation_stack['raw-afterMerge_fterMerge_log-afterMerge'] = self.expressionDF
+                    '''if self.stack_xformations:
+                        self.xformation_stack['raw-afterMerge_fterMerge_log-afterMerge'] = self.expressionDF'''
                 self.expressionDF = self.my_standardize(self.expressionDF)
-                if self.stack_xformations:
-                    self.xformation_stack['raw--afterMerge_stdize-afterMerge'] = self.expressionDF
+                '''if self.stack_xformations:
+                    self.xformation_stack['raw--afterMerge_stdize-afterMerge'] = self.expressionDF'''
                 self.expr_outputfile_prefix += 'stdize-after-merge'
 
             elif self.standardize == 'beforeMerge':
@@ -240,38 +259,36 @@ class RNASeqData():
                         self.rnaExprDataDict[e] = self.my_log(self.log_xform, self.rnaExprDataDict[e])
                     self.rnaExprDataDict[e] = self.my_standardize(self.rnaExprDataDict[e])
                 self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-                if self.stack_xformations:
-                    self.xformation_stack['stdize-beforeMerge'] = self.expressionDF
-                #self.metaDF = pd.concat(list(self.meta_dict.values()))
-                #self.metaDF.columns = list(map(lambda i: i.lower(), self.metaDF.columns))
+                '''if self.stack_xformations:
+                    self.xformation_stack['stdize-beforeMerge'] = self.expressionDF'''
                 self.expr_outputfile_prefix += 'stdize-before-merge'
 
         # case: only log xform
         elif not self.log_xform is None:
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            if stack_xformations:
-                self.xformation_stack['raw'] = self.expressionDF
+            '''if stack_xformations:
+                self.xformation_stack['raw'] = self.expressionDF'''
             self.expressionDF = self.my_log(self.log_xform, self.expressionDF)
-            if stack_xformations:
-                self.xformation_stack['raw_log'] = self.expressionDF
+            '''if stack_xformations:
+                self.xformation_stack['raw_log'] = self.expressionDF'''
             self.expr_outputfile_prefix += '_log' + str(self.log_xform) + '_'
 
         # case: no transformations, just merge and filter data
         elif self.normalize is None and self.standardize is None and self.log_xform is None:
             self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
-            if self.stack_xformations:
-                self.xformation_stack['raw'] = self.expressionDF
+            '''if self.stack_xformations:
+                self.xformation_stack['raw'] = self.expressionDF'''
 
         else:
             print('no such transformation combination value: ', 'normalize = ', self.normalize, 'standardize = ', self.standardize, 'log = ', self.log_xform)
             sys.exit(1)
 
         # combine all xformation_stack into a single expr matrix
-        self.combine_xformation_stack()
 
-        self.save_xformation_stack()
-
-        self.save_meta_stack()
+        if self.stack_xformations:
+            self.combine_xformation_stack()
+            self.save_xformation_stack()
+            self.save_meta_stack()
 
         # create and save merged, untransformed data for deseq2??
 
@@ -294,11 +311,13 @@ class RNASeqData():
 
         # permute samples to be in same order in expr as in meta
         self.permuteSamples(expr_df=self.expressionDF, meta_df=self.metaDF, fileSuffix='_exprdf_')
-        self.permuteSamples(expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'], fileSuffix='_xformation-stack_')
+        if self.stack_xformations:
+            self.permuteSamples(expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'], fileSuffix='_xformation-stack_')
 
         # convert genes x samples to samples x genes
         self.expressionDF = self.transpose_df(df=self.expressionDF, cur_index_col='gene', new_index_col='sample')
-        self.xformation_stack['all'] = self.transpose_df(df=self.xformation_stack['all'], cur_index_col='gene', new_index_col='sample')
+        if self.stack_xformations:
+            self.xformation_stack['all'] = self.transpose_df(df=self.xformation_stack['all'], cur_index_col='gene', new_index_col='sample')
 
         # combine same gene ids into one row
         print('dims before collapse: ', self.expressionDF.shape)
