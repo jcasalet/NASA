@@ -22,7 +22,7 @@ real_df = real_df.drop(columns=['gene'])
 real_std = real_df.std()
 real_mean = real_df.mean()
 
-genes = fake_df['gene']
+genes = list(fake_df['gene'])
 
 fake_df = fake_df.drop(columns=['gene'])
 theMin = min(fake_df.min())
@@ -42,6 +42,7 @@ fake_df.insert(0, 'gene', genes)
 fake_df.to_csv(fakeDFFile.split('.csv')[0] + '_unlog.csv', sep=',', index=False)
 
 # both
+fake_df.drop(columns=['gene'], inplace=True)
 fake_ready = np.exp2(fake_df)
 fake_ready = fake_ready * real_std + real_mean
 fake_ready.insert(0, 'gene', genes)
