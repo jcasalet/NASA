@@ -698,7 +698,8 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols):
     sns.set(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(5,5))
 
-    ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100)
+    hue_cat = pd.Categorical(pcaDF[variable])
+    ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=hue_cat, s=100)
 
     ax.set_xlabel('PC 1 ' + '(' + str(round(pca.explained_variance_ratio_[0]*100, 1)) + '% variance)', fontsize=15)
     ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
