@@ -88,9 +88,10 @@ class LinearInvariantRiskMinimization(object):
         #for inputs, targets in self.train_loaders:
         #    weight_list.append(1/)
         opt = torch.optim.Adam([self.phi], lr=self.args["lr"])
-        loss = torch.nn.MSELoss()
+        #loss = torch.nn.MSELoss()
         #loss = torch.nn.BCELoss()
-        softmax = torch.nn.Softmax(dim=0)
+        #softmax = torch.nn.Softmax(dim=0)
+        loss = torch.nn.BCEWithLogitsLoss()
 
 
         error_dict = dict()
