@@ -99,6 +99,14 @@ for gene in genes:
 	plt.title(gene)
 	plt.savefig(gene + '.png', dpi=300)
 
+	combo_data_dict = {'flight_normalized': results[gene]['flight']['normalized'], 'ground_normalized': results[gene]['ground']['normalized'],
+				'nonflight_normalized': results[gene]['nonflight']['normalized']}
+	fig, ax = plt.subplots()
+	# ax.set_ylim([0, 1])
+	ax.boxplot(combo_data_dict.values())
+	ax.set_xticklabels(combo_data_dict.keys())
+	fig.set_size_inches(12, 4)
+	plt.savefig('ground_flight_bawplot_' + gene + '.png')
 
 	# qqplot
 	'''stats.probplot(expr_per_gene_per_group[gene]['flight'])
