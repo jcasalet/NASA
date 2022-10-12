@@ -197,9 +197,12 @@ class NonLinearInvariantCausalPrediction(object):
         return chain.from_iterable(combinations(s, r) for r in range(max_set_size + 1))
 
     def initialize_model(self):
-        if self.method == 'MLP':
+        if self.method == 'MLP' or self.method == 'MLP2':
             self.input_dim = len(self.feature_mask)
-            self.model = MLP(self.args, self.input_dim, self.output_dim)
+            if self.method == 'MLP':
+                self.model = MLP(self.args, self.input_dim, self.output_dim)
+            elif self.method == 'MLP2':
+                self.model = MLP2(self.args, self.input_dim, self.output_dim)
             if self.cuda:
                 self.model.cuda()
         else:

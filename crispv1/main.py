@@ -12,7 +12,7 @@ def run(config):
     environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
 
 
-    '''
+
     ########################### CHECK IF TARGET IS CONSTANT ############################
     from utils.ZeroVarianceChecker import ZeroVarianceCheckerTarget
     from utils.exceptionclasses import TargetHasZeroVarianceError
@@ -20,7 +20,7 @@ def run(config):
     # If target variable is constant for dataset then stop experiment early
     if constant_target.zero_var:
         raise TargetHasZeroVarianceError()
-    '''
+
 
     ######################### LIST CHOSEN ENSEMBLE METHODS #############################
     ensemble_options = config.get('ensemble_options', {})
@@ -32,7 +32,7 @@ def run(config):
     # Initialise empty list to store per method results to outputs to file system/ cloud storage
     to_bucket_results = []
 
-    '''
+
     ############################# Correlation to Target Ranking #########################
     from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
@@ -169,7 +169,6 @@ def run(config):
         print("Finished RF")
         to_bucket = rf_results_dict['to_bucket']
         to_bucket_results.append(to_bucket)
-    '''
     #####################################################################################
     ############################# FEATURE REDUCTION 2 ###################################
     #####################################################################################
@@ -199,6 +198,9 @@ def run(config):
 
         print('Running IRM (Feature Reduction Mode)')
         IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
+        #environment_datasets_orig, val_dataset_orig, test_dataset_orig = get_datasets_for_experiment(config)
+
+        #IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets_orig, val_dataset_orig, test_dataset_orig, FRIRM_args)
         irm_results_dict = IRM_NN.results()
         if config['verbose']:
             print(irm_results_dict)
@@ -315,11 +317,13 @@ def run(config):
         NLICP_options = ensemble_options.get('NLICP', {})
         NLICP_args = {
             "max_set_size": 2,
-            "alpha": 0.05,
+            "alpha": 0.1,
             "seed": 12,
             "verbose": 1,
             "method": "MLP",
-            "hidden_dim": 256
+            "hidden_dim": 256,
+            "batch_size": 8,
+            "epochs": 50
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
