@@ -6,6 +6,7 @@ import torch
 from scipy.stats import levene, ranksums
 
 from models.TorchModelZoo import MLP
+from models.TorchModelZoo import MLP2
 from utils.defining_sets import defining_sets
 
 
