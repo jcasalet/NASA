@@ -317,13 +317,14 @@ def run(config):
         NLICP_options = ensemble_options.get('NLICP', {})
         NLICP_args = {
             "max_set_size": 2,
-            "alpha": 0.1,
-            "seed": 12,
+            "alpha": 0.05,
+            "seed": ensemble_options.get('seed', 0),
             "verbose": 1,
             "method": "MLP",
             "hidden_dim": 256,
             "batch_size": 8,
-            "epochs": 50
+            "epochs": 50,
+            "max_iter": 100
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
