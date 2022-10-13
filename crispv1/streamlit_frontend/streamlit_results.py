@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import streamlit as st
 import traceback
+import statistics
 
 from utils.gcp_helpers import get_json_from_bucket
 from utils.plotting import get_test_accuracy_figure, get_method_intersections, plot_sankey_for_results, get_corr_matrix, \
@@ -42,8 +43,8 @@ def streamlit_results(config):
 
         # Plot method predictive accuracies
 
-        test_acc_fig = get_test_accuracy_figure(res_json)
-        st.plotly_chart(test_acc_fig)
+        #test_acc_fig = get_test_accuracy_figure(res_json)
+        #st.plotly_chart(test_acc_fig)
 
         # Causal potential bar chart:
 
@@ -80,7 +81,19 @@ def streamlit_results(config):
                 print('Processing', method)
                 coefs = pd.DataFrame()
                 coefs['feature'] = method_dict['features']
-                coefs['coefficient'] = method_dict['coefficients']
+                #coefs['coefficient'] = method_dict['coefficients']
+
+                if method_dict['coefficients'] is None:
+                    coefs['coefficient'] = method_dict['coefficients']
+                else:
+                    coef_stdev = statistics.pstdev(method_dict['coefficients'])
+                    coef_mean = statistics.mean(method_dict['coefficients'])
+                    if coef_stdev != 0:
+                        my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients']]
+                        coefs['coefficient'] = my_coefs
+                    else:
+                        coefs['coefficient'] = method_dict['coefficients']
+
                 coefs['pvals'] = method_dict['pvals']
 
                 fig = get_fig_most_predictive(coefs, method, overall_importance_slider_val)
@@ -101,6 +114,7 @@ def streamlit_results(config):
         top_k_slider_val = st.slider(label='Show top features in Sankey:', min_value=1, max_value=max_value, step=1,
                                      value=20)
 
+        
         sankey = plot_sankey_for_results(config, top_k_slider_val, overall_importance)
 
         st.plotly_chart(sankey, use_container_width=True)
@@ -108,6 +122,7 @@ def streamlit_results(config):
         try:
 
             # correlation/sensitivity network plot
+
             corr_cutoff = st.slider(label='Correlation cutoff:', min_value=0.0, max_value=1.0, step=0.1, value=0.5)
 
             corr = get_corr_matrix(res_json)
