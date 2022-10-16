@@ -24,7 +24,7 @@ class LinearInvariantRiskMinimization(object):
         self.feature_names = test_dataset.predictor_columns
 
         # Initialise Dataloaders (combine all environment datasets to as train)  
-        self.batch_size = args.get('batch_size', 128)
+        self.batch_size = args.get('batch_size', 8)
         self.all_dataset = torch.utils.data.ConcatDataset(environment_datasets)
         self.all_loader = torch.utils.data.DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=True)
         train_loaders = []

@@ -35,7 +35,7 @@ class NonLinearInvariantCausalPrediction(object):
 
         self.output_dim = train_environments[0].get_output_dim()
         self.input_dim = train_environments[0].get_feature_dim()
-        # Initialise Dataloaders (combined all environxment for train; separated by environment for comparison across envs)
+        # Initialise Dataloaders (combined all environment for train; separated by environment for comparison across envs)
         self.batch_size = args.get('batch_size', 128)
         all_dataset = torch.utils.data.ConcatDataset(train_environments)
         self.all_loader = torch.utils.data.DataLoader(all_dataset, batch_size=self.batch_size, shuffle=True)

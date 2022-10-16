@@ -43,8 +43,8 @@ def streamlit_results(config):
 
         # Plot method predictive accuracies
 
-        #test_acc_fig = get_test_accuracy_figure(res_json)
-        #st.plotly_chart(test_acc_fig)
+        test_acc_fig = get_test_accuracy_figure(res_json)
+        st.plotly_chart(test_acc_fig)
 
         # Causal potential bar chart:
 

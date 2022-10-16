@@ -3,8 +3,9 @@ import numpy as np
 import numpy.random as npr
 import pandas as pd
 #import tensorflow as tf
-import tensorflow.compat.v2 as tf
-tf.enable_v2_behavior()
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+#tf.enable_v1_behavior()
 import statsmodels.api as sm
 #from tensorflow_probability import edward2 as ed
 import edward2 as ed
@@ -44,8 +45,8 @@ class Deconfounder(object):
         # Fix the seed
         random.seed(self.seed)
         np.random.seed(self.seed)
-        #tf.set_random_seed(self.seed)
-        tf.random.set_seed(self.seed)
+        tf.set_random_seed(self.seed)
+        #tf.random.set_seed(self.seed)
 
         # Set up test set df
         columns = args["columns"]
@@ -268,15 +269,8 @@ class Deconfounder(object):
 
 
         elbo = energy + entropy
-        #optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
-        optimizer = tf.optimizers.Adam(learning_rate=0.05)
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.05)
         train = optimizer.minimize(-elbo)
-
-        '''elbo = None
-        def cost():
-            return -1 * (energy + entropy)
-        optimizer = tf.optimizers.Adam(learning_rate=0.05)
-        train = optimizer.minimize(loss=cost, var_list=[qb, qw])'''
 
         init = tf.global_variables_initializer()
 

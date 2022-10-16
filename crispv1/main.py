@@ -192,6 +192,7 @@ def run(config):
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
             "cuda": False,
+            "batch_size": 8,
             "hidden_dim":  256
         }
         FRIRM_args.update(FRIRM_options)
@@ -254,6 +255,7 @@ def run(config):
             "minAccuracy": 0.5,
             "seed": 0,
             "verbose": 1,
+            "batch_size": 8,
             "target": data_config['targets'],
             "output_pvals": True
         }
@@ -286,6 +288,7 @@ def run(config):
             "max_set_size": 2,
             "alpha": 0.05,
             "seed": 12,
+            "batch_size": 8,
             "verbose": 1
         }
         ICP_args.update(ICP_options)
@@ -361,6 +364,7 @@ def run(config):
             "n_iterations": 1000,
             "seed": 0,
             "lr": 0.001,
+            "batch_size": 8,
             "cuda": False
         }
         LIRM_args.update(LIRM_options)
@@ -404,6 +408,7 @@ def run(config):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
+            "batch_size": 8,
             "cuda": False
         }
         IRM_args.update(IRM_options)

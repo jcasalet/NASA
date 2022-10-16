@@ -34,7 +34,7 @@ def streamlit_data(config):
 
     # Show correlations in dataframe
 
-    try:
+    '''try:
         # from data_used get predictor cols, remove any features that you're excluding in the config
         if config['data_options']['predictors'] != 'All':
             predictor_cols = config['data_options']['predictors']
@@ -73,4 +73,4 @@ def streamlit_data(config):
     except Exception as e:
         st.write('Unable to show ')
         tb = traceback.format_exc()
-        print('Caught exception ', e, tb)
+        print('Caught exception ', e, tb)'''

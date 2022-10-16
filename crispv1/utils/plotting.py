@@ -149,14 +149,14 @@ def get_ensemble_results(to_bucket_results):
 
             ########################################
             # JC: use coef/stdev
-            print(method_dict['coefficients'])
+            print('method_dict[coefficients]', method_dict['coefficients'])
             if method_dict['coefficients'] is None:
                 coefs['coefficient'] = method_dict['coefficients']
             else:
                 coef_stdev = statistics.pstdev(method_dict['coefficients'])
-                print('coef_stdev: ', coef_stdev)
+                coef_mean = statistics.mean(method_dict['coefficients'])
                 if coef_stdev != 0:
-                    my_coefs = [n / coef_stdev if n else 1 for n in method_dict['coefficients']]
+                    my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients']]
                     coefs['coefficient'] = my_coefs
                 else:
                     coefs['coefficient'] = method_dict['coefficients']
@@ -256,9 +256,23 @@ def get_method_intersections(results_dict, top_k=50):
 
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            coefs['coefficient'] = method_dict['coefficients']
+
+            #coefs['coefficient'] = method_dict['coefficients']
+            if method_dict['coefficients'] is None:
+                coefs['coefficient'] = method_dict['coefficients']
+            else:
+                coef_stdev = statistics.pstdev(method_dict['coefficients'])
+                coef_mean = statistics.mean(method_dict['coefficients'])
+                if coef_stdev != 0:
+                    my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients']]
+                    coefs['coefficient'] = my_coefs
+                else:
+                    coefs['coefficient'] = method_dict['coefficients']
+
             coefs['sort'] = coefs['coefficient'].abs()
             coefs = coefs.sort_values('sort', ascending=False)
+
+
 
             feat_dicts.append(coefs)
             all_features.update(list(coefs['feature'].values))
