@@ -65,7 +65,6 @@ class NonLinearInvariantCausalPrediction(object):
             self.train(self.all_loader)
             # TODO: JC the predicted values are WAY off (like in the 10,000's  ... not suited for 0-1 binary classification
 
-
             # loop through each environment in train_environments, get true/preds and residuals within that env, map residuals to env id
             res_all = []
             e_all = []
@@ -203,7 +202,7 @@ class NonLinearInvariantCausalPrediction(object):
         return chain.from_iterable(combinations(s, r) for r in range(max_set_size + 1))
 
     def initialize_model(self):
-        if self.method == 'MLP' or self.method == 'MLP2':
+        if self.method == 'MLP' or self.method == 'MLP2' or self.method == 'MLP3':
             self.input_dim = len(self.feature_mask)
             if self.method == 'MLP':
                 self.model = MLP(self.args, self.input_dim, self.output_dim)
