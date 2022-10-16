@@ -7,6 +7,7 @@ from scipy.stats import levene, ranksums
 
 from models.TorchModelZoo import MLP
 from models.TorchModelZoo import MLP2
+from models.TorchModelZoo import MLP3
 from utils.defining_sets import defining_sets
 
 
@@ -62,6 +63,8 @@ class NonLinearInvariantCausalPrediction(object):
             # Initialise Model
             self.initialize_model()
             self.train(self.all_loader)
+            # TODO: JC the predicted values are WAY off (like in the 10,000's  ... not suited for 0-1 binary classification
+
 
             # loop through each environment in train_environments, get true/preds and residuals within that env, map residuals to env id
             res_all = []
@@ -206,6 +209,8 @@ class NonLinearInvariantCausalPrediction(object):
                 self.model = MLP(self.args, self.input_dim, self.output_dim)
             elif self.method == 'MLP2':
                 self.model = MLP2(self.args, self.input_dim, self.output_dim)
+            elif self.method == 'MLP3':
+                self.model = MLP3(self.args, self.input_dim, self.output_dim)
             if self.cuda:
                 self.model.cuda()
         else:
@@ -235,6 +240,9 @@ class NonLinearInvariantCausalPrediction(object):
 
                 optimizer.zero_grad()
                 outputs = self.model(inputs)
+                # TODO JC put these outputs on 0-1 scale
+                #outputs = outputs.detach().numpy()
+
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
