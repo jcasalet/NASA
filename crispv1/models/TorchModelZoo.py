@@ -112,12 +112,12 @@ class MLP3(torch.nn.Module):
         for lin in [lin1, lin2, lin3, lin4, lin5, lin6, lin7]:
             torch.nn.init.xavier_uniform_(lin.weight)
             torch.nn.init.zeros_(lin.bias)
-        self._main = torch.nn.Sequential(lin1, torch.nn.ReLu(True), d1,
-                                         lin2, torch.nn.ReLu(True), d2,
-                                         lin3, torch.nn.ReLu(True), d3,
-                                         lin4, torch.nn.ReLu(True), d4,
-                                         lin5, torch.nn.ReLu(True), d5,
-                                         lin6, torch.nn.ReLu(True), d6,
+        self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), d1,
+                                         lin2, torch.nn.ReLU(True), d2,
+                                         lin3, torch.nn.ReLU(True), d3,
+                                         lin4, torch.nn.ReLU(True), d4,
+                                         lin5, torch.nn.ReLU(True), d5,
+                                         lin6, torch.nn.ReLU(True), d6,
                                          lin7, torch.nn.Softmax()
                                          )
         self.input_dim = input_dim

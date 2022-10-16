@@ -323,7 +323,7 @@ def run(config):
             "alpha": 0.05,
             "seed": ensemble_options.get('seed', 0),
             "verbose": 1,
-            "method": "MLP2",
+            "method": "MLP3",
             "hidden_dim": 256,
             "batch_size": 8,
             "epochs": 50,
