@@ -118,7 +118,7 @@ class MLP3(torch.nn.Module):
                                          lin4, torch.nn.ReLU(True), d4,
                                          lin5, torch.nn.ReLU(True), d5,
                                          lin6, torch.nn.ReLU(True), d6,
-                                         lin7, torch.nn.Softmax()
+                                         lin7, torch.nn.Sigmoid()
                                          )
         self.input_dim = input_dim
         self.output_dim = output_dim
