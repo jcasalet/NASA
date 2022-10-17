@@ -221,7 +221,8 @@ class NonLinearInvariantCausalPrediction(object):
 
         epochs = self.args.get('epochs', 100)  # maybe reduce default to speed up?
         lr = self.args.get('lr', 0.001)
-        criterion = torch.nn.BCEWithLogitsLoss()  # todo: maybe detect what loss to use for binary/multi-class cases
+        #criterion = torch.nn.BCEWithLogitsLoss()  # todo: maybe detect what loss to use for binary/multi-class cases
+        criterion = torch.nn.BCELoss()  # todo: maybe detect what loss to use for binary/multi-class cases
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
 
         # Start training loop
@@ -239,8 +240,7 @@ class NonLinearInvariantCausalPrediction(object):
 
                 optimizer.zero_grad()
                 outputs = self.model(inputs)
-                # TODO JC put these outputs on 0-1 scale
-                #outputs = outputs.detach().numpy()
+                # TODO JC put these outputs on 0-1 scale (changed last layer activation to sigmoid for now)
 
                 loss = criterion(outputs, targets)
                 loss.backward()
