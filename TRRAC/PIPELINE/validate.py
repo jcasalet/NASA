@@ -77,7 +77,7 @@ for gene in genes:
 		results[gene][comparison]['wilcoxon'] = float('%.3f' % (stats.ranksums(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 		results[gene][comparison]['ks-test'] = float('%.3f' % (stats.kstest(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 		results[gene][comparison]['levene'] = float('%.3f' % (stats.levene(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
-	#results[gene][comparison]['chisq-test'] = float('%.3f' % (stats.chisquare(np.log(results[gene]['flight']['normalized']), np.log(results[gene][group]['normalized'])).pvalue))
+		#results[gene][comparison]['chisq-test'] = float('%.3f' % (stats.chisquare(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 
 
 
@@ -113,6 +113,7 @@ for gene in genes:
 	stats.probplot(expr_per_gene_per_group[gene]['ground'])
 	stats.probplot(nonflight)
 	pylab.show()'''
+
 	print("gene = ", gene,
 		  "\n\tflt mean = ", results[gene]['flight']['mean'],
 		  "\n\tflt variance = ", results[gene]['flight']['variance'],
