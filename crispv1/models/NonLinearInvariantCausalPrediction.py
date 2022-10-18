@@ -293,7 +293,9 @@ class NonLinearInvariantCausalPrediction(object):
                 else:
                     test_targets.append(targets.squeeze().unsqueeze(0))
                     test_logits.append(outputs.squeeze().unsqueeze(0))
-                    test_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    #test_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    # TODO JC we already did sigmoid so removing it here ...
+                    test_probs = test_logits
 
         self.test_targets = torch.cat(test_targets, dim=1)
         self.test_logits = torch.cat(test_logits, dim=1)
