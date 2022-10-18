@@ -65,7 +65,7 @@ for env in df['env']:
 		#y = np.log10(1+vars_dict[env][gene])
 		#plt.text(x, y, gene, color='red', )
 
-	#plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
+	plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
 
 
 	plt.savefig(plotName + '_' + env + '.png')
