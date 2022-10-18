@@ -48,13 +48,12 @@ def main():
                               top_n_var = 0,
                               amplify = {'n':0, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              use_raw_in_xformation_stack = False,
                               env='append', # env, append, xformation,xformation-append
                               verbose_R = False,
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['merge_std','std_merge','stdsamples_merge','merge_stdsamples','merge_log',
+                              xformations = ['raw', 'merge_std','std_merge','stdsamples_merge','merge_stdsamples','merge_log',
                                            'merge_norm','zscore_merge','merge_zscore','merge_clr','merge_minmax', 'merge_sqrt',
                                             'merge_boxcox'],
                               stdize_all=None,
@@ -104,7 +103,6 @@ class RNASeqData():
                  top_n_var = 0,
                  amplify={'n': 0, 'var': 10, 'seed': 23},
                  stack_xformations=False,
-                 use_raw_in_xformation_stack=True,
                  env=None,
                  verbose_R = False,
                  filterFile = None,
@@ -135,7 +133,6 @@ class RNASeqData():
         self.top_n_var = top_n_var
         self.amplify = amplify
         self.stack_xformations = stack_xformations
-        self.use_raw_in_xformation_stack = use_raw_in_xformation_stack
         self.xformation_stack = dict()
         self.meta_stack = dict()
         self.env = env
@@ -204,9 +201,10 @@ class RNASeqData():
                 self.oro_thresholds_per_study_dict[study] = (u25 + l75) / 2
                 keep_samples += m50
 
+        # now add env and target to expressionDF
+
         #self.build_single_dataset()
         if self.stack_xformations:
-            # self.build_xformation_stack()
             self.build_stack_from_xformations()
 
 
@@ -236,8 +234,9 @@ class RNASeqData():
         for xformation in self.xformation_stack:
             self.save_expr(self.xformation_stack[xformation], fileName=self.outputDir + '/' + xformation + '-xformation-expr-stack.csv')
 
-    def update_samples_in_xformation(self, xformation):
+    def update_samples_in_xformation(self, xformation, raw=False):
         meta_df = pd.DataFrame()
+
         for i in range(len(self.xformation_stack[xformation])):
             old_name = self.xformation_stack[xformation].iloc[i]['sample']
             new_name =  old_name + '-' + xformation
@@ -249,6 +248,7 @@ class RNASeqData():
         return self.xformation_stack[xformation], meta_df
 
     def combine_xformation_stack(self):
+
         # 1. tranpose to samples x genes
         # 2. change sample names per xformation
         # 3. create list of genes that intersect all xformations in stack
@@ -375,6 +375,66 @@ class RNASeqData():
 
         return df1
 
+    def my_sqrt(self, df=None):
+        samples = list(df.columns)[1:]
+        genes = list(df['gene'])
+        df.drop(columns=['gene'], inplace=True)
+        sqrt_df = np.sqrt(df)
+        sqrt_df['gene'] = genes
+        sqrt_df = sqrt_df[['gene'] + samples]
+        sqrt_df = sqrt_df.reset_index().drop(columns=['index'])
+        return sqrt_df
+
+    def my_boxcox(self, df=None):
+        # TODO parallelize me!
+        samples = list(df.columns)[1:]
+        genes = list(df['gene'])
+        df.drop(columns=['gene'], inplace=True)
+        df = df + 1
+        bcDF = pd.DataFrame(columns=samples)
+        for i in range(len(df)):
+            bc_array, bob = boxcox(df.iloc[i])
+            bcDF = bcDF.append(pd.DataFrame(np.array(bc_array).reshape(1, -1), columns=samples), ignore_index=True)
+
+        bcDF['gene'] = genes
+        bcDF = bcDF[['gene'] + samples]
+        bcDF = bcDF.reset_index().drop(columns=['index'])
+        return bcDF
+
+    def my_log_ratio(self, lr_type=None, df=None):
+        import pyrolite
+        # expr needs to be samples x genes and strictly positive
+        samples = list(df.columns)[1:]
+        genes = list(df['gene'])
+        df.drop(columns=['gene'], inplace=True)
+        df = df.T
+        df = df + 1
+        if lr_type == 'CLR':
+            df = df.pyrocomp.CLR()
+        elif lr_type == 'ILR':
+            df = df.pyrocomp.ILR()
+        df = df.T
+        df['gene'] = genes
+        df = df[['gene'] + samples]
+        df = df.reset_index().drop(columns=['index'])
+        return df
+
+    def my_log(self, base=10, expr=None):
+        genes = list(expr['gene'])
+        df_np = np.array(expr.drop(columns=['gene']))
+        if base == 10:
+            df_np_log = pd.DataFrame(np.log10(df_np + 1))
+        elif base == 2:
+            df_np_log = pd.DataFrame(np.log2(df_np + 1))
+        else:
+            print('base unknown: ', base)
+            sys.exit(1)
+        df_np_log['gene'] = genes
+        cols = list(expr.columns[1:])
+        df_np_log.columns = cols + ['gene']
+        df_np_log = df_np_log[['gene'] + cols]
+        return df_np_log
+
     def apply_filter(self, df, meta_df, mask=[]):
         # do all the filtering on raw data before normalizing or standardizing or log-xforming?
         # convert gene ids to gene names
@@ -424,85 +484,20 @@ class RNASeqData():
             print('dims after amplify: ', df.shape)
             print('meta dims after amplify: ', meta_df.shape)
 
-
         return self.transpose_df(df, cur_index_col='sample', new_index_col='gene'), meta_df
 
-    def my_sqrt(self, df=None):
-        samples = list(df.columns)[1:]
-        genes = list(df['gene'])
-        df.drop(columns=['gene'], inplace=True)
-        sqrt_df = np.sqrt(df)
-        sqrt_df['gene'] = genes
-        sqrt_df = sqrt_df[['gene'] + samples]
-        sqrt_df = sqrt_df.reset_index().drop(columns=['index'])
-        return sqrt_df
-
-    def my_boxcox(self, df=None):
-        # TODO parallelize me!
-        samples = list(df.columns)[1:]
-        genes = list(df['gene'])
-        df.drop(columns=['gene'], inplace=True)
-        df = df + 1
-        bcDF = pd.DataFrame(columns=samples)
-        for i in range(len(df)):
-            bc_array,bob=boxcox(df.iloc[i])
-            bcDF = bcDF.append(pd.DataFrame(np.array(bc_array).reshape(1,-1), columns=samples), ignore_index=True)
-
-        bcDF['gene'] = genes
-        bcDF = bcDF[['gene'] + samples]
-        bcDF = bcDF.reset_index().drop(columns=['index'])
-        return bcDF
-
-    def my_log_ratio(self, lr_type=None, df=None):
-        import pyrolite
-        # expr needs to be samples x genes and strictly positive
-        #samples = list(self.expressionDF.columns)[1:]
-        samples = list(df.columns)[1:]
-        #genes = list(self.expressionDF['gene'])
-        genes = list(df['gene'])
-        #df=self.expressionDF.drop(columns=['gene'])
-        df.drop(columns=['gene'], inplace=True)
-        df=df.T
-        df=df+1
-        if lr_type=='CLR':
-            df = df.pyrocomp.CLR()
-        elif lr_type == 'ILR':
-            df = df.pyrocomp.ILR()
-        df = df.T
-        df['gene'] = genes
-        df = df[['gene'] + samples]
-        df = df.reset_index().drop(columns=['index'])
-        return df
-
-    def my_log(self, base=10, expr=None):
-        genes = list(expr['gene'])
-        df_np = np.array(expr.drop(columns=['gene']))
-        if base == 10:
-            df_np_log = pd.DataFrame(np.log10(df_np+1))
-        elif base == 2:
-            df_np_log = pd.DataFrame(np.log2(df_np+1))
-        else:
-            print('base unknown: ', base)
-            sys.exit(1)
-        df_np_log['gene'] = genes
-        cols = list(expr.columns[1:])
-        df_np_log.columns = cols + ['gene']
-        df_np_log = df_np_log[['gene'] + cols]
-        return df_np_log
-
-
-    def setTargetByKey(self, key):
-        valueSet = set(self.metaDF[key])
+    def setTargetByKey(self, key, exprDF, metaDF):
+        valueSet = set(metaDF[key])
         if len(valueSet) != 2:
             print('need binary target')
             sys.exit(1)
         valueList = list(valueSet)
         targetDict = dict()
-        for i in range(len(self.metaDF)):
-            myKey = self.metaDF.iloc[i]['sample']
-            myValue = valueList.index(self.metaDF.iloc[i][key])
+        for i in range(len(metaDF)):
+            myKey = metaDF.iloc[i]['sample']
+            myValue = valueList.index(metaDF.iloc[i][key])
             targetDict[myKey] = myValue
-        self.expressionDF[key] = self.expressionDF['sample'].map(targetDict)
+        exprDF[key] = exprDF['sample'].map(targetDict)
 
     def permuteSamples(self, expr_df, meta_df, metaKey='sample', exprKey='gene', fileSuffix=None):
         sample2index_dict = dict()
@@ -521,7 +516,6 @@ class RNASeqData():
     def prep4Crisp(self, inputFile, outputFileBase, covariate_list, target):
         if not inputFile is None:
             self.expressionDF = self.read_expr(inputFile)
-            self.expressionDF = self.add_env(covariate_list=covariate_list, expr_df=self.expressionDF, meta_df=self.metaDF, env=None)
         if self.stack_xformations:
             self.xformation_stack['all'] = self.add_env(covariate_list=covariate_list, expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'], env=self.env)
         if target == 'oro_thresh':
@@ -538,9 +532,6 @@ class RNASeqData():
         if self.stack_xformations:
             self.save_expr(self.xformation_stack['all'], outputFileBase + 'xformation_stack.csv')
             self.save_expr(self.xformation_stack['all'], outputFileBase + 'xformation_stack.pkl')
-
-    def mergeExprData(self, dataDict):
-        self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(dataDict.values()))
 
     def read_expr(self, fileName):
         df = pd.read_csv(fileName, header=0, sep=',', )
@@ -625,6 +616,15 @@ class RNASeqData():
         fig.set_size_inches(12, 4)
         plt.show()
 
+    def transpose_df(self, df, cur_index_col, new_index_col):
+        if not cur_index_col in list(df.columns) or len(df) == 0:
+            return df
+        df = df.set_index(cur_index_col).T
+        df.reset_index(level=0, inplace=True)
+        cols = [new_index_col] + list(df.columns)[1:]
+        df.columns = cols
+        return df
+
     def add_oro(self, df, meta_df, threshold=18):
         # create oro threshold dictionary with arbitrary threshold
         # >18 = 0 which is the 70% oro value, and there are 70% gc and 30% flight
@@ -648,17 +648,6 @@ class RNASeqData():
         # join oro threshold dictionary to data frame
         df['oro_thresh'] = df['sample'].map(orothresh_dict)
 
-        return df
-
-
-
-    def transpose_df(self, df, cur_index_col, new_index_col):
-        if not cur_index_col in list(df.columns) or len(df) == 0:
-            return df
-        df = df.set_index(cur_index_col).T
-        df.reset_index(level=0, inplace=True)
-        cols = [new_index_col] + list(df.columns)[1:]
-        df.columns = cols
         return df
 
     def create_env(self, covariate_list, meta_df):
@@ -703,7 +692,6 @@ class RNASeqData():
 
         # join env dictionary to data frame
         expr_df['env'] = expr_df['sample'].map(env_dict)
-
         return expr_df
 
     def filterGenesByPercentZeroCount(self, df=None, p=0):
@@ -791,8 +779,8 @@ class RNASeqData():
             df = self.transpose_df(df, 'gene', 'sample')
         return df
 
-    def collapseGeneCounts(self):
-        df = self.transpose_df(self.expressionDF, 'sample', 'gene')
+    def collapseGeneCounts(self, exprDF):
+        df = self.transpose_df(exprDF, 'sample', 'gene')
         dups = df[df.duplicated('gene', keep=False)].sort_values('gene')
         dups_cols = list(dups.columns)
         dups['index'] = list(dups.index)
@@ -811,7 +799,8 @@ class RNASeqData():
             df = df.append(collapsed_genes[gene], ignore_index=True)
             index=len(df)-1
             df.loc[index, 'gene'] = gene
-        self.expressionDF = self.transpose_df(df, 'gene', 'sample')
+        exprDF = self.transpose_df(df, 'gene', 'sample')
+        return exprDF
 
 
     def getMiddle50(self, key, study):
@@ -827,55 +816,6 @@ class RNASeqData():
 
         return list(middle_group_samples), group_25, group_75
 
-    def plotVarVersusMean(self):
-        dfFileName = sys.argv[1]
-        plotName = sys.argv[2]
-        crispGenesFileName = sys.argv[3]
-
-        #####################
-        with open(dfFileName, 'r') as f:
-            df = pd.read_csv(f, header=0, sep=',')
-        f.close()
-
-        if 'env' in df.columns:
-            df.drop(columns=['env'], inplace=True)
-
-        if 'oro_thresh' in df.columns:
-            df.drop(columns=['oro_thresh'], inplace=True)
-
-        means_dict = dict(df.mean())
-        vars_dict = dict(df.var())
-
-        means_list = list(means_dict.values())
-        vars_list = list(vars_dict.values())
-        #####################
-
-        #####################
-        with open(crispGenesFileName, 'r') as f:
-            crispGenes = f.read().splitlines()
-        f.close()
-        print(crispGenes)
-        #####################
-
-        #####################
-        fig, ax = plt.subplots(figsize=(10, 10))
-        ax.set_xlabel('mean', fontsize=18)
-        ax.set_ylabel('variance', fontsize=18)
-        fig.suptitle(plotName, fontsize=24)
-
-        plt.scatter(x=np.log10(means_list), y=np.log10(vars_list))
-
-        crisp_x = list()
-        crisp_y = list()
-
-        for gene in crispGenes:
-            crisp_x.append(np.log10(means_dict[gene]))
-            crisp_y.append(np.log10(vars_dict[gene]))
-
-        plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red')
-
-        plt.savefig(plotName + '.png')
-        #####################
 
     def divide(self, n, d):
        res = list()
@@ -976,7 +916,6 @@ def std_merge(obj):
     obj.xformation_stack['std_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'),
                                                         list(stdize_before_merge.values()))
 
-
 def stdsamples_merge(obj):
     stdize_before_merge = dict()
     for e in obj.rnaExprDataDict:
@@ -1068,6 +1007,9 @@ def merge_sqrt(obj):
 
 def merge_boxcox(obj):
     obj.xformation_stack['merge_boxcox'] = obj.my_boxcox(df=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
+
+def raw(obj):
+    obj.xformation_stack['raw'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values()))
 
 if __name__ == "__main__":
     main()
