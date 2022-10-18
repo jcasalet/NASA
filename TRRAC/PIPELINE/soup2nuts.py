@@ -12,6 +12,7 @@ import functools as ft
 import random
 from multiprocessing import Process, Queue, cpu_count
 from scipy.stats import zscore
+from scipy.stats import boxcox
 from pyrolite.util.synthetic import normal_frame, random_cov_matrix
 from sklearn.preprocessing import MinMaxScaler
 
@@ -53,12 +54,12 @@ def main():
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              #xformations = ['merge_std','std_merge','stdsamples_merge','merge_stdsamples','merge_log',
-                              #             'merge_norm','zscore_merge','merge_zscore','merge_clr','merge_minmax', 'merge_sqrt'],
-                              xformations = ['merge_sqrt'],
+                              xformations = ['merge_std','std_merge','stdsamples_merge','merge_stdsamples','merge_log',
+                                           'merge_norm','zscore_merge','merge_zscore','merge_clr','merge_minmax', 'merge_sqrt',
+                                            'merge_boxcox'],
                               stdize_all=None,
                               filter_mask=[], #['filterGenesByType']
-                              norm_all=True
+                              norm_all=False
                               )
 
 
@@ -435,6 +436,22 @@ class RNASeqData():
         sqrt_df = sqrt_df[['gene'] + samples]
         sqrt_df = sqrt_df.reset_index().drop(columns=['index'])
         return sqrt_df
+
+    def my_boxcox(self, df=None):
+        # TODO parallelize me!
+        samples = list(df.columns)[1:]
+        genes = list(df['gene'])
+        df.drop(columns=['gene'], inplace=True)
+        df = df + 1
+        bcDF = pd.DataFrame(columns=samples)
+        for i in range(len(df)):
+            bc_array,bob=boxcox(df.iloc[i])
+            bcDF = bcDF.append(pd.DataFrame(np.array(bc_array).reshape(1,-1), columns=samples), ignore_index=True)
+
+        bcDF['gene'] = genes
+        bcDF = bcDF[['gene'] + samples]
+        bcDF = bcDF.reset_index().drop(columns=['index'])
+        return bcDF
 
     def my_log_ratio(self, lr_type=None, df=None):
         import pyrolite
@@ -1048,6 +1065,9 @@ def clr_merge(obj):
 
 def merge_sqrt(obj):
     obj.xformation_stack['merge_sqrt'] = obj.my_sqrt(df=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
+
+def merge_boxcox(obj):
+    obj.xformation_stack['merge_boxcox'] = obj.my_boxcox(df=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
 
 if __name__ == "__main__":
     main()
