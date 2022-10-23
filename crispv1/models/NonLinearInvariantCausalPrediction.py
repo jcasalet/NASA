@@ -77,8 +77,8 @@ class NonLinearInvariantCausalPrediction(object):
             p_value = self.leveneAndWilcoxTest(res_all, e_all)
 
             # TODO JC change to less than, right?
-            if p_value > self.alpha:
-            #if p_value < self.alpha:
+            #if p_value > self.alpha:
+            if p_value < self.alpha:
                 self.accepted_subsets.append(set(subset))
                 self.accepted_p_values.append(p_value)
                 if args["verbose"]:
@@ -140,7 +140,9 @@ class NonLinearInvariantCausalPrediction(object):
                         p_value = self.leveneAndWilcoxTest(res_all, e_all)
                         def_p_values.append(p_value)
 
-                    best_def_set = def_sets[np.where(def_p_values == max(def_p_values))[0][0]]
+                    # TODO JC should be min not max right?
+                    #best_def_set = def_sets[np.where(def_p_values == max(def_p_values))[0][0]]
+                    best_def_set = def_sets[np.where(def_p_values == min(def_p_values))[0][0]]
                     best_def_set.sort()
 
                     if len(best_def_set):
@@ -188,14 +190,16 @@ class NonLinearInvariantCausalPrediction(object):
             stat, w_p = ranksums(res_in, res_out)
             wilcox_p = min(w_p, wilcox_p)
         # levene test - to test that residuals from all envs have equal variances
-        W, levene_p = levene(*res_groups, center='mean')
+        #W, levene_p = levene(*res_groups, center='mean')
+        W, levene_p = levene(*res_groups, center='median')
 
         # bonf adj wilcoxon test if test multiple environments
         bonf_adj = (1 if len(set(e_all)) == 2 else len(set(e_all)))
         wilcox_p = wilcox_p * bonf_adj
         # accept minimum p-value of wilcoxon and levene tests; 2* is for bonferroni correction for the two tests
-        p_value = 2 * min(wilcox_p, levene_p)
-
+        # TODO JC is 2x best correction?
+        #p_value = 2 * min(wilcox_p, levene_p)
+        p_value = min(wilcox_p, levene_p)
         return p_value
 
     def powerset(self, s, max_set_size):
@@ -241,7 +245,6 @@ class NonLinearInvariantCausalPrediction(object):
                 optimizer.zero_grad()
                 outputs = self.model(inputs)
                 # TODO JC put these outputs on 0-1 scale (changed last layer activation to sigmoid for now)
-
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
