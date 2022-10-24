@@ -34,10 +34,6 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              normalize = 'beforeMerge',
-                              standardize = 'beforeMerge',
-                              log_xform='CLR',
-                              vst=None, # vsd, rld, or ntd
                               oro_thresholds_per_study=True,
                               sample_subsets=['Flight', 'Ground', 'Vivarium', 'Basal'],
                               covariate_list= ['libprep'],
@@ -53,9 +49,7 @@ def main():
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['raw', 'merge_std','std_merge','stdsamples_merge','merge_stdsamples','merge_log',
-                                           'merge_norm','zscore_merge','merge_zscore','merge_clr','merge_minmax', 'merge_sqrt',
-                                            'merge_boxcox'],
+                              xformations = ['merge_std','merge_log','merge_zscore','merge_clr','merge_sqrt','merge_boxcox'],
                               stdize_all=None,
                               filter_mask=[], #['filterGenesByType']
                               norm_all=False
@@ -64,14 +58,14 @@ def main():
 
     # vst can only be run on count data, NOT on zscores (and need to drop any meta cols from expr like env, oro_thresh
     # use DESeq to shrink data with vsd, rld, and ntd transformations
-    if not myrnaseqdata.vst is None:
+    '''if not myrnaseqdata.vst is None:
         myrnaseqdata.shrinkExpression(myrnaseqdata.vst, myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv')
 
         myrnaseqdata.prep4Crisp(inputFile=myrnaseqdata.outputDir + '/expr_' + myrnaseqdata.vst + '.csv',
                                 outputFileBase=myrnaseqdata.outputDir + '/' + myrnaseqdata.expr_outputfile_prefix + '_'  +
                                 myrnaseqdata.vst,
                                 covariate_list=myrnaseqdata.covariate_list,
-                                target=myrnaseqdata.target)
+                                target=myrnaseqdata.target)'''
 
     # prepare data for crisp consumption
     myrnaseqdata.prep4Crisp(inputFile=None,
@@ -90,10 +84,6 @@ class RNASeqData():
                  oro_thresholds_per_study=True,
                  middle50_samples=False,
                  RScriptPath='/usr/local/bin/Rscript',
-                 normalize = None,
-                 standardize=None,
-                 vst=None,
-                 log_xform=None,
                  sample_subsets=None,
                  covariate_list=None,
                  target=None,
@@ -117,14 +107,10 @@ class RNASeqData():
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.expr_outputfile_prefix = outputFilePrefix
-        self.vst=vst
         self.oro_thresholds_per_study=oro_thresholds_per_study
         self.oro_scale=oro_scale
         self.middle50_samples = middle50_samples
         self.covariate_list = covariate_list
-        self.normalize = normalize
-        self.standardize = standardize
-        self.log_xform = log_xform
         self.sample_subsets = sample_subsets
         self.target = target
         self.zero_count_percent = zero_count_percent
@@ -997,16 +983,22 @@ def merge_clr(obj):
                                                                                                  list(obj.rnaExprDataDict.values())))
 
 def clr_merge(obj):
-    clr_merge = dict()
+    clr_before_merge = dict()
     for e in obj.rnaExprDataDict:
-        clr_merge[e] = obj.my_log_ratio('CLR', df=obj.rnaExprDataDict[e])
-    obj.xformation_stack['clr_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(clr_merge.values()))
+        clr_before_merge[e] = obj.my_log_ratio('CLR', df=obj.rnaExprDataDict[e])
+    obj.xformation_stack['clr_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(clr_before_merge.values()))
 
 def merge_sqrt(obj):
     obj.xformation_stack['merge_sqrt'] = obj.my_sqrt(df=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
 
 def merge_boxcox(obj):
     obj.xformation_stack['merge_boxcox'] = obj.my_boxcox(df=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
+
+def boxcox_merge(obj):
+    boxcox_before_merge = dict()
+    for e in obj.rnaExprDataDict:
+        boxcox_before_merge[e] = obj.my_boxcox(df=obj.rnaExprDataDict[e])
+    obj.xformation_stack['boxcox_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(boxcox_before_merge.values()))
 
 def raw(obj):
     obj.xformation_stack['raw'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values()))
