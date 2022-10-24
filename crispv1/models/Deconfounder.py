@@ -2,13 +2,13 @@ import os
 import numpy as np
 import numpy.random as npr
 import pandas as pd
-#import tensorflow as tf
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
+#import tensorflow.compat.v1 as tf
+#tf.disable_v2_behavior()
 #tf.enable_v1_behavior()
 import statsmodels.api as sm
-#from tensorflow_probability import edward2 as ed
-import edward2 as ed
+from tensorflow_probability import edward2 as ed
+#import edward2 as ed
 from scipy import sparse, stats
 import random
 import time

@@ -90,17 +90,21 @@ for gene in genes:
 	axs[2].hist(results[gene]['nonflight']['normalized'], bins=nbins)
 	axs[2].set_title('non-flight')
 	fig.suptitle(gene)
-	plt.savefig(gene + '.png', dpi=300)
+	plt.yscale('log', nonposy='clip')
+	plt.savefig(gene + '_comparison.png', dpi=300)
 
 	colors = ['red', 'blue', 'orange']
-	combo_data = [results[gene]['flight']['normalized'], results[gene]['ground']['normalized'], results[gene]['nonflight']['normalized']]
+	combo_data = [results[gene]['flight']['normalized'], results[gene]['ground']['normalized'],
+				  results[gene]['nonflight']['normalized']]
 	plt.hist(x=combo_data, bins=nbins, color=colors, density=False, stacked=True)
 	plt.legend(['flight', 'ground', 'non-flight'])
 	plt.title(gene)
+	plt.yscale('log', nonposy='clip')
 	plt.savefig(gene + '.png', dpi=300)
 
-	combo_data_dict = {'flight_normalized': results[gene]['flight']['normalized'], 'ground_normalized': results[gene]['ground']['normalized'],
-				'nonflight_normalized': results[gene]['nonflight']['normalized']}
+	combo_data_dict = {'flight_normalized': results[gene]['flight']['normalized'],
+					   'ground_normalized': results[gene]['ground']['normalized'],
+						'nonflight_normalized': results[gene]['nonflight']['normalized']}
 	fig, ax = plt.subplots()
 	# ax.set_ylim([0, 1])
 	ax.boxplot(combo_data_dict.values())

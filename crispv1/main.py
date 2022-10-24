@@ -192,7 +192,7 @@ def run(config):
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
             "cuda": False,
-            "batch_size": 8,
+            "batch_size": 128,
             "hidden_dim":  256
         }
         FRIRM_args.update(FRIRM_options)
