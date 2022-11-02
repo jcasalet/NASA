@@ -15,7 +15,8 @@ morFile <- args[3]
 expr <- read.csv(exprFile, header=TRUE, row.names=1, stringsAsFactors=TRUE, check.names=FALSE)
 meta <- read.csv(metaFile, header=TRUE, row.names=1, stringsAsFactors=TRUE, check.names=FALSE)
 #colData <- DataFrame(condition=factor(meta$oro_thresh), libprep=factor(meta$dataset))
-colData <- DataFrame(condition=factor(meta$oro_thresh), libprep=factor(meta$libprep))
+colData <- DataFrame(libprep=factor(meta$libprep))
+#colData <- DataFrame(condition=factor(meta$oro_thresh), libprep=factor(meta$libprep))
 ncol(expr)
 nrow(colData)
 
