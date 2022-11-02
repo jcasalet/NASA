@@ -165,10 +165,12 @@ class NonLinearInvariantRiskMinimization(object):
                     test_targets.append(targets.squeeze().unsqueeze(0))
                     test_logits.append(outputs.cpu().squeeze().unsqueeze(0))
                     test_probs.append(sig(outputs).cpu().squeeze().unsqueeze(0))
+                    print('using cuda')
                 else:
                     test_targets.append(targets.squeeze().unsqueeze(0))
                     test_logits.append(outputs.squeeze().unsqueeze(0))
                     test_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    print('not using cuda')
 
         self.test_targets = torch.cat(test_targets, dim=1)
         self.test_logits = torch.cat(test_logits, dim=1)
