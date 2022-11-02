@@ -40,6 +40,41 @@ f.close()
 print(crispGenes)
 #####################
 
+'''# one big plot
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.set_xlabel('mean', fontsize=18)
+ax.set_ylabel('variance', fontsize=18)
+fig.suptitle(plotName, fontsize=24)
+
+all_means_list=list()
+all_vars_list=list()
+for env in means_list_dict.values():
+	all_means_list.append(means_list_dict[env])
+	all_vars_list.append(vars_list_dict[env])
+
+
+plt.scatter(x=np.log10([i+1 for i in all_means_list]), y=np.log10([j+1 for j in all_vars_list]))
+#plt.scatter(x=means_list_dict[env], y=vars_list_dict[env])
+#plt.scatter(x=[i+1 for i in means_list_dict[env]], y=[j+1 for j in vars_list_dict[env]])
+crisp_x = list()
+crisp_y = list()
+
+for gene in crispGenes:
+	crisp_x.append(np.log10(1+df[gene].mean()))
+	#crisp_x.append(means_dict[env][gene])
+	crisp_y.append(np.log10(1+df[gene].var()))
+	#crisp_y.append(vars_dict[env][gene])
+	x = np.log10(1+means_dict[env][gene])
+	y = np.log10(1+vars_dict[env][gene])
+	plt.text(x, y, gene, color='red', )
+
+plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
+
+
+plt.savefig(plotName + '_' + env + '.png')'''
+
+
+
 
 #####################
 for env in df['env']:
@@ -61,9 +96,9 @@ for env in df['env']:
 		#crisp_x.append(means_dict[env][gene])
 		crisp_y.append(np.log10(1+vars_dict[env][gene]))
 		#crisp_y.append(vars_dict[env][gene])
-		#x = np.log10(1+means_dict[env][gene])
-		#y = np.log10(1+vars_dict[env][gene])
-		#plt.text(x, y, gene, color='red', )
+		x = np.log10(1+means_dict[env][gene])
+		y = np.log10(1+vars_dict[env][gene])
+		plt.text(x, y, gene, color='red', )
 
 	plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
 

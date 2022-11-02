@@ -4,12 +4,38 @@ import pandas as pd
 from statistics import mean, median
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
+import argparse
 
 
-df=pd.read_csv('metadata.csv', header=0, sep=',')
-all=df
+parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--meta', help='metadata file', default=None, required=True)
+parser.add_argument('-f', '--field', help='metadata field', default=None, required=True)
+args = parser.parse_args()
 
-#subset data
+df=pd.read_csv(args.meta, header=0, sep=',')
+
+field = args.field
+
+fieldValues = set(df[field])
+
+
+oro_value_dict=dict()
+
+for value in fieldValues:
+    subset = df[df[field] == value]
+    oro_value_dict[str(value) + '_flight'] = list(subset[subset['group'] == 'Flight']['oro positivity (%)'])
+    oro_value_dict[str(value) + '_nonflight'] = list(subset[subset['group'] != 'Flight']['oro positivity (%)'])
+
+
+#oro_dict={'rr1_nasa_ground':rr1_nasa_oro_ground_raw, 'rr1_nasa_flight':rr1_nasa_oro_flight_raw, 'rr1_casis_ground': rr1_casis_oro_ground_raw, 'rr1_casis_flight': rr1_casis_oro_flight_raw,  'rr3_ground': rr3_oro_ground_raw, 'rr3_flight': rr3_oro_flight_raw}
+fig,ax = plt.subplots()
+#ax.set_ylim([0, 1])
+ax.boxplot(oro_value_dict.values())
+ax.set_xticklabels(oro_value_dict.keys())
+fig.set_size_inches(12,4)
+plt.savefig('ground_flight_bawplot_' + field + '.png')
+
+'''#subset data
 #============
 
 #normalize-then-merge
@@ -161,4 +187,4 @@ rr1_casis_flight_75=all[(all['Group']=='Flight') & (all['Study']=='CASIS')].desc
 rr3_ground_25=all[(all['Group']=='Ground') & (all['Study']=='RR-3')].describe().loc['25%']['ORO Positivity (%)']
 rr3_ground_75=all[(all['Group']=='Ground') & (all['Study']=='RR-3')].describe().loc['75%']['ORO Positivity (%)']
 rr3_flight_25=all[(all['Group']=='Flight') & (all['Study']=='RR-3')].describe().loc['25%']['ORO Positivity (%)']
-rr3_flight_75=all[(all['Group']=='Flight') & (all['Study']=='RR-3')].describe().loc['75%']['ORO Positivity (%)']
+rr3_flight_75=all[(all['Group']=='Flight') & (all['Study']=='RR-3')].describe().loc['75%']['ORO Positivity (%)']'''
