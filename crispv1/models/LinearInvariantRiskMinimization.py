@@ -10,8 +10,7 @@ class LinearInvariantRiskMinimization(object):
         self.args = args
         self.cuda = torch.cuda.is_available() and args.get('cuda', False)
         self.input_dim = environment_datasets[0].get_feature_dim()
-        #self.output_dim = self.args["output_dim"]
-        self.output_dim = environment_datasets[0].get_output_dim()
+        self.output_dim = self.args["output_dim"]
         self.test_dataset = test_dataset
         self.args = args
         self.logging_iteration = args.get('logging_iteration', 200)
@@ -47,7 +46,6 @@ class LinearInvariantRiskMinimization(object):
 
         
         # Start training procedure
-        self.args['output_data_regime'] = "binary"
         print("Start IRM training procedure with", self.args["output_data_regime"], "target")
 
         dim_x = self.input_dim + 1  
@@ -296,11 +294,7 @@ class LinearInvariantRiskMinimization(object):
             if self.cuda:
                 grad = inputs.grad.squeeze().detach().cuda()
             else:
-                print('inputs grad shape is: ', str(inputs.grad.shape))
-                if inputs.grad.shape[0] > 1:
-                    grad = inputs.grad.squeeze().detach().cpu()
-                else:
-                    grad = inputs.grad.detach().cpu()
+                grad = inputs.grad.squeeze().detach().cpu()
             #print("grad:", grad.shape)
             
             input_gradients[i*self.batch_size:i*self.batch_size+self.batch_size, :] = grad[:, 1:] # don't record the gradient of the intercept
@@ -324,8 +318,7 @@ class LinearInvariantRiskMinimization(object):
             npcorr = self.get_corr_mat()
 
 
-
-        '''return {
+        return {
             "test_logits" : self.test_logits.squeeze().numpy().tolist(),
             "test_acc": test_acc.numpy().squeeze().tolist(),
             "test_nll": test_nll.item(),
@@ -343,30 +336,7 @@ class LinearInvariantRiskMinimization(object):
                 'pvals': None,
                 "test_logits" : self.test_logits.squeeze().numpy().tolist(),
                 'test_acc': test_acc.numpy().squeeze().tolist(),
-                'test_acc_std': test_acc_std,#.item().numpy().squeeze().tolist(),
-                'coefficient_correlation_matrix': None,
-                'sensitivities': self.get_sensitivities().tolist()
-            }
-        }'''
-        return {
-            "test_logits": self.test_logits.squeeze().numpy().tolist(),
-            "test_acc": test_acc.numpy().squeeze().tolist(),
-            "test_nll": test_nll.item(),
-            "test_probs": self.test_probs.squeeze().numpy().tolist(),
-            "test_labels": self.test_targets.squeeze().numpy().tolist(),
-            "feature_coeffients": self.solution().detach().cpu().numpy().squeeze()[1:].tolist(),
-            "loss_over_time": [x.tolist() for x in self.loss_per_iteration],
-            'acc_over_time': [x.tolist() for x in self.acc_per_iteration],
-            'to_bucket': {
-                "test_logits": self.test_logits.squeeze().numpy().tolist(),
-                'method': "Linear IRM",
-                'features': self.feature_names,
-                'coefficients': coefficients,
-                'feature_gradients': feature_gradients,
-                'pvals': None,
-                "test_logits": self.test_logits.squeeze().numpy().tolist(),
-                'test_acc': test_acc.numpy().squeeze().tolist(),
-                'test_acc_std': test_acc_std.item(),  # ,.numpy().squeeze().tolist(),
+                'test_acc_std': test_acc_std.item(),# ,.numpy().squeeze().tolist(),
                 'coefficient_correlation_matrix': None,
                 'sensitivities': self.get_sensitivities().tolist()
             }
