@@ -34,6 +34,7 @@ class MLP(torch.nn.Module):
                                          lin2, torch.nn.ReLU(True), d2,
                                          lin3, torch.nn.ReLU(True), d3,
                                          lin4)
+
         self.input_dim = input_dim
         self.output_dim = output_dim
 
@@ -77,6 +78,7 @@ class MLP2(torch.nn.Module):
                                          lin6, torch.nn.ReLU(True), d6,
                                          lin7
                                          )
+
         self.input_dim = input_dim
         self.output_dim = output_dim
 

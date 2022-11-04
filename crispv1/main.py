@@ -364,7 +364,7 @@ def run(config):
             "n_iterations": 1000,
             "seed": 0,
             "lr": 0.001,
-            "batch_size": 128,
+            "batch_size": 8,
             "cuda": False,
             "output_dim": environment_datasets[0].get_output_dim(),
             "output_data_regime": "binary"
