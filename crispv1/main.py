@@ -362,7 +362,6 @@ def run(config):
             "use_icp_initialization": False,
             "verbose": 1,
             "n_iterations": 1000,
-            "seed": 0,
             "lr": 0.001,
             "batch_size": 8,
             "cuda": False,

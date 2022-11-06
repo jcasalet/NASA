@@ -7,8 +7,8 @@ import copy
 
 class LinearInvariantRiskMinimization(object):
     def __init__(self, environment_datasets, val_dataset, test_dataset, args):
-        self.args = args
         self.cuda = torch.cuda.is_available() and args.get('cuda', False)
+        self.error_env_list = list()
         self.input_dim = environment_datasets[0].get_feature_dim()
         #self.output_dim = self.args["output_dim"]
         self.output_dim =  environment_datasets[0].get_output_dim()
@@ -97,6 +97,7 @@ class LinearInvariantRiskMinimization(object):
 
         # Start testing procedure
         self.test(self.test_loader)
+        print(self.error_env_list)
 
     def train(self):
         dim_x = self.input_dim + 1  
@@ -173,6 +174,8 @@ class LinearInvariantRiskMinimization(object):
             opt.zero_grad()
             (self.reg * error/count + (1 - self.reg) * penalty/count).backward()
             opt.step()
+            self.error_env_list.append(err_env)
+
 
     def solution(self):
         coef_unnormalized = sum([w.data.abs().sum(axis=1) for w in self.phi.parameters()])
@@ -296,11 +299,14 @@ class LinearInvariantRiskMinimization(object):
                 grad = inputs.grad.squeeze().detach().cuda()
             else:
                 grad = inputs.grad.squeeze().detach().cpu()
-            #print("grad:", grad.shape)
-            
-            input_gradients[i*self.batch_size:i*self.batch_size+self.batch_size, :] = grad[:, 1:] # don't record the gradient of the intercept
-            
-        # return input_gradients.mean(dim=0)
+            print("grad:", grad.shape)
+
+
+            if np.ndim(grad) == 2:
+                input_gradients[i*self.batch_size:i*self.batch_size+self.batch_size, :] = grad[:, 1:] # don't record the gradient of the intercept
+            else:
+                break
+                # return input_gradients.mean(dim=0)
         return input_gradients.norm(2, dim=0)
         #return torch.abs(input_gradients).sum(dim=0)
 
