@@ -55,7 +55,7 @@ class LinearInvariantRiskMinimization(object):
         best_err = 1e6
 
         # Penalty regularization parameter is an important hyperparameter. Grid search is performed to find the optimal hyperparameter. # CHosen parameters 1e-3
-        for reg in [0.95]:
+        '''for reg in [0.95]:
             self.reg = reg
             self.train()
 
@@ -93,7 +93,9 @@ class LinearInvariantRiskMinimization(object):
                 best_phi = copy.deepcopy(self.phi)
 
         self.phi = best_phi
-        self.reg = best_reg
+        self.reg = best_reg'''
+        self.reg = 0.95
+        self.train()
 
         # Start testing procedure
         self.test(self.test_loader)
@@ -168,7 +170,7 @@ class LinearInvariantRiskMinimization(object):
                     print('logging accuracy and loss',  error.item()/count, penalty.item(), self.acc_per_iteration[-1])
                
         
-            if self.args["verbose"] and iteration % 200 == 0:
+            if self.args["verbose"] and iteration % 100 == 0:
                 print("iteration:", iteration, "training error:", error.item()/count)
                 
             opt.zero_grad()
