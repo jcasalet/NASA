@@ -101,6 +101,8 @@ class LinearInvariantRiskMinimization(object):
         self.test(self.test_loader)
         print(self.error_env_list)
 
+
+
     def train(self):
         dim_x = self.input_dim + 1  
         dim_y = self.output_dim
@@ -130,6 +132,7 @@ class LinearInvariantRiskMinimization(object):
             raise NotImplementedError("IRM supports real-valued, binary, and multi-class target, not " + str(self.args["output_data_regime"]))
 
         for iteration in range(self.args["n_iterations"]):
+            penalty_multiplier = iteration ** 1.6
             penalty = 0
             error = 0
             count = 0
@@ -153,8 +156,10 @@ class LinearInvariantRiskMinimization(object):
                     
                 err_env.append(error_e.item()/count_e)
                 
-                penalty += torch.autograd.grad(error_e, self.w,
-                                               create_graph=True)[0].pow(2).mean()
+                penalty += penalty_multiplier * torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
+                # JC
+                #penalty += self.compute_irm_penalty(error_e, self.w)
+
                 error += error_e
                 
                     
