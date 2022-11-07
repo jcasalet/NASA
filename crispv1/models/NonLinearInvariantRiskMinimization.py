@@ -138,8 +138,11 @@ class NonLinearInvariantRiskMinimization(object):
             # Penalty weight is an important hyper parameter, which balances the invariance penalty vs. the empirical risk
             # Defaul penalty weight is 1 for the first 100 iterations, and thereon it is increased to 1e4 (based on Arjovsky et al.'s implementation)
             # Other suggested variations in the literature include a sequence of monotonically increasing penalty weights 
-            penalty_weight = (self.args['penalty_weight']
-                              if step >= self.args['penalty_anneal_iters'] else 1.0)
+
+            '''penalty_weight = (self.args['penalty_weight']
+                              if step >= self.args['penalty_anneal_iters'] else 1.0)'''
+            # JC
+            penalty_weight = 1.1 * step
             loss += penalty_weight * train_penalty
             if penalty_weight > 1.0:
                 loss /= penalty_weight
