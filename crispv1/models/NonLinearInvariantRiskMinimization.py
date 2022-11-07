@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from models.TorchModelZoo import MLP, MLP2
+from models.TorchModelZoo import MLP, MLP2, MLP3
 
 
 class NonLinearInvariantRiskMinimization(object):
@@ -30,6 +30,14 @@ class NonLinearInvariantRiskMinimization(object):
             self.input_dim = environment_datasets[0].get_feature_dim()
             self.output_dim = environment_datasets[0].get_output_dim()
             self.model = MLP2(self.args, self.input_dim, self.output_dim)
+            self.model.train() # self.model.eval() to turn dropout off
+            if self.cuda:
+                self.model.cuda()
+        if method == 'SDNN':
+            print('NLIRM using deep MLP3')
+            self.input_dim = environment_datasets[0].get_feature_dim()
+            self.output_dim = environment_datasets[0].get_output_dim()
+            self.model = MLP3(self.args, self.input_dim, self.output_dim)
             self.model.train() # self.model.eval() to turn dropout off
             if self.cuda:
                 self.model.cuda()

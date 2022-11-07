@@ -400,7 +400,7 @@ def run(config):
         IRM_args = {
             # Flad for model to use in Non-Linear IRM ['NN': MLP]
             "use_reduced_feature_set": False,
-            "NN_method": "DNN",
+            "NN_method": "SDNN",
             "verbose": 1,
             "n_iterations": 1000,
             "seed": 0,
