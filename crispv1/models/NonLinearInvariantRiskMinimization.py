@@ -2,6 +2,7 @@ import numpy as np
 import torch
 
 from models.TorchModelZoo import MLP, MLP2, MLP3
+import math
 
 
 class NonLinearInvariantRiskMinimization(object):
@@ -131,7 +132,7 @@ class NonLinearInvariantRiskMinimization(object):
             weight_norm = torch.tensor(0.)
             for w in self.model.parameters():
                 weight_norm += w.norm().pow(2)
-
+            weight_norm = math.sqrt(weight_norm)
             loss = train_nll.clone()
             loss += self.args['l2_regularizer_weight'] * weight_norm
             

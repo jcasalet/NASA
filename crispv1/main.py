@@ -409,7 +409,7 @@ def run(config):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
-            "batch_size": 16,
+            "batch_size": 8,
             "cuda": False
         }
         IRM_args.update(IRM_options)
