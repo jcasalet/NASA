@@ -18,6 +18,7 @@ class CausalNexClass(object):
     def __init__(self, environment_datasets, val_dataset, test_dataset, args):
         self.args = args
         self.cuda = torch.cuda.is_available() and args.get('cuda', False)
+        print('using cuda: ', self.cuda)
         self.input_dim = environment_datasets[0].get_feature_dim()
         self.output_dim = len(np.unique(environment_datasets[0].targets))
         self.test_dataset = test_dataset

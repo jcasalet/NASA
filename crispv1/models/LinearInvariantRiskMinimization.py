@@ -99,7 +99,7 @@ class LinearInvariantRiskMinimization(object):
 
         # Start testing procedure
         self.test(self.test_loader)
-        print(self.error_env_list)
+        #print(self.error_env_list)
 
 
 
@@ -132,7 +132,6 @@ class LinearInvariantRiskMinimization(object):
             raise NotImplementedError("IRM supports real-valued, binary, and multi-class target, not " + str(self.args["output_data_regime"]))
 
         for iteration in range(self.args["n_iterations"]):
-            penalty_multiplier = iteration * 1.1
             penalty = 0
             error = 0
             count = 0
@@ -156,11 +155,7 @@ class LinearInvariantRiskMinimization(object):
                     
                 err_env.append(error_e.item()/count_e)
                 
-                penalty += penalty_multiplier * torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
-                #penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
-
-                # JC
-                #penalty += self.compute_irm_penalty(error_e, self.w)
+                penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
 
                 error += error_e
                 
@@ -195,6 +190,8 @@ class LinearInvariantRiskMinimization(object):
             
         for w in self.phi.parameters():
             W = W@w.T
+
+        # JC
         coef = W@self.w
         #coef_unnormalized = w.data.abs().sum(axis=1) for w in self.phi.parameters()])
         coef = coef / coef.sum()
@@ -219,7 +216,7 @@ class LinearInvariantRiskMinimization(object):
                 if self.cuda:
                         inputs = inputs.cuda()
                         targets = targets.cuda()
-                
+                # JC
                 output = self.phi(inputs) @ self.w
                 l0 = loss(output, targets) 
 
@@ -280,7 +277,7 @@ class LinearInvariantRiskMinimization(object):
         n_samples = len(self.all_dataset)
         
         input_gradients = torch.zeros((n_samples, self.input_dim))
-        print("input_gradients:", input_gradients.shape)
+        #print("input_gradients:", input_gradients.shape)
         
         if self.args["output_data_regime"] == "real-valued":
             criterion = torch.nn.MSELoss()
@@ -300,18 +297,20 @@ class LinearInvariantRiskMinimization(object):
             if self.args["output_data_regime"] == "multi-class":
                 targets = targets.squeeze().long()
 
+            # JC
             pred = self.phi(inputs) @ self.w
+            #pred = self.phi(inputs) @ self.w
 
             # JC
-            #loss = criterion(pred, targets)
-            loss = criterion(sig(pred), targets)
+            loss = criterion(pred, targets)
+            #loss = criterion(sig(pred), targets)
             loss.backward()
             
             if self.cuda:
                 grad = inputs.grad.squeeze().detach().cuda()
             else:
                 grad = inputs.grad.squeeze().detach().cpu()
-            print("grad:", grad.shape)
+            #print("grad:", grad.shape)
 
 
             if np.ndim(grad) == 2:
@@ -336,7 +335,7 @@ class LinearInvariantRiskMinimization(object):
         else:
             npcorr = self.get_corr_mat()
 
-
+        print('accuracy: ', test_acc.numpy().squeeze().tolist())
         return {
             "test_logits" : self.test_logits.squeeze().numpy().tolist(),
             "test_acc": test_acc.numpy().squeeze().tolist(),
