@@ -132,7 +132,7 @@ class LinearInvariantRiskMinimization(object):
             raise NotImplementedError("IRM supports real-valued, binary, and multi-class target, not " + str(self.args["output_data_regime"]))
 
         for iteration in range(self.args["n_iterations"]):
-            penalty_multiplier = iteration ** 1.1
+            penalty_multiplier = iteration * 1.1
             penalty = 0
             error = 0
             count = 0
