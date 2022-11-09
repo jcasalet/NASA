@@ -228,7 +228,7 @@ def run(config):
         to_bucket['method'] = 'CausalNex (Feature Reduction Mode)'
         to_bucket_results.append(to_bucket)
 
-        print("Finished Non Linear IRM")
+        print("Finished causalnex")
 
         coefs = pd.DataFrame()
         coefs['feature'] = to_bucket['features']
@@ -580,7 +580,7 @@ def run(config):
             elif len(method_dict['pvals']) == 1:
                 coefs['pvals'] = method_dict['pvals'][0]
             else:
-                coefs['pvals'] = method_dict['pvalas']
+                coefs['pvals'] = method_dict['pvals']
 
             fname = config['results_directory'] + method + '_features.pdf'
             plot_most_predictive(coefs, fname)
