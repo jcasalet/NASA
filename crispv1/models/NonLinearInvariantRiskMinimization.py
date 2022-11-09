@@ -131,9 +131,10 @@ class NonLinearInvariantRiskMinimization(object):
 
             weight_norm = torch.tensor(0.)
             for w in self.model.parameters():
+                # TODO JC why square this?
                 weight_norm += w.norm().pow(2)
             # JC (take sqrt for L2 norm?)
-            weight_norm = math.sqrt(weight_norm)
+            #weight_norm = math.sqrt(weight_norm)
             loss = train_nll.clone()
             loss += self.args['l2_regularizer_weight'] * weight_norm
             

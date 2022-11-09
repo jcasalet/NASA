@@ -569,8 +569,18 @@ def run(config):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            coefs['coefficient'] = method_dict['coefficients']
-            coefs['pvals'] = method_dict['pvals']
+            # TODO JC hack - sometimes list of a single list?
+            if len(method_dict['coefficients']) == 1:
+                coefs['coefficient'] = method_dict['coefficients'][0]
+            else:
+                coefs['coefficient'] = method_dict['coefficients']
+            # TODO JC hack - sometimes no pvals?
+            if not 'pvals' in method_dict or method_dict['pvals'] is None:
+                coefs['pvals'] = None
+            elif len(method_dict['pvals']) == 1:
+                coefs['pvals'] = method_dict['pvals'][0]
+            else:
+                coefs['pvals'] = method_dict['pvalas']
 
             fname = config['results_directory'] + method + '_features.pdf'
             plot_most_predictive(coefs, fname)

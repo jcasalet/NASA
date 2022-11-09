@@ -34,7 +34,9 @@ class LinearInvariantRiskMinimization(object):
         self.train_loaders = train_loaders
         self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
         
-        self.min_per_dim = np.ones(shape=(self.input_dim ,1) ) *(100000.)
+
+
+        '''self.min_per_dim = np.ones(shape=(self.input_dim ,1) ) *(100000.)
         self.max_per_dim = np.ones(shape=(self.input_dim ,1) ) *(-100000.)
         for inputs, targets in self.all_loader:
             for ii in range(self.input_dim):
@@ -55,7 +57,7 @@ class LinearInvariantRiskMinimization(object):
         best_err = 1e6
 
         # Penalty regularization parameter is an important hyperparameter. Grid search is performed to find the optimal hyperparameter. # CHosen parameters 1e-3
-        '''for reg in [0.95]:
+        for reg in [0.95]:
             self.reg = reg
             self.train()
 
@@ -101,7 +103,11 @@ class LinearInvariantRiskMinimization(object):
         self.test(self.test_loader)
         #print(self.error_env_list)
 
-
+    def compute_penalty(losses, dummy_w):
+        # g1 is the even indices, g2 is the odd indices
+        g1 = torch.autograd.grad(losses[0::2].mean(), dummy_w, create_graph=True)[0]
+        g2 = torch.autograd.grad(losses[1::2].mean(), dummy_w, create_graph=True)[0]
+        return (g1 * g2).sum()
 
     def train(self):
         dim_x = self.input_dim + 1  
@@ -155,11 +161,9 @@ class LinearInvariantRiskMinimization(object):
                     
                 err_env.append(error_e.item()/count_e)
                 
-                penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
-
+                #penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
+                penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].mean()
                 error += error_e
-                
-                    
 
             if iteration % self.logging_iteration == 0:
                 if self.args["verbose"]: 
@@ -330,6 +334,7 @@ class LinearInvariantRiskMinimization(object):
             feature_gradients=None
         else:
             feature_gradients = self.get_input_gradients().cpu().numpy().tolist()
+
         if self.args["output_data_regime"] == "multi-class":
             npcorr = None
         else:
@@ -355,7 +360,7 @@ class LinearInvariantRiskMinimization(object):
                 'test_acc': test_acc.numpy().squeeze().tolist(),
                 'test_acc_std': test_acc_std.item(),# ,.numpy().squeeze().tolist(),
                 'coefficient_correlation_matrix': None,
-                'sensitivities': self.get_sensitivities().tolist()
+                #'sensitivities': self.get_sensitivities().tolist()
             }
         }
 
