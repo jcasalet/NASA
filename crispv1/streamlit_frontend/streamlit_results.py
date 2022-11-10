@@ -119,7 +119,7 @@ def streamlit_results(config):
 
         st.plotly_chart(sankey, use_container_width=True)
 
-        try:
+'''        try:
 
             # correlation/sensitivity network plot
 
@@ -136,4 +136,4 @@ def streamlit_results(config):
 
         except Exception as e:
             tb = traceback.format_exc()
-            print('Caught exception ', e, tb)
+            print('Caught exception ', e, tb)'''

@@ -577,8 +577,6 @@ def run(config):
             # TODO JC hack - sometimes no pvals?
             if not 'pvals' in method_dict or method_dict['pvals'] is None:
                 coefs['pvals'] = None
-            elif len(method_dict['pvals']) == 1:
-                coefs['pvals'] = method_dict['pvals'][0]
             else:
                 coefs['pvals'] = method_dict['pvals']
 
