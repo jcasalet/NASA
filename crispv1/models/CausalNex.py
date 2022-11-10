@@ -95,8 +95,8 @@ class CausalNexClass(object):
                 "test_logits" : None,
                 'method': "CausalNex",
                 'features': list(self.feature_names),
-                'coefficients': self.coef_,
-                'pvals': self.importance,
+                'coefficients': self.coef_.tolist(),
+                'pvals': self.importance.tolist(),
                 'test_acc': self.acc,
                 'test_acc_std': None,
                 'coefficient_correlation_matrix': None
