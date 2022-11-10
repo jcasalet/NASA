@@ -47,9 +47,11 @@ class CausalNexClass(object):
         df = pd.DataFrame(X, columns = test_dataset.predictor_columns)
         df['Target'] = yy
 #         sm = from_pandas(df, tabu_child_nodes=list(df.keys().drop('Target')))
-        
-        self.importance = reg.feature_importances_
-        self.coef_ = reg.coef_
+
+        # TODO JC added [0]
+        self.importance = reg.feature_importances_[0]
+        # TODO JC added [0]
+        self.coef_ = reg.coef_[0]
         
         # computing the test accuracy
         self.batch_size = args.get('batch_size', 128)
@@ -93,10 +95,9 @@ class CausalNexClass(object):
                 "test_logits" : None,
                 'method': "CausalNex",
                 'features': list(self.feature_names),
-                'coefficients': self.coef_.tolist(),
-                'pvals': self.importance.tolist(),
-                "test_logits" : None,
-                'test_acc': self.acc, 
+                'coefficients': self.coef_,
+                'pvals': self.importance,
+                'test_acc': self.acc,
                 'test_acc_std': None,
                 'coefficient_correlation_matrix': None
             }
@@ -185,7 +186,7 @@ class CausalNexClassEnv(object):
                 "test_logits" : None,
                 'method': "CausalNex",
                 'features': list(self.ordered_names),
-                'coefficients': list(self.ordered_values),
+                'coefficients': self.ordered_values,
                 'pvals': None,
                 "test_logits" : None,
                 'test_acc': None, 

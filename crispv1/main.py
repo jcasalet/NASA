@@ -232,12 +232,12 @@ def run(config):
 
         coefs = pd.DataFrame()
         coefs['feature'] = to_bucket['features']
-        coefs['coefficient'] = to_bucket['coefficients'][0]
+        coefs['coefficient'] = to_bucket['coefficients']
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
         keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
 
-        # JC
+        # TODO JC added alfa=0
         alfa=0
         join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
 
@@ -570,7 +570,7 @@ def run(config):
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
             # TODO JC hack - sometimes list of a single list?
-            if len(method_dict['coefficients']) == 1:
+            if method_dict['coefficients'] == list and len(method_dict['coefficients']) == 1:
                 coefs['coefficient'] = method_dict['coefficients'][0]
             else:
                 coefs['coefficient'] = method_dict['coefficients']
