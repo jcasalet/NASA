@@ -33,8 +33,8 @@ class CausalNexClass(object):
         yy = []
         for x,y in all_dataset:
             if self.cuda:
-                X.append(x.cuda().numpy())
-                yy.append(y.cuda().item())
+                X.append(x.cpu().numpy())
+                yy.append(y.cpu().item())
             else:
                 X.append(x.numpy())
                 yy.append(y.item())
