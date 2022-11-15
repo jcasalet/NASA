@@ -195,7 +195,7 @@ def run(config):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
-            "cuda": True,
+            "cuda": False,
             "hidden_dim": 256
         }
         FRIRM_args.update(FRIRM_options)
