@@ -36,8 +36,8 @@ class CausalNexClass(object):
                 X.append(x.cpu().numpy())
                 yy.append(y.cpu().item())
             else:
-                X.append(x.numpy())
-                yy.append(y.item())
+                X.append(x.cpu().numpy())
+                yy.append(y.cpu().item())
                 
         if args.get("output_data_regime")=="real-valued":
             reg = DAGRegressor(tabu_child_nodes=[i for i,k in enumerate(self.feature_names) if k != 'Target' ],
