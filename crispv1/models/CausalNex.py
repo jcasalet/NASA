@@ -17,8 +17,7 @@ import pandas as pd
 class CausalNexClass(object):
     def __init__(self, environment_datasets, val_dataset, test_dataset, args):
         self.args = args
-        #self.cuda = torch.cuda.is_available() and args.get('cuda', False)
-        #self.cuda = True
+        self.cuda = torch.cuda.is_available() and args.get('cuda', False)
         #device = torch.device("cuda" if self.cuda else "cpu")
         self.input_dim = environment_datasets[0].get_feature_dim()
         self.output_dim = len(np.unique(environment_datasets[0].targets))
@@ -32,8 +31,12 @@ class CausalNexClass(object):
         X = []
         yy = []
         for x,y in all_dataset:
-            X.append(x.numpy())
-            yy.append(y.item())
+            if self.cuda:
+                X.append(x.cuda().numpy())
+                yy.append(y.cuda().item())
+            else:
+                X.append(x.numpy())
+                yy.append(y.item())
                 
         if args.get("output_data_regime")=="real-valued":
             reg = DAGRegressor(tabu_child_nodes=[i for i,k in enumerate(self.feature_names) if k != 'Target' ],
