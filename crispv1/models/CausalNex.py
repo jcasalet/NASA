@@ -18,8 +18,9 @@ class CausalNexClass(object):
     def __init__(self, environment_datasets, val_dataset, test_dataset, args):
         self.args = args
         #self.cuda = torch.cuda.is_available() and args.get('cuda', False)
-        self.cuda = torch.cuda.is_available()
+        #self.cuda = torch.cuda.is_available()
         #device = torch.device("cuda" if self.cuda else "cpu")
+        self.cuda = False
         self.input_dim = environment_datasets[0].get_feature_dim()
         self.output_dim = len(np.unique(environment_datasets[0].targets))
         self.test_dataset = test_dataset
@@ -47,7 +48,7 @@ class CausalNexClass(object):
         else:
             yy = np.int64(yy)
             reg = DAGClassifier(tabu_child_nodes=[i for i,k in enumerate(self.feature_names) if k != 'Target' ],
-                   dependent_target=True, enforce_dag=True, standardize=True)
+                   dependent_target=True, enforce_dag=True, standardize=False)
 
         reg.fit(X,yy)
         df = pd.DataFrame(X, columns = test_dataset.predictor_columns)
@@ -60,7 +61,7 @@ class CausalNexClass(object):
         self.coef_ = reg.coef_[0]
         
         # computing the test accuracy
-        self.batch_size = args.get('batch_size', 128)
+        self.batch_size = args.get('batch_size', 8)
         self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
         
         
