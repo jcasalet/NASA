@@ -4,7 +4,7 @@ Gene expression data from RNA sequencing (RNASeq) experiments yields valuable in
 
 Assuming there is sufficient data to study, what's lacking in the field is an objective way to measure the performance of machine learning and artificial intelligence algorithms on these data sets.
 
-This software repository contains scripts that resolve the aforementioned issues. 
+This software repository contains scripts that resolve the aforementioned issues. This repository was initially cloned from https://github.com/rvinas/adversarial-gene-expression.
 
 # Generate fake expression data 
 Run the following steps to generate fake gene expression data. 
