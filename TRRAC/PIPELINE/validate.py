@@ -10,7 +10,8 @@ import numpy as np
 sigThresh = 0.05
 
 #expr=pd.read_csv('liver_env=mission:dissection:library-prep.csv', sep=',', header=0)
-expr=pd.read_pickle(sys.argv[1])
+#expr=pd.read_pickle(sys.argv[1])
+expr=pd.read_csv(sys.argv[1], sep=',', header=0)
 meta=pd.read_csv(sys.argv[2], sep=',', header=0)
 with open(sys.argv[3], 'r') as f:
 	genes=f.read().splitlines()
@@ -51,11 +52,12 @@ for gene in genes:
 		counts_2d = []
 		for c in expr_per_gene_per_group[gene][group]:
 			counts_2d.append([c])
+		results[gene][group]['raw'] = list(expr_per_gene_per_group[gene][group])
 		results[gene][group]['normalized'] = list(scaler.fit_transform(counts_2d).flatten())
-		results[gene][group]['mean'] = float('%.3f'%(statistics.mean(expr_per_gene_per_group[gene][group])))
-		results[gene][group]['variance'] = float('%.3f'%(statistics.variance(expr_per_gene_per_group[gene][group])))
-		results[gene][group]['mean'] = float('%.3f' % (statistics.mean(results[gene][group]['normalized'])))
-		results[gene][group]['variance'] = float('%.3f' % (statistics.variance(results[gene][group]['normalized'])))
+		results[gene][group]['mean'] = float('%.0f'%(statistics.mean(expr_per_gene_per_group[gene][group])))
+		results[gene][group]['variance'] = float('%.0f'%(statistics.variance(expr_per_gene_per_group[gene][group])))
+		results[gene][group]['mean_normalized'] = float('%.3f' % (statistics.mean(results[gene][group]['normalized'])))
+		results[gene][group]['variance_normalized'] = float('%.3f' % (statistics.variance(results[gene][group]['normalized'])))
 		results[gene][group]['n'] = len(expr_per_gene_per_group[gene][group])
 
 
@@ -64,47 +66,56 @@ for gene in genes:
 	for c in nonflight:
 		counts_2d.append([c])
 	results[gene]['nonflight'] = dict()
+	results[gene]['nonflight']['raw'] = nonflight
 	results[gene]['nonflight']['normalized'] = list(scaler.fit_transform(counts_2d).flatten())
-	results[gene]['nonflight']['mean'] = float('%.3f'%(statistics.mean(results[gene]['nonflight']['normalized'])))
-	results[gene]['nonflight']['variance'] = float('%.3f'%(statistics.variance(results[gene]['nonflight']['normalized'])))
+	results[gene]['nonflight']['mean'] = float('%.0f' % (statistics.mean(nonflight)))
+	results[gene]['nonflight']['variance'] = float('%.0f' % (statistics.variance(nonflight)))
+	results[gene]['nonflight']['mean_normalized'] = float('%.3f'%(statistics.mean(results[gene]['nonflight']['normalized'])))
+	results[gene]['nonflight']['variance_normalized'] = float('%.3f'%(statistics.variance(results[gene]['nonflight']['normalized'])))
 	results[gene]['nonflight']['n'] = len(nonflight)
 
 
 	for group in ['ground',  'vivarium', 'basal', 'nonflight']:
 		comparison = 'flight_vs_' + group
 		results[gene][comparison] = dict()
-		results[gene][comparison]['t-test'] = float('%.3f' % (stats.ttest_ind(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
-		results[gene][comparison]['wilcoxon'] = float('%.3f' % (stats.ranksums(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
-		results[gene][comparison]['ks-test'] = float('%.3f' % (stats.kstest(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
-		results[gene][comparison]['levene'] = float('%.3f' % (stats.levene(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
+		#results[gene][comparison]['t-test-normalized'] = float('%.3f' % (stats.ttest_ind(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
+		#results[gene][comparison]['wilcoxon-normalized'] = float('%.3f' % (stats.ranksums(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
+		#results[gene][comparison]['ks-test-normalized'] = float('%.3f' % (stats.kstest(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
+		#results[gene][comparison]['levene-normalized'] = float('%.3f' % (stats.levene(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
+		results[gene][comparison]['t-test'] = float('%.3f' % (stats.ttest_ind(results[gene]['flight']['raw'], results[gene][group]['raw']).pvalue))
+		results[gene][comparison]['wilcoxon'] = float('%.3f' % (stats.ranksums(results[gene]['flight']['raw'], results[gene][group]['raw']).pvalue))
+		results[gene][comparison]['ks-test'] = float('%.3f' % (stats.kstest(results[gene]['flight']['raw'], results[gene][group]['raw']).pvalue))
+		results[gene][comparison]['levene'] = float('%.3f' % (stats.levene(results[gene]['flight']['raw'], results[gene][group]['raw']).pvalue))
 		#results[gene][comparison]['chisq-test'] = float('%.3f' % (stats.chisquare(results[gene]['flight']['normalized'], results[gene][group]['normalized']).pvalue))
 
 
 
 	nbins = 50
 	fig, axs = plt.subplots(1, 3)
-	axs[0].hist(results[gene]['flight']['normalized'], bins=nbins)
+	#axs[0].hist(results[gene]['flight']['normalized'], bins=nbins)
+	axs[0].hist(results[gene]['flight']['raw'], bins=nbins)
 	axs[0].set_title('flight')
-	axs[1].hist(results[gene]['ground']['normalized'], bins=nbins)
+	#axs[1].hist(results[gene]['ground']['normalized'], bins=nbins)
+	axs[1].hist(results[gene]['ground']['raw'], bins=nbins)
 	axs[1].set_title('ground')
-	axs[2].hist(results[gene]['nonflight']['normalized'], bins=nbins)
+	#axs[2].hist(results[gene]['nonflight']['normalized'], bins=nbins)
+	axs[2].hist(results[gene]['nonflight']['raw'], bins=nbins)
 	axs[2].set_title('non-flight')
 	fig.suptitle(gene)
 	plt.yscale('log', nonposy='clip')
 	plt.savefig(gene + '_comparison.png', dpi=300)
 
 	colors = ['red', 'blue', 'orange']
-	combo_data = [results[gene]['flight']['normalized'], results[gene]['ground']['normalized'],
-				  results[gene]['nonflight']['normalized']]
+	combo_data = [results[gene]['flight']['normalized'], results[gene]['ground']['normalized'],results[gene]['nonflight']['normalized']]
+	#combo_data = [results[gene]['flight']['raw'], results[gene]['ground']['raw'],results[gene]['nonflight']['raw']]
 	plt.hist(x=combo_data, bins=nbins, color=colors, density=False, stacked=True)
 	plt.legend(['flight', 'ground', 'non-flight'])
 	plt.title(gene)
 	plt.yscale('log', nonposy='clip')
 	plt.savefig(gene + '.png', dpi=300)
 
-	combo_data_dict = {'flight_normalized': results[gene]['flight']['normalized'],
-					   'ground_normalized': results[gene]['ground']['normalized'],
-						'nonflight_normalized': results[gene]['nonflight']['normalized']}
+	combo_data_dict = {'flight_normalized': results[gene]['flight']['normalized'],'ground_normalized': results[gene]['ground']['normalized'],'nonflight_normalized': results[gene]['nonflight']['normalized']}
+	#combo_data_dict = {'flight_raw': results[gene]['flight']['raw'], 'ground_raw': results[gene]['ground']['raw'],'nonflight_raw': results[gene]['nonflight']['raw']}
 	fig, ax = plt.subplots()
 	# ax.set_ylim([0, 1])
 	ax.boxplot(combo_data_dict.values())

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import pandas as pd
+import math
 
 dfFileName=sys.argv[1]
 plotName=sys.argv[2]
@@ -29,6 +30,8 @@ for env in df['env']:
 	vars_dict[env] = dict(df_env.var())
 
 	means_list_dict[env] = list(means_dict[env].values())
+	#vars_list_dict[env] = [math.sqrt(v) for v in vars_dict[env].values()]
+
 	vars_list_dict[env] = list(vars_dict[env].values())
 #####################
 
@@ -56,6 +59,7 @@ for env in means_list_dict.values():
 plt.scatter(x=np.log10([i+1 for i in all_means_list]), y=np.log10([j+1 for j in all_vars_list]))
 #plt.scatter(x=means_list_dict[env], y=vars_list_dict[env])
 #plt.scatter(x=[i+1 for i in means_list_dict[env]], y=[j+1 for j in vars_list_dict[env]])
+
 crisp_x = list()
 crisp_y = list()
 
@@ -69,7 +73,6 @@ for gene in crispGenes:
 	plt.text(x, y, gene, color='red', )
 
 plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
-
 
 plt.savefig(plotName + '_' + env + '.png')'''
 

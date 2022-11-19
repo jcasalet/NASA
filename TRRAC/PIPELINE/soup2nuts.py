@@ -37,10 +37,10 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              oro_thresholds_per_metakey=True,
+                              oro_thresholds_per_metakey=False,
                               oro_metakey = 'study',
                               sample_subsets=['Flight', 'Ground', 'Vivarium'],
-                              covariate_list= ['dataset'],
+                              covariate_list= ['libprep'],
                               target='oro_thresh',
                               zero_count_percent = 0.8,
                               low_count_threshold = 50,
@@ -48,12 +48,12 @@ def main():
                               top_n_var = 0,
                               amplify = {'n':0, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              env='append', # env, append, xformation,xformation-append
+                              env='env', # env, append, xformation,xformation-append
                               verbose_R = False,
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['merge_std', 'merge_norm', 'merge_boxcox', 'norm_merge', 'zscore_merge', 'merge_zscore', 'merge_sqrt'],
+                              xformations = ['merge_norm','merge_boxcox','merge_sqrt'],
                               xform_all=None,
                               filter_mask=[], #['filterGenesByType']
                               norm_all=False,
@@ -78,7 +78,8 @@ def main():
                             covariate_list=myrnaseqdata.covariate_list, target=myrnaseqdata.target)
 
 
-
+    # save meta for deseq2 now that oro_thresh is calculated
+    myrnaseqdata.save_meta(df=myrnaseqdata.metaDF, fileName=myrnaseqdata.outputDir + '/meta-4-deseq2.csv')
 class RNASeqData():
     def __init__(self, inputDir ='.',
                  outputDir='.',
@@ -174,23 +175,24 @@ class RNASeqData():
 
         # combine all meta dicts into single df and save in file for deseq2
         self.metaDF = pd.concat(list(self.meta_dict.values()))
-        self.save_meta(self.metaDF, self.outputDir + '/meta-4-deseq2.csv')
 
         # combine all expr dicts into single df and save in file for deseq2
         self.expressionDF = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(self.rnaExprDataDict.values()))
+        # permute samples
+        self.expressionDF, self.metaDF = self.permuteSamples(expr_df=self.expressionDF, meta_df=self.metaDF, fileSuffix='_permuted')
         self.save_expr(inputDF=self.expressionDF,
                        fileName = self.outputDir + '/expr-4-deseq2.csv',
                        transpose=True,
                        cur_index_col='gene',
                        new_index_col='sample')
-
         # now save it for ica
         self.save_expr(inputDF=self.expressionDF, fileName = self.outputDir + '/expr-4-ica.csv')
 
         # set up samples
-        self.oro_thresholds_per_metakey_dict=dict()
-        keep_samples = []
+
         if self.oro_thresholds_per_metakey:
+            self.oro_thresholds_per_metakey_dict = dict()
+            keep_samples = []
             for meta_val in set(self.metaDF[self.oro_metakey]):
                 m50,f25,f50,g50,g75 = self.getMiddle50(meta_key=self.oro_metakey, meta_val=meta_val)
                 print('f25 for ' + str(meta_val), str(f25))
@@ -203,14 +205,15 @@ class RNASeqData():
                 elif np.isnan(g75) and not np.isnan(f25):
                     self.oro_thresholds_per_metakey_dict[meta_val] = f50
                 else:
-                    self.oro_thresholds_per_metakey_dict[meta_val] = (g75 + f25) / 2
+                    self.oro_thresholds_per_metakey_dict[meta_val] = (g50 + f50) / 2
+                    # self.oro_thresholds_per_metakey_dict[meta_val] = (g75 + f25) / 2
                 print('threshold for ' + str(meta_val), str(self.oro_thresholds_per_metakey_dict[meta_val]))
                 keep_samples += m50
+
 
         # now add env and target to expressionDF
         if self.stack_xformations:
             self.build_stack_from_xformations()
-
 
     def build_stack_from_xformations(self):
         for xformation in self.xformations:
@@ -219,7 +222,7 @@ class RNASeqData():
         self.combine_xformation_stack()
         self.save_xformation_stack()
         self.save_meta_stack()
-        self.permuteSamples(expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'],
+        self.xformation_stack['all'], self.meta_stack['all'] = self.permuteSamples(expr_df=self.xformation_stack['all'], meta_df=self.meta_stack['all'],
                             fileSuffix=str(self.xformations))
 
         # combine all xformation stacks into a single expr matrix
@@ -262,7 +265,7 @@ class RNASeqData():
 
         for i in range(len(self.xformation_stack[xformation])):
             old_name = self.xformation_stack[xformation].iloc[i]['sample']
-            new_name =  old_name + '-' + xformation
+            new_name =  old_name + '__' + xformation
             self.xformation_stack[xformation].iloc[i, self.xformation_stack[xformation].columns.get_loc('sample')] = new_name
             meta_data = self.metaDF[self.metaDF['sample'] == old_name]
             meta_data['sample'] = new_name
@@ -308,9 +311,9 @@ class RNASeqData():
         self.save_meta(meta, metaFile)
         cmd = ['/usr/local/bin/R', '-f', R_SCRIPTS_DIR + '/normalize.R', '--args', inputFile, metaFile, outputFile]
         self.callR(cmd)
-        self.expressionDF = pd.read_csv(outputFile, sep=',', header=0)
+        df = pd.read_csv(outputFile, sep=',', header=0)
         if 'gene' in df.columns and 'Unnamed: 0' in df.columns:
-            df=df.drop(columns=['Unnamed: 0'])
+            df.drop(columns=['Unnamed: 0'], inplace=True)
         return df
 
     def my_zscore(self, df):
@@ -553,6 +556,7 @@ class RNASeqData():
         self.expr_outputfile_prefix += '_permuted_'
         self.save_meta(meta_df, fileName=self.outputDir + '/meta-' + self.expr_outputfile_prefix + fileSuffix + '.csv')
         self.save_expr(inputDF=expr_df, fileName=self.outputDir + '/' + self.expr_outputfile_prefix + fileSuffix + '.csv')
+        return expr_df, meta_df
 
     def prep4Crisp(self, inputFile, outputFileBase, covariate_list, target):
         if not inputFile is None:
@@ -638,7 +642,6 @@ class RNASeqData():
     def callR(self, cmd):
         import subprocess
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
         o, e = proc.communicate(timeout=900)
 
         if self.verbose_R:
@@ -673,8 +676,10 @@ class RNASeqData():
         # threshold=13.96 # median oro value
         # threshold=18 #70% oro value
         orothresh_dict = dict()
+        orothresh_dict_raw = dict()
         for i in range(len(meta_df)):
             key = meta_df.iloc[i]['sample']
+            key_raw = key.split('__')[0]
             oro = meta_df.iloc[i]['oro positivity (%)']
             meta_key = meta_df.iloc[i][self.oro_metakey]
             if self.oro_thresholds_per_metakey:
@@ -683,12 +688,14 @@ class RNASeqData():
                 thresh = threshold
             if math.ceil(oro) < math.floor(thresh):
                 orothresh_dict[key] = 0
+                orothresh_dict_raw[key_raw] = 0
             else:
                 orothresh_dict[key] = 1
-
+                orothresh_dict_raw[key_raw] = 1
 
         # join oro threshold dictionary to data frame
         df['oro_thresh'] = df['sample'].map(orothresh_dict)
+        self.metaDF['oro_thresh'] = self.metaDF['sample'].map(orothresh_dict_raw)
 
         return df
 
@@ -867,7 +874,6 @@ class RNASeqData():
         middle_group_samples = group_df[(group_df['oro positivity (%)'] >= g75) & (group_df['oro positivity (%)'] <= f25)]['sample']
 
         return list(middle_group_samples), f25,f50,g50,g75
-
 
     def divide(self, n, d):
        res = list()

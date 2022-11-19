@@ -1,10 +1,10 @@
 #read data
 #=========
 import pandas as pd
-from statistics import mean, median
-from sklearn import preprocessing
 import matplotlib.pyplot as plt
 import argparse
+import scipy.stats as stats
+
 
 
 parser = argparse.ArgumentParser()
@@ -20,13 +20,22 @@ fieldValues = set(df[field])
 
 
 oro_value_dict=dict()
+results = dict()
 
 for value in fieldValues:
+    flight = str(value) + '_flight'
+    nonflight= str(value) + '_nonflight'
+    results[value] = dict()
     subset = df[df[field] == value]
-    oro_value_dict[str(value) + '_flight'] = list(subset[subset['group'] == 'Flight']['oro positivity (%)'])
-    oro_value_dict[str(value) + '_nonflight'] = list(subset[subset['group'] != 'Flight']['oro positivity (%)'])
+    oro_value_dict[flight] = list(subset[subset['group'] == 'Flight']['oro positivity (%)'])
+    oro_value_dict[nonflight] = list(subset[subset['group'] != 'Flight']['oro positivity (%)'])
+    if len(oro_value_dict[flight]) != 0 and len(oro_value_dict[nonflight]) != 0:
+        results[value]['t-test'] = float('%.5f' % (stats.ttest_ind(oro_value_dict[flight], oro_value_dict[nonflight]).pvalue))
+        results[value]['wilcoxon'] = float('%.5f' % (stats.ranksums(oro_value_dict[flight], oro_value_dict[nonflight]).pvalue))
+        results[value]['ks-test'] = float('%.5f' % (stats.kstest(oro_value_dict[flight], oro_value_dict[nonflight]).pvalue))
 
 
+print(results)
 #oro_dict={'rr1_nasa_ground':rr1_nasa_oro_ground_raw, 'rr1_nasa_flight':rr1_nasa_oro_flight_raw, 'rr1_casis_ground': rr1_casis_oro_ground_raw, 'rr1_casis_flight': rr1_casis_oro_flight_raw,  'rr3_ground': rr3_oro_ground_raw, 'rr3_flight': rr3_oro_flight_raw}
 fig,ax = plt.subplots()
 #ax.set_ylim([0, 1])
