@@ -162,7 +162,7 @@ class LinearInvariantRiskMinimization(object):
                 err_env.append(error_e.item()/count_e)
                 
                 #penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
-                penalty += torch.autograd.grad(outputs=error_e, inputs=self.w, create_graph=True)[0].mean()
+                penalty += torch.autograd.grad(outputs=error_e, inputs=self.w, create_graph=True)[0].pow(2).mean()
                 error += error_e
 
             if iteration % self.logging_iteration == 0:

@@ -198,7 +198,7 @@ def run(config):
             "cuda": False,
             "hidden_dim": 256
         }
-        
+
         FRIRM_args.update(FRIRM_options)
 
         print('Running IRM (Feature Reduction Mode)')
