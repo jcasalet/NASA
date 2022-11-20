@@ -22,21 +22,21 @@ class MLP(torch.nn.Module):
         d1 = torch.nn.Dropout(dropout_p_low)
         lin2 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
         d2 = torch.nn.Dropout(dropout_p_low)
-        lin3 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
+        #lin3 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
         #JC
-        #lin3 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
-        #d3 = torch.nn.Dropout(dropout_p_high)
-        #lin4 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
+        lin3 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
+        d3 = torch.nn.Dropout(dropout_p_high)
+        lin4 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
 
-        #for lin in [lin1, lin2, lin3, lin4]:
-        for lin in [lin1, lin2, lin3]:
+        for lin in [lin1, lin2, lin3, lin4]:
+        #for lin in [lin1, lin2, lin3]:
             torch.nn.init.xavier_uniform_(lin.weight)
             torch.nn.init.zeros_(lin.bias)
         self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), d1,
                                          lin2, torch.nn.ReLU(True), d2,
-                                         lin3)
-                                         #lin3, torch.nn.ReLU(True), d3,
-                                         #lin4)
+                                         #lin3)
+                                         lin3, torch.nn.ReLU(True), d3,
+                                         lin4)
 
         self.input_dim = input_dim
         self.output_dim = output_dim

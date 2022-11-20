@@ -198,6 +198,7 @@ def run(config):
             "cuda": False,
             "hidden_dim": 256
         }
+        
         FRIRM_args.update(FRIRM_options)
 
         print('Running IRM (Feature Reduction Mode)')
@@ -262,13 +263,13 @@ def run(config):
                      'features': reduced_test_dataset.predictor_columns}
         to_bucket_results.append(to_bucket)
 
-    '''#####################################################################################
+    #####################################################################################
     ############################# FEATURE REDUCTION 2 ###################################
     #####################################################################################
     # Several methods in CRISP are not compatible with large numbers of features,
     # as such we perform feature reduction using Non-Linear Invaraint Risk Minimization
 
-    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
+    '''if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
 
         from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
 
