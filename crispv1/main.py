@@ -178,7 +178,7 @@ def run(config):
     # Several methods in CRISP are not compatible with large numbers of features,
     # as such we perform feature reduction using Non-Linear Invaraint Risk Minimization
 
-    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
+    '''if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
 
         from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
         from models.CausalNex import CausalNexClass
@@ -261,7 +261,7 @@ def run(config):
         # write test feature values to to_bucket_results for plotting
         to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
                      'features': reduced_test_dataset.predictor_columns}
-        to_bucket_results.append(to_bucket)
+        to_bucket_results.append(to_bucket)'''
 
     #####################################################################################
     ############################# FEATURE REDUCTION 2 ###################################
@@ -333,6 +333,71 @@ def run(config):
         to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
                      'features': reduced_test_dataset.predictor_columns}
         to_bucket_results.append(to_bucket)'''
+
+    #####################################################################################
+    ### USING LIRM FOR FEATURE REDUCTION #2#########
+    #####################################################################################
+    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
+
+        from models.LinearInvariantRiskMinimization import LinearInvariantRiskMinimization
+
+        # Setup Linear and Non-Linear IRM args
+        FRIRM_options = ensemble_options.get('FRIRM', {})
+        FRIRM_args = {
+            "verbose": 1,
+            "n_iterations": 1000,
+            "seed": 23,
+            "l2_regularizer_weight": 0.001,
+            "lr": 0.001,
+            "penalty_anneal_iters": 100,
+            "penalty_weight": 10000.0,
+            "cuda": False,
+            "batch_size": 8,
+            "hidden_dim": 256,
+            "output_data_regime": "binary"
+        }
+        FRIRM_args.update(FRIRM_options)
+
+        print('Running IRM (Feature Reduction Mode)')
+        IRM_NN = LinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
+        irm_results_dict = IRM_NN.results()
+        if config['verbose']:
+            print(irm_results_dict)
+
+        # Extract top weighted features to use for remaining methods requiring reduced feature set
+        to_bucket = irm_results_dict['to_bucket']
+        to_bucket['method'] = 'Linear IRM (Feature Reduction Mode)'
+        to_bucket_results.append(to_bucket)
+
+        print("Finished Linear IRM")
+
+        coefs = pd.DataFrame()
+        coefs['feature'] = to_bucket['features']
+        coefs['coefficient'] = to_bucket['coefficients']
+        coefs['sort'] = coefs['coefficient'].abs()
+        sorted_coefs = coefs.sort_values('sort', ascending=False)
+
+        keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
+        removed_columns = [c for c in test_dataset.predictor_columns if c not in keep_columns]
+
+        save_dict_to_json({'Linear IRM Feature Selection columns removed': removed_columns},
+                          config['results_directory'] + 'irm_dropped_columns.json')
+
+        keep_columns_indices_to_original_features = np.array(
+            [test_dataset.predictor_columns.index(f) for f in keep_columns])
+
+        print('Keeping:', keep_columns)
+
+        selected_feature_list = keep_columns
+        config['data_options']['predictors'] = selected_feature_list
+        # Generate reduced feature set datasets
+        reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset = get_datasets_for_experiment(config)
+
+        # write test feature values to to_bucket_results for plotting
+        to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
+                     'features': reduced_test_dataset.predictor_columns}
+        to_bucket_results.append(to_bucket)
+
 
     #####################################################################################
     ################################# DECONFOUNDER ######################################
