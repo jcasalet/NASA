@@ -8,11 +8,9 @@ from utils.vm_helpers import save_dict_to_json
 from utils.joining_reductions import join_keep_columns
 
 
-
-def run(config):
+def run(config, alfa=0):
     ############################ LOAD CHOSEN DATASET ###################################
     environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
-
 
 
     ########################### CHECK IF TARGET IS CONSTANT ############################
@@ -36,7 +34,7 @@ def run(config):
 
 
     ############################# Correlation to Target Ranking #########################
-    '''from utils.CorrelationToTarget import CorrelationToTarget
+    from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
     # Calculate correlations of each feature to target variable and save to file system/cloud storage
     tg_corr = CorrelationToTarget(environment_datasets, val_dataset, test_dataset, ct_args)
@@ -53,7 +51,8 @@ def run(config):
     print('Checking for features with zero variance')
     # Flag for checking zero variance across all environments ([train_environments], val, test) or within any one environment
     var_args = {
-        'in_each_env': selection_config.get('zero_variance_in_each_env', False)
+        'in_each_env': selection_config.get('zero_variance_in_each_env', False),
+        'variance_threshold': selection_config.get('variance_threshold',0)
     }
     zero_var_checker = ZeroVarianceChecker(environment_datasets, val_dataset, test_dataset, var_args)
     if var_args['in_each_env']:
@@ -95,7 +94,7 @@ def run(config):
     original_dimensionality = len(selected_feature_list)
     config['data_options']['predictors'] = selected_feature_list
     # Reinitialise datasets without highly correlated feature pairs
-    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)'''
+    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
 
     #####################################################################################
     ############################# TRAIN SELECTED MODELS #################################
@@ -178,7 +177,7 @@ def run(config):
     # Several methods in CRISP are not compatible with large numbers of features,
     # as such we perform feature reduction using Non-Linear Invaraint Risk Minimization
 
-    '''if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
+    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
 
         from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
         from models.CausalNex import CausalNexClass
@@ -190,15 +189,14 @@ def run(config):
             "NN_method": "NN",
             "verbose": 1,
             "n_iterations": 1000,
-            "seed": 0,
+            "seed":  0,
             "l2_regularizer_weight": 0.001,
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
             "cuda": False,
-            "hidden_dim": 256
+            "hidden_dim":  256
         }
-
         FRIRM_args.update(FRIRM_options)
 
         print('Running IRM (Feature Reduction Mode)')
@@ -220,90 +218,14 @@ def run(config):
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
         keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
-
+        
         # Define the CRISP coefficients
-        csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
+        '''csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
         csnx_results_dict = csnx.results()
-
+        
         to_bucket = csnx_results_dict['to_bucket']
         to_bucket['method'] = 'CausalNex (Feature Reduction Mode)'
-        to_bucket_results.append(to_bucket)
-
-        print("Finished causalnex")
-
-        coefs = pd.DataFrame()
-        coefs['feature'] = to_bucket['features']
-        coefs['coefficient'] = to_bucket['coefficients']
-        coefs['sort'] = coefs['coefficient'].abs()
-        sorted_coefs = coefs.sort_values('sort', ascending=False)
-        keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
-
-        # TODO JC added alfa=0
-        alfa=0
-        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
-
-        keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
-        removed_columns = [c for c in test_dataset.predictor_columns if c not in keep_columns]
-
-        save_dict_to_json({'Non Linear IRM Feature Selection columns removed': removed_columns},
-                          config['results_directory'] + 'irm_dropped_columns.json')
-
-        keep_columns_indices_to_original_features = np.array(
-            [test_dataset.predictor_columns.index(f) for f in keep_columns])
-
-        print('Keeping:', keep_columns)
-
-        selected_feature_list = keep_columns
-        config['data_options']['predictors'] = selected_feature_list
-        # Generate reduced feature set datasets
-        reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset = get_datasets_for_experiment(config)
-
-        # write test feature values to to_bucket_results for plotting
-        to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
-                     'features': reduced_test_dataset.predictor_columns}
         to_bucket_results.append(to_bucket)'''
-
-    #####################################################################################
-    ############################# FEATURE REDUCTION 2 ###################################
-    #####################################################################################
-    # Several methods in CRISP are not compatible with large numbers of features,
-    # as such we perform feature reduction using Non-Linear Invaraint Risk Minimization
-
-    '''if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
-
-        from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
-
-        # Setup Linear and Non-Linear IRM args
-        FRIRM_options = ensemble_options.get('FRIRM', {})
-        FRIRM_args = {
-            # Flag for model to use in Non-Linear IRM ['NN': MLP, 'DNN': Deeper MLP]
-            "NN_method": "NN",
-            "verbose": 1,
-            "n_iterations": 1000,
-            "seed":  0,
-            "l2_regularizer_weight": 0.001,
-            "lr": 0.001,
-            "penalty_anneal_iters": 100,
-            "penalty_weight": 10000.0,
-            "cuda": False,
-            "batch_size": 128,
-            "hidden_dim":  256
-        }
-        FRIRM_args.update(FRIRM_options)
-
-        print('Running IRM (Feature Reduction Mode)')
-        IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
-        #environment_datasets_orig, val_dataset_orig, test_dataset_orig = get_datasets_for_experiment(config)
-
-        #IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets_orig, val_dataset_orig, test_dataset_orig, FRIRM_args)
-        irm_results_dict = IRM_NN.results()
-        if config['verbose']:
-            print(irm_results_dict)
-
-        # Extract top weighted features to use for remaining methods requiring reduced feature set
-        to_bucket = irm_results_dict['to_bucket']
-        to_bucket['method'] = 'Non Linear IRM (Feature Reduction Mode)'
-        to_bucket_results.append(to_bucket)
 
         print("Finished Non Linear IRM")
 
@@ -312,6 +234,11 @@ def run(config):
         coefs['coefficient'] = to_bucket['coefficients']
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
+        #keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
+        keep_columns_CSNX = [] 
+        
+        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
+        
 
         keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
         removed_columns = [c for c in test_dataset.predictor_columns if c not in keep_columns]
@@ -332,78 +259,14 @@ def run(config):
         # write test feature values to to_bucket_results for plotting
         to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
                      'features': reduced_test_dataset.predictor_columns}
-        to_bucket_results.append(to_bucket)'''
-
-    #####################################################################################
-    ### USING LIRM FOR FEATURE REDUCTION #2#########
-    #####################################################################################
-    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
-
-        from models.LinearInvariantRiskMinimization import LinearInvariantRiskMinimization
-
-        # Setup Linear and Non-Linear IRM args
-        FRIRM_options = ensemble_options.get('FRIRM', {})
-        FRIRM_args = {
-            "verbose": 1,
-            "n_iterations": 1000,
-            "seed": 23,
-            "l2_regularizer_weight": 0.001,
-            "lr": 0.001,
-            "penalty_anneal_iters": 100,
-            "penalty_weight": 10000.0,
-            "cuda": False,
-            "batch_size": 8,
-            "hidden_dim": 256,
-            "output_data_regime": "binary"
-        }
-        FRIRM_args.update(FRIRM_options)
-
-        print('Running IRM (Feature Reduction Mode)')
-        IRM_NN = LinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
-        irm_results_dict = IRM_NN.results()
-        if config['verbose']:
-            print(irm_results_dict)
-
-        # Extract top weighted features to use for remaining methods requiring reduced feature set
-        to_bucket = irm_results_dict['to_bucket']
-        to_bucket['method'] = 'Linear IRM (Feature Reduction Mode)'
         to_bucket_results.append(to_bucket)
-
-        print("Finished Linear IRM")
-
-        coefs = pd.DataFrame()
-        coefs['feature'] = to_bucket['features']
-        coefs['coefficient'] = to_bucket['coefficients']
-        coefs['sort'] = coefs['coefficient'].abs()
-        sorted_coefs = coefs.sort_values('sort', ascending=False)
-
-        keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
-        removed_columns = [c for c in test_dataset.predictor_columns if c not in keep_columns]
-
-        save_dict_to_json({'Linear IRM Feature Selection columns removed': removed_columns},
-                          config['results_directory'] + 'irm_dropped_columns.json')
-
-        keep_columns_indices_to_original_features = np.array(
-            [test_dataset.predictor_columns.index(f) for f in keep_columns])
-
-        print('Keeping:', keep_columns)
-
-        selected_feature_list = keep_columns
-        config['data_options']['predictors'] = selected_feature_list
-        # Generate reduced feature set datasets
-        reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset = get_datasets_for_experiment(config)
-
-        # write test feature values to to_bucket_results for plotting
-        to_bucket = {'test_feature_values': reduced_test_dataset.data.tolist(),
-                     'features': reduced_test_dataset.predictor_columns}
-        to_bucket_results.append(to_bucket)
-
 
     #####################################################################################
     ################################# DECONFOUNDER ######################################
     if "DCF" in selected_models:
         print("Running Deconfounder")
-        from models.Deconfounder import Deconfounder
+        #from models.Deconfounder import Deconfounder
+        from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
 
         # Deconfounder args
         dcf_options = ensemble_options.get('DCF', {})
@@ -414,14 +277,12 @@ def run(config):
             "minAccuracy": 0.5,
             "seed": 0,
             "verbose": 1,
-            "batch_size": 8,
             "target": data_config['targets'],
             "output_pvals": True
         }
         dcf_args.update(dcf_options)
 
         # If we wish to output p vals for each feature, then use reduced feature set
-        original_dimensionality = 501
         if dcf_args["output_pvals"] and (original_dimensionality > 500):
             dcf_args["columns"] = reduced_test_dataset.predictor_columns
             dcf = Deconfounder(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, dcf_args)
@@ -440,20 +301,25 @@ def run(config):
     icp_solution = False
     # run linear and nonlinear ICP
     if "ICP" in selected_models:
-        from models.LinearInvariantCausalPrediction import InvariantCausalPrediction
+        from models.TorchLinearInvariantCausalPrediction import TorchInvariantCausalPrediction
+        #from models.LinearInvariantCausalPrediction import InvariantCausalPrediction
         # Set up ICP args
         ICP_options = ensemble_options.get('ICP', {})
         ICP_args = {
             "max_set_size": 2,
             "alpha": 0.05,
             "seed": 12,
-            "batch_size": 8,
             "verbose": 1
         }
         ICP_args.update(ICP_options)
+        ICP_args["target"] = config["data_options"]["targets"]
+        #ICP_args["output_data_regime"] = config["data_options"]["output_data_regime"]
+        ICP_args["output_data_regime"] = "binary" 
+        ICP_args["columns"] = config["data_options"]["predictors"]
 
         # Initialise Linear ICP and run (train and test called internally)
-        ICPmod = InvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
+        ICPmod = TorchInvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
+        #ICPmod = InvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
         # Get results on test_dataset
         ICP_results_dict = ICPmod.results()
         icp_solution = ICP_results_dict['solution']
@@ -480,13 +346,10 @@ def run(config):
         NLICP_args = {
             "max_set_size": 2,
             "alpha": 0.05,
-            "seed": ensemble_options.get('seed', 0),
+            "seed": 12,
             "verbose": 1,
-            "method": "MLP3",
-            "hidden_dim": 256,
-            "batch_size": 8,
-            "epochs": 50,
-            "max_iter": 100
+            "method": "MLP",
+            "hidden_dim": 256
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
@@ -494,7 +357,12 @@ def run(config):
         # Initialise Linear ICP and run (train and test called internally)
         NLICPmod = NonLinearInvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, NLICP_args)
         # Get results on test_dataset
-        NLICP_results_dict = NLICPmod.results()
+        if hasattr(NLICPmod, "test_logits"):
+            # can only run .results() if NLICP has an attribute "test_logits", which is set in test(), which in turn is only called if > 0 subsets were found
+            NLICP_results_dict = NLICPmod.results()
+        else:
+            print("NLICP no results")
+            NLICP_results_dict = {"result" : "no subsets found", "selected_feature_indices" : [], "to_bucket" : {"result" : "no subsets found"}}
 
         NLICP_results_dict['original_feature_indices'] = keep_columns_indices_to_original_features[
             NLICP_results_dict['selected_feature_indices']]
@@ -521,11 +389,9 @@ def run(config):
             "use_icp_initialization": False,
             "verbose": 1,
             "n_iterations": 1000,
+            "seed": 0,
             "lr": 0.001,
-            "batch_size": 8,
-            "cuda": False,
-            "output_dim": environment_datasets[0].get_output_dim(),
-            "output_data_regime": "binary"
+            "cuda": False
         }
         LIRM_args.update(LIRM_options)
 
@@ -559,7 +425,7 @@ def run(config):
         IRM_args = {
             # Flad for model to use in Non-Linear IRM ['NN': MLP]
             "use_reduced_feature_set": False,
-            "NN_method": "NN",
+            "NN_method": "DNN",
             "verbose": 1,
             "n_iterations": 1000,
             "seed": 0,
@@ -568,7 +434,6 @@ def run(config):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
-            "batch_size": 8,
             "cuda": False
         }
         IRM_args.update(IRM_options)
@@ -593,20 +458,20 @@ def run(config):
     #####################################################################################
     ############################ SAVE RESULTS TO BUCKET #################################
 
-    '''save_dict_to_json({'zero std columns removed': zero_var_columns},
+    save_dict_to_json({'zero std columns removed': zero_var_columns},
                       config['results_directory'] + 'zero_std_columns.json')
 
-    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')'''
+    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')
 
     save_dict_to_json({"results": to_bucket_results}, config['results_directory'] + 'results_for_bucket.json')
 
     if config['use_cloud']:
-        '''save_json_to_bucket({"zero std columns removed": zero_var_columns},
+        save_json_to_bucket({"zero std columns removed": zero_var_columns},
                             config['bucket_path'] + config['bucket_exp_path'] + 'zero_var_columns.json', config['bucket_project'],
                             config['bucket_name'])
 
         save_dataframe_to_bucket(column_pairs_df, config['bucket_path'] + config['bucket_exp_path'] + 'correlation_pairs.csv',
-                                 config['bucket_project'], config['bucket_name'])'''
+                                 config['bucket_project'], config['bucket_name'])
 
         save_json_to_bucket({"results": to_bucket_results}, config['bucket_path'] + config['bucket_exp_path'] + 'results.json',
                             config['bucket_project'], config['bucket_name'])
@@ -635,18 +500,8 @@ def run(config):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            # TODO JC hack - sometimes list of a single list?
-            if method_dict['coefficients'] == list and len(method_dict['coefficients']) == 1:
-                coefs['coefficient'] = method_dict['coefficients'][0]
-            else:
-                coefs['coefficient'] = method_dict['coefficients']
-            # TODO JC hack - sometimes no pvals?
-            if not 'pvals' in method_dict or method_dict['pvals'] is None:
-                coefs['pvals'] = None
-            elif type(method_dict['pvals']) == list and len(method_dict['pvals']) == 1:
-                coefs['pvals'] = method_dict['pvals'][0]
-            else:
-                coefs['pvals'] = method_dict['pvals']
+            coefs['coefficient'] = method_dict['coefficients']
+            coefs['pvals'] = method_dict['pvals']
 
             fname = config['results_directory'] + method + '_features.pdf'
             plot_most_predictive(coefs, fname)

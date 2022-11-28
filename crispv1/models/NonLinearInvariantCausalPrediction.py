@@ -6,8 +6,6 @@ import torch
 from scipy.stats import levene, ranksums
 
 from models.TorchModelZoo import MLP
-from models.TorchModelZoo import MLP2
-from models.TorchModelZoo import MLP3
 from utils.defining_sets import defining_sets
 
 
@@ -19,6 +17,8 @@ def pretty(vector):
 class NonLinearInvariantCausalPrediction(object):
     def __init__(self, train_environments, val_environment, test_environment,
                  args):  # define model nn.Module to fit to? default to MLP
+        args["output_data_regime"] = "binary"
+        print("Non linear ICP with ", args["output_data_regime"], "target.")
         self.intersection_found = False
         self.defining_set_found = False
         self.alpha = args.get('alpha', 0.05)
@@ -32,11 +32,13 @@ class NonLinearInvariantCausalPrediction(object):
         self.cuda = torch.cuda.is_available() and args.get('cuda', False)
         self.max_iter = args.get('max_iter', 1000)
         self.full_feature_set = train_environments[0].predictor_columns.copy()
-        self.test_environment = test_environment
+        
 
         self.output_dim = train_environments[0].get_output_dim()
+        if self.args["output_data_regime"] == "multi-class":
+            self.output_dim = len(np.unique(train_environments[0].targets))
         self.input_dim = train_environments[0].get_feature_dim()
-        # Initialise Dataloaders (combined all environxment for train; separated by environment for comparison across envs)
+        # Initialise Dataloaders (combined all environment for train; separated by environment for comparison across envs)
         self.batch_size = args.get('batch_size', 128)
         all_dataset = torch.utils.data.ConcatDataset(train_environments)
         self.all_loader = torch.utils.data.DataLoader(all_dataset, batch_size=self.batch_size, shuffle=True)
@@ -47,7 +49,8 @@ class NonLinearInvariantCausalPrediction(object):
         self.train_loaders = train_loaders
         self.val_loader = torch.utils.data.DataLoader(val_environment, batch_size=self.batch_size, shuffle=False)
         self.test_loader = torch.utils.data.DataLoader(test_environment, batch_size=self.batch_size, shuffle=False)
-
+        self.test_environment = test_environment
+        
         # test every combination of features (up to max_set_size)
         self.max_set_size = (args['max_set_size'] if 'max_set_size' in args else int(self.input_dim))
 
@@ -63,7 +66,6 @@ class NonLinearInvariantCausalPrediction(object):
             # Initialise Model
             self.initialize_model()
             self.train(self.all_loader)
-            # TODO: JC the predicted values are WAY off (like in the 10,000's  ... not suited for 0-1 binary classification
 
             # loop through each environment in train_environments, get true/preds and residuals within that env, map residuals to env id
             res_all = []
@@ -76,9 +78,7 @@ class NonLinearInvariantCausalPrediction(object):
             # get p-value
             p_value = self.leveneAndWilcoxTest(res_all, e_all)
 
-            # TODO JC change to less than, right?
             if p_value > self.alpha:
-            #if p_value < self.alpha:
                 self.accepted_subsets.append(set(subset))
                 self.accepted_p_values.append(p_value)
                 if args["verbose"]:
@@ -140,9 +140,7 @@ class NonLinearInvariantCausalPrediction(object):
                         p_value = self.leveneAndWilcoxTest(res_all, e_all)
                         def_p_values.append(p_value)
 
-                    # TODO JC should be min not max right?
-                    #best_def_set = def_sets[np.where(def_p_values == max(def_p_values))[0][0]]
-                    best_def_set = def_sets[np.where(def_p_values == min(def_p_values))[0][0]]
+                    best_def_set = def_sets[np.where(def_p_values == max(def_p_values))[0][0]]
                     best_def_set.sort()
 
                     if len(best_def_set):
@@ -170,8 +168,6 @@ class NonLinearInvariantCausalPrediction(object):
             self.test(loader=self.test_loader)
         else:
             print('no accepted sets found for nonlinear ICP')
-            print('but JC trying to run test in order to instantiate self.test_logits')
-            self.test(loader=self.test_loader)
 
     def leveneAndWilcoxTest(self, residuals, e_all):
         residuals = np.array(residuals)
@@ -190,30 +186,23 @@ class NonLinearInvariantCausalPrediction(object):
             stat, w_p = ranksums(res_in, res_out)
             wilcox_p = min(w_p, wilcox_p)
         # levene test - to test that residuals from all envs have equal variances
-        #W, levene_p = levene(*res_groups, center='mean')
-        W, levene_p = levene(*res_groups, center='median')
+        W, levene_p = levene(*res_groups, center='mean')
 
         # bonf adj wilcoxon test if test multiple environments
         bonf_adj = (1 if len(set(e_all)) == 2 else len(set(e_all)))
         wilcox_p = wilcox_p * bonf_adj
         # accept minimum p-value of wilcoxon and levene tests; 2* is for bonferroni correction for the two tests
-        # TODO JC is 2x best correction?
-        #p_value = 2 * min(wilcox_p, levene_p)
-        p_value = min(wilcox_p, levene_p)
+        p_value = 2 * min(wilcox_p, levene_p)
+
         return p_value
 
     def powerset(self, s, max_set_size):
         return chain.from_iterable(combinations(s, r) for r in range(max_set_size + 1))
 
     def initialize_model(self):
-        if self.method == 'MLP' or self.method == 'MLP2' or self.method == 'MLP3':
+        if self.method == 'MLP':
             self.input_dim = len(self.feature_mask)
-            if self.method == 'MLP':
-                self.model = MLP(self.args, self.input_dim, self.output_dim)
-            elif self.method == 'MLP2':
-                self.model = MLP2(self.args, self.input_dim, self.output_dim)
-            elif self.method == 'MLP3':
-                self.model = MLP3(self.args, self.input_dim, self.output_dim)
+            self.model = MLP(self.args, self.input_dim, self.output_dim)
             if self.cuda:
                 self.model.cuda()
         else:
@@ -225,8 +214,12 @@ class NonLinearInvariantCausalPrediction(object):
 
         epochs = self.args.get('epochs', 100)  # maybe reduce default to speed up?
         lr = self.args.get('lr', 0.001)
-        #criterion = torch.nn.BCEWithLogitsLoss()  # todo: maybe detect what loss to use for binary/multi-class cases
-        criterion = torch.nn.BCELoss()  # todo: maybe detect what loss to use for binary/multi-class cases
+        if self.args["output_data_regime"] == "binary":
+            criterion = torch.nn.BCEWithLogitsLoss()  # todo: maybe detect what loss to use for binary/multi-class cases
+        elif self.args["output_data_regime"] == "real-valued":
+            criterion = torch.nn.MSELoss()
+        elif self.args["output_data_regime"] == "multi-class":
+            criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
 
         # Start training loop
@@ -244,7 +237,11 @@ class NonLinearInvariantCausalPrediction(object):
 
                 optimizer.zero_grad()
                 outputs = self.model(inputs)
-                # TODO JC put these outputs on 0-1 scale (changed last layer activation to sigmoid for now)
+                if self.args["output_data_regime"] == "multi-class":
+                    targets = targets.squeeze().long()
+                    outputs = outputs.argmax(dim=1)
+                    print(targets.shape, outputs.shape)
+                    print(targets[:3], outputs[:3])
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
@@ -258,8 +255,10 @@ class NonLinearInvariantCausalPrediction(object):
         with torch.no_grad():
             for inputs, targets in loader:
                 inputs = inputs[:, self.feature_mask]
+                if self.cuda:
+                    inputs = inputs.to("cuda")
                 pred = self.model(inputs)
-                pred = pred.numpy()
+                pred = pred.cpu().numpy()
                 err = (pred.flatten() - targets.squeeze().numpy().flatten()).flatten()
                 res.extend(err)
                 i += 1
@@ -296,9 +295,7 @@ class NonLinearInvariantCausalPrediction(object):
                 else:
                     test_targets.append(targets.squeeze().unsqueeze(0))
                     test_logits.append(outputs.squeeze().unsqueeze(0))
-                    #test_probs.append(sig(outputs).squeeze().unsqueeze(0))
-                    # TODO JC we already did sigmoid so removing it here ...
-                    test_probs = test_logits
+                    test_probs.append(sig(outputs).squeeze().unsqueeze(0))
 
         self.test_targets = torch.cat(test_targets, dim=1)
         self.test_logits = torch.cat(test_logits, dim=1)
@@ -338,11 +335,25 @@ class NonLinearInvariantCausalPrediction(object):
             }
         }
 
+    def acc_preds(self, logits, y):
+        if self.args["output_data_regime"] == "multi-class":
+            return logits.argmax(dim=-1).float()
+        elif self.args["output_data_regime"] == "real-valued":
+            return logits.float()
+        else:
+            # binary classification case
+            return  (logits > 0.).float()
+    
     def mean_nll(self, logits, y):
-        return torch.nn.functional.binary_cross_entropy_with_logits(logits, y)
+        if self.args["output_data_regime"] == "multi-class":
+            return CrossEntropyLoss()(logits.squeeze(), y.squeeze().long())
+        else:
+            return torch.nn.functional.binary_cross_entropy_with_logits(logits, y)
 
-    def mean_accuracy(self, probs, y):
-        return ((probs - y).abs() < 1e-2).float().mean()
+    def mean_accuracy(self, logits, y):
+        preds = self.acc_preds(logits, y)
+        if self.args["output_data_regime"] == "real-valued":
+            return r2_score(y, preds)
 
     def std_accuracy(self, logits, y):
         preds = (logits > 0.).float()
