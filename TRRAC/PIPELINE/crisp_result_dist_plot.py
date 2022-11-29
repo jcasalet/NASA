@@ -94,7 +94,7 @@ for env in df['env']:
 	crisp_x = list()
 	crisp_y = list()
 
-	for gene in crispGenes:
+	'''for gene in crispGenes:
 		crisp_x.append(np.log10(1+means_dict[env][gene]))
 		#crisp_x.append(means_dict[env][gene])
 		crisp_y.append(np.log10(1+vars_dict[env][gene]))
@@ -103,7 +103,7 @@ for env in df['env']:
 		y = np.log10(1+vars_dict[env][gene])
 		plt.text(x, y, gene, color='red', )
 
-	plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)
+	plt.scatter(x=crisp_x, y=crisp_y, marker='*', color='red', s=100)'''
 
 
 	plt.savefig(plotName + '_' + env + '.png')

@@ -38,26 +38,28 @@ def main():
                               inputDir=args.idir,
                               outputDir=args.odir,
                               oro_thresholds_per_metakey=False,
-                              oro_metakey = 'study',
-                              sample_subsets=['Flight', 'Ground', 'Vivarium'],
+                              oro_metakey = 'dataset',
+                              sample_subsets=['Flight', 'Ground', 'Vivarium','Basal'],
                               covariate_list= ['libprep'],
                               target='oro_thresh',
                               zero_count_percent = 0.8,
                               low_count_threshold = 50,
                               low_count_percent = 0.8,
+                              high_mean_threshold = 0,
                               top_n_var = 0,
                               amplify = {'n':0, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              env='env', # env, append, xformation,xformation-append
+                              env='append', # env, append, xformation
                               verbose_R = False,
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['merge_norm','merge_boxcox','merge_sqrt'],
+                              xformations = ['merge_zscore','merge_std','merge_norm','zscore_merge','std_merge','norm_merge'],
                               xform_all=None,
                               filter_mask=[], #['filterGenesByType']
                               norm_all=False,
-                              filterCount=100000000
+                              filterCount=100000000,
+                              splitInHalf = False
                               )
 
 
@@ -80,6 +82,14 @@ def main():
 
     # save meta for deseq2 now that oro_thresh is calculated
     myrnaseqdata.save_meta(df=myrnaseqdata.metaDF, fileName=myrnaseqdata.outputDir + '/meta-4-deseq2.csv')
+
+    # split in half for causalnex
+    if myrnaseqdata.splitInHalf:
+        df1, df2 = myrnaseqdata.splitStackInHalf(myrnaseqdata.xformation_stack['all'])
+        myrnaseqdata.save_expr(inputDF=df1, fileName=myrnaseqdata.outputDir + '/expr_half_1.pkl')
+        myrnaseqdata.save_expr(inputDF=df2, fileName=myrnaseqdata.outputDir + '/expr_half_2.pkl')
+
+
 class RNASeqData():
     def __init__(self, inputDir ='.',
                  outputDir='.',
@@ -97,6 +107,7 @@ class RNASeqData():
                  zero_count_percent=0.8,
                  low_count_threshold = 5,
                  low_count_percent = 0.8,
+                 high_mean_threshold=0,
                  top_n_var = 0,
                  amplify={'n': 0, 'var': 10, 'seed': 23},
                  stack_xformations=False,
@@ -109,7 +120,8 @@ class RNASeqData():
                  xform_all = None,
                  filter_mask=None,
                  norm_all = True,
-                 filterCount=0
+                 filterCount=0,
+                 splitInHalf=False
                  ):
         self.RScriptPath = RScriptPath
         self.inputDir = inputDir
@@ -125,6 +137,7 @@ class RNASeqData():
         self.zero_count_percent = zero_count_percent
         self.low_count_threshold = low_count_threshold
         self.low_count_percent = low_count_percent
+        self.high_mean_threshold = high_mean_threshold
         self.top_n_var = top_n_var
         self.amplify = amplify
         self.stack_xformations = stack_xformations
@@ -140,6 +153,7 @@ class RNASeqData():
         self.filter_mask=filter_mask
         self.norm_all = norm_all
         self.filterCount = filterCount
+        self.splitInHalf = splitInHalf
 
         # append subsets to file name
         for group in self.sample_subsets:
@@ -251,6 +265,22 @@ class RNASeqData():
             else:
                 print('unknown xformation for all: ', str(self.xform_all))
 
+
+
+    def splitStackInHalf(self, df):
+        oro_thresh = list(df['oro_thresh'])
+        env = list(df['env'])
+        df_t = self.transpose_df(df=df, cur_index_col='sample', new_index_col='gene')
+        halfway_point = int(len(df_t)/2)
+        df_1 = df_t[0:halfway_point]
+        df_2 = df_t[halfway_point:]
+        df_1_t = self.transpose_df(df=df_1, cur_index_col='gene', new_index_col='sample')
+        df_2_t = self.transpose_df(df=df_2, cur_index_col='gene', new_index_col='sample')
+        df_1_t['env'] = env
+        df_1_t['oro_thresh'] = oro_thresh
+        df_2_t['env'] = env
+        df_2_t['oro_thresh'] = oro_thresh
+        return df_1_t, df_2_t
 
     def save_meta_stack(self):
         for xformation in self.meta_stack:
@@ -514,6 +544,11 @@ class RNASeqData():
             df = self.filterGenesByPercentLowCount(df, n=self.low_count_threshold, p=self.low_count_percent)
             print('dims after filter low: ', df.shape)
 
+        # filter genes with high means
+        if not 'filterGenesByHighMeanThreshold' in mask:
+            print('dims before filter high mean: ', df.shape)
+            df = self.filterGenesByHighMeanThreshold(df, n=self.high_mean_threshold)
+            print('dims after filter high mean: ', df.shape)
         # reduce number of genes to n top variance
         if not 'filterGenesByTopNSD' in mask:
             print('dims before filter by top n: ', df.shape)
@@ -742,6 +777,19 @@ class RNASeqData():
         # join env dictionary to data frame
         expr_df['env'] = expr_df['sample'].map(env_dict)
         return expr_df
+
+    def filterGenesByHighMeanThreshold(self, df, n):
+        if n == 0:
+            pass
+        else:
+            genes = list(df.drop(columns=['sample']).columns)
+            drop_genes = list()
+            for gene in genes:
+                if df[gene].mean() >= n:
+                    drop_genes.append(gene)
+            df = df.drop(columns=drop_genes)
+        return df
+
 
     def filterGenesByPercentZeroCount(self, df=None, p=0):
         if p == 0:
@@ -974,12 +1022,12 @@ def std_merge(obj):
     obj.xformation_stack['std_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'),
                                                         list(stdize_before_merge.values()))
 
-def stdsamples_merge(obj):
+'''def stdsamples_merge(obj):
     stdize_before_merge = dict()
     for e in obj.rnaExprDataDict:
         stdize_before_merge[e] = obj.my_stdizedf(obj.rnaExprDataDict[e], across='samples')
     obj.xformation_stack['stdsamples_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'),
-                                                  list(stdize_before_merge.values()))
+                                                  list(stdize_before_merge.values()))'''
 
 def merge_stdsamples(obj):
     obj.xformation_stack['merge_stdsamples'] = obj.my_stdizedf(
@@ -1034,12 +1082,12 @@ def norm_merge_std(obj):
     obj.xformation_stack['norm_merge_std'] = obj.my_stdizedf(ft.reduce(lambda left, right: pd.merge(left, right, on='gene'),
                                                                        list(norm_before_merge_stdize.values())), across='genes')
 
-def norm_std_merge(obj):
+'''def norm_std_merge(obj):
     norm_std_before_merge = dict()
     for e in obj.rnaExprDataDict:
         norm_std_before_merge[e] = obj.my_stdizedf(obj.my_normalize(obj.rnaExprDataDict[e], obj.meta_dict[e]), across='genes')
     obj.xformation_stack['norm_std_merge'] = ft.reduce(lambda left, right: pd.merge(left, right, on='gene'),
-                                                       list(norm_std_before_merge.values()))
+                                                       list(norm_std_before_merge.values()))'''
 
 def merge_log(obj):
     obj.xformation_stack['merge_log'] = obj.my_log(base=2, expr=ft.reduce(lambda left, right: pd.merge(left, right, on='gene'), list(obj.rnaExprDataDict.values())))
