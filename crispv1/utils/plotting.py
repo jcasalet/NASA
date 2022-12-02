@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import statistics
 import math
 
@@ -135,15 +135,16 @@ def get_ensemble_results(to_bucket_results):
             #coefs['coefficient'] = method_dict['coefficients']
             ########################################
             # JC: use maxmin scaler for coefficients             
-            scaler = MinMaxScaler(feature_range=(0,1))
+            scaler = MinMaxScaler(feature_range=(-100,100))
+            #scaler = StandardScaler()
             coefs_2d = []
-            for c in method_dict['coefficients']:
-                coefs_2d.append([c])
-            my_coefs = scaler.fit_transform(coefs_2d)
-            '''for i in range(len(method_dict['coefficients'])):
-                if method_dict['coefficients'][i] < 0:
-                    my_coefs[i] = -1.0 * my_coefs[i]'''
-            coefs['coefficient'] = my_coefs
+            if method_dict['coefficients'] is None:
+                coefs['coefficient'] = method_dict['coefficients']
+            else:
+                for c in method_dict['coefficients']:
+                    coefs_2d.append([c])
+                my_coefs = scaler.fit_transform(coefs_2d)
+                coefs['coefficient'] = my_coefs
             ########################################
 
 
@@ -198,16 +199,29 @@ def get_ensemble_results(to_bucket_results):
                     my_coefs.append( x / theMax)
             coefs['coefficient'] = my_coefs'''
 
+            ''' ORIG
+            method_names += [method]
+            # get feats sorted by highest absolute value; note for nonlinear models these are sensitivities (which should be used on normalized data)
+            coefs = pd.DataFrame()
+            coefs['feature'] = method_dict['features']
+            coefs['coefficient'] = method_dict['coefficients']
+            coefs['pvals'] = method_dict['pvals']
+            coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
+            coefs = coefs.sort_values('sort', ascending=False)
+            coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
+            feat_dicts.append(coefs)
+            # update all_features with all features seen across all models
+            all_features.update(list(coefs['feature'].values))
+            /ORIG '''
 
-            if 'pvals' in method_dict and not method_dict['pvals'] is None:
-                coefs['pvals'] = method_dict['pvals']
-                # JC sorting based on product of model accuracy * feature coefficient
-                coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
-                coefs = coefs.sort_values('sort', ascending=False)
-                coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
-                feat_dicts.append(coefs)
-                # update all_features with all features seen across all models
-                all_features.update(list(coefs['feature'].values))
+            coefs['pvals'] = method_dict['pvals']
+            # JC sorting based on product of model accuracy * feature coefficient
+            coefs['sort'] = method_dict['test_acc'] * coefs['coefficient'].abs()
+            coefs = coefs.sort_values('sort', ascending=False)
+            coefs['pvals'] = [p if p else 1 for p in coefs['pvals']]
+            feat_dicts.append(coefs)
+            # update all_features with all features seen across all models
+            all_features.update(list(coefs['feature'].values))
 
     # create df with coefficients each method, and the 'selected' parameter which is proportional to the number of
     # models that feature intersected with
@@ -219,12 +233,23 @@ def get_ensemble_results(to_bucket_results):
     feature_weight_df = feature_weight_df.fillna(0)
 
     # count number of models feature is chosen by
-    feature_weight_df['count_models'] = (feature_weight_df != 0).sum(axis=1)
+    # JC
+    #feature_weight_df['count_models'] = (feature_weight_df != 0).sum(axis=1)
+    feature_weight_df['count_models'] = [0 for i in range(len(feature_weight_df))]
+    top20_per_method = dict()
+    for method_index in range(len(method_names)):
+        m = method_names[method_index]
+        top20_per_method[m] = list(feat_dicts[method_index][0:20]['feature'])
+    for feature_index in range(len(feature_weight_df)):
+        feature_weight_df.iloc[feature_index]['count_models'] = 0
+        for m in top20_per_method:
+            if feature_weight_df.index[feature_index] in top20_per_method[m]:
+                feature_weight_df.iloc[feature_index, feature_weight_df.columns.get_loc('count_models')] += 1
+
     # calc proportion of models feature is chosen by
     method_count = len(method_names)
     feature_weight_df['selected'] = feature_weight_df['count_models'] / method_count
-    feature_weight_df['weighted_coefficient'] = feature_weight_df[method_names].mean(axis=1) * feature_weight_df[
-        'selected']
+    feature_weight_df['weighted_coefficient'] = feature_weight_df[method_names].mean(axis=1) * feature_weight_df['selected']
     feature_weight_df['feature'] = feature_weight_df.index
     feature_weight_df.replace([-np.inf], 0, inplace=True)
 
