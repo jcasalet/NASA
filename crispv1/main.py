@@ -266,8 +266,8 @@ def run(config, alfa=0):
     ################################# DECONFOUNDER ######################################
     if "DCF" in selected_models:
         print("Running Deconfounder")
-        #from models.Deconfounder import Deconfounder
-        from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
+        from models.Deconfounder import Deconfounder
+        #from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
 
         # Deconfounder args
         dcf_options = ensemble_options.get('DCF', {})
