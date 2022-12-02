@@ -14,7 +14,7 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols, use_palet
     for meta_param in list(use_meta_cols['cat']):
         pcaDF = pd.concat([pcaDF, info_df[[meta_param]]], axis=1)
 
-    sns.set(style="whitegrid", font_scale=1.1)
+    sns.set(style="whitegrid", font_scale=0.5)
     fig, ax = plt.subplots(figsize=(5,5))
     uniq_values = set(list(pcaDF[variable]))
     #palette = ['green', 'orange', 'brown', 'blue', 'red', 'purple']
@@ -46,7 +46,9 @@ def myPlot(x, info_df, output_dir, use_meta_cols):
             use_palette=False
         else:
             use_palette=True
-        pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols, use_palette)
+        #pcaPlot(pca, x, info_df, meta_param, meta_param + '_Dataset_' + 'n=' + str(x.shape[0]), output_dir, use_meta_cols, use_palette)
+        pcaPlot(pca, x, info_df, meta_param, meta_param, output_dir, use_meta_cols, use_palette)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()

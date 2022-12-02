@@ -47,7 +47,6 @@ def streamlit_results(config):
         st.plotly_chart(test_acc_fig)
 
         # Causal potential bar chart:
-
         max_value = 50  # max([len(res['features']) for res in res_json['results']])
         try:
             # Combined method plot
