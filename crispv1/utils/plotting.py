@@ -135,21 +135,23 @@ def get_ensemble_results(to_bucket_results):
             #coefs['coefficient'] = method_dict['coefficients']
             ########################################
             # JC: use maxmin scaler for coefficients             
-            '''scaler = MinMaxScaler(feature_range=(0,1))
+            scaler = MinMaxScaler(feature_range=(0,1))
             coefs_2d = []
             for c in method_dict['coefficients']:
                 coefs_2d.append([c])
             my_coefs = scaler.fit_transform(coefs_2d)
-            for i in range(len(method_dict['coefficients'])):
+            '''for i in range(len(method_dict['coefficients'])):
                 if method_dict['coefficients'][i] < 0:
-                    my_coefs[i] = -1.0 * my_coefs[i]
-            coefs['coefficient'] = my_coefs'''
+                    my_coefs[i] = -1.0 * my_coefs[i]'''
+            coefs['coefficient'] = my_coefs
             ########################################
 
 
             ########################################
             # JC: use coef/stdev
-            if method_dict['coefficients'] is None:
+
+
+            '''if method_dict['coefficients'] is None:
                 coefs['coefficient'] = method_dict['coefficients']
             else:
                 if type(method_dict['coefficients']) == list and len(method_dict['coefficients']) == 1:
@@ -168,7 +170,7 @@ def get_ensemble_results(to_bucket_results):
                         coefs['coefficient'] = my_coefs
                     else:
                         coefs['coefficient'] = method_dict['coefficients']
-            print('coefs[coefficient]: ', coefs['coefficient'])
+            print('coefs[coefficient]: ', coefs['coefficient'])'''
 
             ########################################
 
