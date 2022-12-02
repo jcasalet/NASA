@@ -195,7 +195,8 @@ def run(config, alfa=0):
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
             "cuda": False,
-            "hidden_dim":  256
+            "hidden_dim":  256,
+            "output_data_regime": "binary"
         }
         FRIRM_args.update(FRIRM_options)
 
@@ -278,7 +279,8 @@ def run(config, alfa=0):
             "seed": 0,
             "verbose": 1,
             "target": data_config['targets'],
-            "output_pvals": True
+            "output_pvals": True,
+            "output_data_regime": "binary"
         }
         dcf_args.update(dcf_options)
 
@@ -309,7 +311,8 @@ def run(config, alfa=0):
             "max_set_size": 2,
             "alpha": 0.05,
             "seed": 12,
-            "verbose": 1
+            "verbose": 1,
+            "output_data_regime": "binary"
         }
         ICP_args.update(ICP_options)
         ICP_args["target"] = config["data_options"]["targets"]
@@ -349,7 +352,8 @@ def run(config, alfa=0):
             "seed": 12,
             "verbose": 1,
             "method": "MLP",
-            "hidden_dim": 256
+            "hidden_dim": 256,
+            "output_data_regime": "binary"
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
@@ -391,7 +395,8 @@ def run(config, alfa=0):
             "n_iterations": 1000,
             "seed": 0,
             "lr": 0.001,
-            "cuda": False
+            "cuda": False,
+            "output_data_regime": "binary"
         }
         LIRM_args.update(LIRM_options)
 
@@ -434,7 +439,8 @@ def run(config, alfa=0):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
-            "cuda": False
+            "cuda": False,
+            "output_data_regime": "binary"
         }
         IRM_args.update(IRM_options)
 

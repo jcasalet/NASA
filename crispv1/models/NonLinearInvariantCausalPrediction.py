@@ -7,6 +7,7 @@ from scipy.stats import levene, ranksums
 
 from models.TorchModelZoo import MLP
 from utils.defining_sets import defining_sets
+from sklearn.metrics import r2_score
 
 
 def pretty(vector):
@@ -354,6 +355,8 @@ class NonLinearInvariantCausalPrediction(object):
         preds = self.acc_preds(logits, y)
         if self.args["output_data_regime"] == "real-valued":
             return r2_score(y, preds)
+        else:
+            return ((preds - y).abs() < 1e-2).float().mean()
 
     def std_accuracy(self, logits, y):
         preds = (logits > 0.).float()
