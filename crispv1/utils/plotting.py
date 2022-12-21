@@ -135,7 +135,7 @@ def get_ensemble_results(to_bucket_results):
             #coefs['coefficient'] = method_dict['coefficients']
             ########################################
             # JC: use maxmin scaler for coefficients             
-            scaler = MinMaxScaler(feature_range=(-100,100))
+            scaler = MinMaxScaler(feature_range=(-1,1))
             #scaler = StandardScaler()
             coefs_2d = []
             if method_dict['coefficients'] is None:
