@@ -33,13 +33,37 @@ then
 	then
 		mv $TO_BRIDGE_FROM_COLABSHIM ~/DONE/$TS
 	fi
+	if [ -d $TO_COLABSHIM_FROM_BRIDGE ]
+	then
+		mv $TO_COLABSHIM_FROM_BRIDGE ~/DONE/$TS
+	fi
+
 	if [ -d $TO_BRIDGE_FROM_TDS ]
 	then
 		mv $TO_BRIDGE_FROM_TDS ~/DONE/$TS
 	fi
+	if [ -d $TO_TDS_FROM_BRIDGE ]
+	then
+		mv $TO_TDS_FROM_BRIDGE ~/DONE/$TS
+	fi
+
+	if [ -d $TO_TDS_FROM_ISS ]
+	then
+		mv $TO_TDS_FROM_ISS ~/DONE/$TS
+	fi
+	if [ -d $TO_ISS_FROM_TDS ]
+	then
+		mv $TO_ISS_FROM_TDS ~/DONE/$TS
+	fi
 
 	mkdir -p $TO_BRIDGE_FROM_COLABSHIM
+	mkdir -p $TO_COLABSHIM_FROM_BRIDGE
+
 	mkdir -p $TO_BRIDGE_FROM_TDS
+	mkdir -p $TO_TDS_FROM_BRIDGE
+
+	mkdir -p $TO_TDS_FROM_ISS
+	mkdir -p $TO_ISS_FROM_TDS
 
 	while true
 	do

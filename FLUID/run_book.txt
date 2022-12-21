@@ -164,6 +164,16 @@ $ ssh tds (** say 'yes' to prompt)
 $ exit (** now you're on tds, so you want to exit to get back to the bridge)
 $ ssh tds (** note you should not be prompted this time)
 
+15. DO THIS STEP ONLY ON TDS NODE
+$ su - fluid
+$ ssh bridge(** say 'yes' to prompt)
+$ exit (** now you're on colab-shim, so you want to exit to get back to the bridge)
+$ ssh bridge (** note you should not be prompted this time)
+$ exit
+$ ssh agg-shim (** say 'yes' to prompt)
+$ exit (** now you're on agg-shim, so you want to exit to get back to the tds)
+$ ssh agg-shim (** note you should not be prompted this time)
+$ exit
 
 16. Start the docker daemon (ON ALL NODES EXCEPT BRIDGE and TDS)
 
