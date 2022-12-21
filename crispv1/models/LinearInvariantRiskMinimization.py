@@ -14,7 +14,7 @@ class LinearInvariantRiskMinimization(object):
         self.output_dim =  environment_datasets[0].get_output_dim()
         self.test_dataset = test_dataset
         self.args = args
-	self.args['output_data_regime'] = 'binary'
+        self.args['output_data_regime'] = 'binary'
         self.logging_iteration = args.get('logging_iteration', 200)
         self.loss_per_iteration = []
         self.acc_per_iteration = []
