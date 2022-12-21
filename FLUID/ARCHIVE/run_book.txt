@@ -1,0 +1,256 @@
+STEPS TO DEPLOY FLUID IN AWS
+
+=======
+SECTION 1: CREATE INSTANCES ON AWS
+=======
+
+Open the AWS Dashboard using your normal credentials.
+
+1. create AWS instance template (in AWS EC2 console) using the following parameters:
+	- OS = redhat 8.4 hvm x86_64
+	- type = t2.large (2 vcpu, 8gb ram, $0.0928 per hour)
+	- keypair = jupyterlab
+	- security group = jupyterlab (this will open ingress ports 22, 8888 from any ip; allow icmp)
+	- root disk = 100gb EBS volume type gp2
+
+2. Use the AWS EC2 console to launch 6 instances from template:
+	- Name the instances according to the following list: agg-earth, colab-earth, colab-shim,  colab-iss, agg-iss
+
+3. Download PEM file for the jupyterlab security group:
+	- Open the EC2 console
+	- Chose Netowrk Security / Key Pairs from the left hand navigation menu
+	- Select jupyterlab from the security group list
+	- Click the "Create key pair" button in the top right.
+	- Name the keypair jupyterlab, and select RSA and .pem (for OpenSSH)
+	- Download the PEM file and note its location for future use to facilitate ssh logins (see section 2 step 1 below) and for editing of the fluid-network.sh powershell script to locate the PEM file (see line 5 of the fluid-network.sh file)
+
+** note no tds in this deployment -- getting files directly from agg-iss and sending them to colab-shim
+
+==============================================================
+SECTION 2: DEPLOY AND CONFIGURE SOFTWARE - RUN THE COMMANDS IN THIS SECTION ON EACH INSTANCE CREATED IN SECTION 1
+===============================================================
+
+IMPORTANT: If you stop/restarted any of the AWS nodes during this process, they will be allocated new public IP addresses. In this case, you must update the IP addresses in the fluid-network.sh file (see Step 17) and the /etc/hosts file (see step 3) on each of the nodes before moving on the EXPERIMENT phase of this Run Book. This IP address update process has been automated using the Windows Powershell script fluid_ip_config.ps1 that is included in the fluid.zip file. 
+
+1. login to instance as ec2-user from your workstation using ssh, where:
+* <key> is the fully qualified PEM file on your workstation (e.g. ~/.ssh/JupyterLab). See section 1 step 3 above
+* <public-ip> is the public-ip address of the node (as shown in EC2 console, instance list)
+$ ssh -i <key> ec2-user@<public-ip>
+
+2. switch user to root 
+$ sudo -s
+
+** note prompt will change from '$' to '#' indicating you're the root user now
+** several commands that follow require being the root user, and are indicated accordingly with a '#' prompt
+
+3. set hostname to the <name> you gave to this instance in SECTION 1 STEP 2 above (ie. agg-earth, colab-earth, colab-shim, colab-iss, or agg-iss)
+
+	a. edit /etc/hostname file >>> to automatically set hostname to the <name> given to this istance whenever node is rebooted
+	# vi /etc/hostname
+	<name>
+
+	b. set hostname from command line for this session on this node
+	# hostname <name>
+
+	c. populate /etc/hosts file with the public IPs >>> of the nodes you created in SECTION 1. This can be done manually, as below, or modified automatically using the Powershell script 'fluid_ip_config.ps1'
+	# vi /etc/hosts 
+	127.0.0.1 localhost
+	52.5.52.204 bridge     
+	<public IP address of agg-earth> agg-earth
+	<public IP address of agg-iss> agg-iss
+	<public IP address of colab-earth> colab-earth
+	<public IP address of colab-shim> colab-shim
+	<public IP address of colab-iss> colab-iss
+
+** note only the bridge IP is fixed; all other IPs are dynamic and will change with any reboot or stop/restart.
+
+d. test hostname resolution and network connectivity with ping
+# for host in $(cat /etc/hosts); do h=$(echo $host | awk '{print $1}'); ping -c 1 $h; done
+
+4. add docker-ce to yum repo data (else redhat will install podman-docker, and you don't want that)
+# vi /etc/yum.repos.d/docker-ce.repo
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
+enabled=1
+gpgcheck=0
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+5. install software
+#  yum install net-tools bzip2 zip unzip git which docker-ce docker-ce-cli docker-compose-plugin -y 
+
+6. verify docker group created  
+# grep docker /etc/group
+
+7. create fluid group
+# groupadd -g 2001 fluid
+
+8. create "fluid" user, then set password which must be securely noted for future steps
+# useradd -u 2001 -g 2001 -G docker -s /bin/bash -d /home/fluid fluid  -m
+# passwd fluid (set password for the fluid account)
+# exit (exit back into the ec2-user account)
+$ 
+
+9. Transfer fluid.zip file from your workstation to the node (contains Dockerfile, scripts, and data) 
+
+	a. copy fluid.zip from your laptop to the /tmp directory on the node. 
+
+	[your-local-workstation]$ scp -i <path>JupyterLab.pem <path>fluid.zip ec2-user@<instance-public-IP>:/tmp   (<path> = specify the full path to JupyterLab.pem and fluid.zip on your workstation)
+
+	b. ssh login to that node from your laptop, or return to your active ssh session for the node you are configuring
+
+	$ ssh -i <path>JupyterLab.pem ec2-user@<instance-public-IP>
+
+	c. unzip fluid files
+
+	$ su - fluid
+	$ cp /tmp/fluid.zip .
+	$ unzip fluid.zip
+	$ unzip data.zip
+
+10. DO THIS STEP ONLY ON AGG-EARTH
+
+This step does the install of conda for python 3.7 (for additional infomation see https://linuxize.com/post/how-to-install-anaconda-on-centos-7)
+
+$ su - fluid
+
+$ export CONDA_AUTO_UPDATE_CONDA=false
+
+$ export PATH=/home/fluid/miniconda/bin:$PATH
+
+$ curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh  && chmod +x ~/miniconda.sh  && ~/miniconda.sh -b -p ~/miniconda  && rm ~/miniconda.sh  && conda install -y python==3.7
+
+$ conda create -y -n venv_3.7 python=3.7 anaconda
+
+$ conda init bash
+
+$ conda run -n venv_3.7
+
+$ source ~/miniconda/etc/profile.d/conda.sh
+
+$ echo "export PATH=/home/fluid/miniconda/bin:$PATH" >> ~/.bash_profile
+
+$ echo "conda activate venv_3.7" >> ~/.bash_profile
+
+$ pip install paramiko scp pyflakes==2.3.0 pycodestyle==2.7.0 torch torchvision 
+
+$ conda install cudatoolkit=10.1
+
+$ git clone -b live_demo https://gitlab.com/frontierdevelopmentlab/astronaut-health/crisp.git
+
+$ pip install -r crisp/requirements.txt
+
+$ git clone --branch fluid https://github.com/intel/openfl.git
+
+$ pip install /home/fluid/openfl/.
+
+
+11. DO THIS STEP ONLY ON BRIDGE NODE
+$ su - fluid
+$ ssh-keygen -t rsa (hit <CR> thru prompts)
+$ cat .ssh/id_rsa.pub (** copy the contents of this file to some temp file for use in a subsequent command)
+
+12. DO THIS STEP ONLY ON COLAB-SHIM
+$ su - fluid
+$ ssh-keygen -t rsa (hit <CR> thru prompts)
+$ cd .ssh
+$ vi authorized_keys (** paste in contents of id_rsa.pub from bridge node)
+$ chmod 600 authorized_keys
+
+13. DO THIS STEP ONLY ON AGG-ISS
+$ su - fluid
+$ ssh-keygen -t rsa (hit <CR> thru prompts)
+$ cd .ssh
+$ vi authorized_keys (** paste in contents of id_rsa.pub from bridge node)
+$ chmod 600 authorized_keys
+
+14. DO THIS STEP ONLY ON BRIDGE NODE
+
+$ su - fluid
+$ rm -f ~/.ssh/known_hosts (clear known_hosts file if present)
+$ ssh colab-shim (** say 'yes' to prompt)
+$ exit (** now you're on colab-shim, so you want to exit to get back to the bridge)
+$ ssh colab-shim (** note you should not be prompted this time)
+$ ssh agg-iss (** say 'yes' to prompt)
+$ exit (** now you're on agg-iss, so you want to exit to get back to the bridge)
+$ ssh agg-iss (** note you should not be prompted this time)
+
+15. Start the docker daemon (ON ALL NODES EXCEPT BRIDGE)
+
+$ exit (if you're logged in as fluid, you need to first exit and login as ec2-user in order to do the sudo command)
+$ sudo -s
+# systemctl enable docker
+# systemctl start docker
+# exit
+$ su - fluid
+$ docker image build -t fluid .
+
+17. create ~/scripts/fluid-network.sh file, making note to to change IP addresses to correspond to the public IP addressess of the nodes you created (similar to the hosts file in step 3)
+REPLACE THE EXAMPLE IP ADDRESSES SHOWN BELOW WITH THE ACTUAL PUBLIC IP ADDRESSES OF YOUR NODES AS SHOWN IN AWS EC2 INSTANCES LIST.
+This can be done manually, as noted below, or automated using the Powershell 'fluid_ip_config.ps1' script.
+
+$ vi ~/scripts/fluid-network.sh
+DATA_PATH=/home/fluid/data
+SCRIPT_PATH=/home/fluid/scripts
+IMAGE_NAME=fluid
+AGG_PORT=8888
+AGG_EARTH_IP=100.27.49.222
+AGG_ISS_IP=3.239.85.160
+COLAB_EARTH_IP=3.235.222.119
+COLAB_ISS_IP=3.239.83.239
+COLAB_SHIM_IP=3.238.96.18
+
+18. create ~/scripts/crisp-config.sh file
+$ vi ~/scripts/crisp-config.sh
+WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
+WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
+WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
+ROUNDS=2
+AGG_ISS_HOST=agg-iss
+AGG_ISS_PORT=8888
+AGG_EARTH_HOST=agg-earth
+AGG_EARTH_PORT=8888
+
+** shouldn't need to change anything
+
+
+================================================
+SECTION 3: RUN EXPERIMENT - EXECUTE THE COMMANDS ON THE SPECIFIED NODES
+================================================
+
+IMPORTANT: If you stop/restarted any of the AWS nodes during this process, they will be allocated new public IP addresses. In this case, you must update the IP addresses in the fluid-network.sh file (see Step 15) and the /etc/hosts file (see step 3) on each of the nodes before running the experiments. Run the 'fluid_ip_config.ps1' powershell script to automate this process.
+
+ON ALL NODES (and in any order) EXCEPT THE BRIDGE NODE perform steps 1 & 2 
+
+1 Login as fluid and clean up from previous runs... clear workspace, kill active containers 
+$ su - fluid
+$ docker stop $(docker ps -a -q)
+$ rm -rf data/WORKSPACE/workspace
+
+1.5 ON ALL NODES, update /etc/hosts if necessary... >>>> OR RUN THE FLUID-NETWORK.PS1 script
+
+2. Launch the containers
+$ cd scripts
+$ chmod +x *.sh
+$ ./runDocker-notls-shim.sh -r $(hostname) 
+
+ONLY ON THE BRIDGE NODE perform step 3.
+
+3. Start bridge node syncing (after having started all the other containers)
+
+$ su - fluid
+$ pkill mysync.sh
+$ cd scripts
+$ ./mysync.sh 
+
+4. Monitor standard output for completion and get results. You'll get your prompt back on agg-earth, colab-earth, and colab-iss after job is complete.
+
+5. Upon completion, retrieve results from agg-earth 
+
+$ su - fluid
+$ cp ~/scripts/get_results* ~/crisp
+$ cd ~/crisp
+$ ./get_results.sh
+

@@ -262,11 +262,3 @@ $ su - fluid
 $ cp ~/scripts/get_results* ~/crisp
 $ cd ~/crisp
 $ ./get_results.sh
-
-
-summary of changes
-==================
-1. /etc/hosts -- should be IP followed by list of hostnames
-2. use 'docker stop $(docker ps -a -q)'
-3. changed password-less SSH config for just outbound from bridge
-4. change docker restart policy on agg-earth to 'no' (script ends, docker daemon restarts, overwrites save directory)
