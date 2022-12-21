@@ -180,7 +180,7 @@ def run(config, alfa=0):
     if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
 
         from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
-        from models.CausalNex import CausalNexClass
+        #from models.CausalNex import CausalNexClass
 
         # Setup Linear and Non-Linear IRM args
         FRIRM_options = ensemble_options.get('FRIRM', {})
@@ -194,7 +194,7 @@ def run(config, alfa=0):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
-            "cuda": False,
+            "cuda": True,
             "hidden_dim":  256,
             "output_data_regime": "binary"
         }
@@ -218,7 +218,8 @@ def run(config, alfa=0):
         coefs['coefficient'] = to_bucket['coefficients']
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
-        keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
+
+        '''keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
         
         # Define the CRISP coefficients
         csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
@@ -238,7 +239,7 @@ def run(config, alfa=0):
         keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
         #keep_columns_CSNX = [] 
         
-        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
+        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)'''
         
 
         keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
@@ -312,7 +313,8 @@ def run(config, alfa=0):
             "alpha": 0.05,
             "seed": 12,
             "verbose": 1,
-            "output_data_regime": "binary"
+            "output_data_regime": "binary",
+            "cuda": True
         }
         ICP_args.update(ICP_options)
         ICP_args["target"] = config["data_options"]["targets"]
@@ -353,7 +355,8 @@ def run(config, alfa=0):
             "verbose": 1,
             "method": "MLP",
             "hidden_dim": 256,
-            "output_data_regime": "binary"
+            "output_data_regime": "binary",
+            "cuda": True
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
@@ -395,7 +398,7 @@ def run(config, alfa=0):
             "n_iterations": 1000,
             "seed": 0,
             "lr": 0.001,
-            "cuda": False,
+            "cuda": True,
             "output_data_regime": "binary"
         }
         LIRM_args.update(LIRM_options)
@@ -439,7 +442,7 @@ def run(config, alfa=0):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
-            "cuda": False,
+            "cuda": True,
             "output_data_regime": "binary"
         }
         IRM_args.update(IRM_options)
@@ -506,6 +509,7 @@ def run(config, alfa=0):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
+            print('method = ', method)
             coefs['coefficient'] = method_dict['coefficients']
             coefs['pvals'] = method_dict['pvals']
 
