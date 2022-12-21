@@ -14,6 +14,7 @@ class LinearInvariantRiskMinimization(object):
         self.output_dim =  environment_datasets[0].get_output_dim()
         self.test_dataset = test_dataset
         self.args = args
+	self.args['output_data_regime'] = 'binary'
         self.logging_iteration = args.get('logging_iteration', 200)
         self.loss_per_iteration = []
         self.acc_per_iteration = []
@@ -33,69 +34,7 @@ class LinearInvariantRiskMinimization(object):
             train_loaders.append(dl)
         self.train_loaders = train_loaders
         self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
-        
 
-
-        '''self.min_per_dim = np.ones(shape=(self.input_dim ,1) ) *(100000.)
-        self.max_per_dim = np.ones(shape=(self.input_dim ,1) ) *(-100000.)
-        for inputs, targets in self.all_loader:
-            for ii in range(self.input_dim):
-                dimmin = min(inputs.numpy()[: ,ii])
-                dimmax = max(inputs.numpy()[: ,ii])
-                if dimmin < self.min_per_dim[ii]:
-                    self.min_per_dim[ii] = dimmin
-                if dimmax > self.max_per_dim[ii]:
-                    self.max_per_dim[ii] = dimmax
-
-        
-        # Start training procedure
-        print("Start IRM training procedure with", self.args["output_data_regime"], "target")
-
-        dim_x = self.input_dim + 1  
-        best_phi = torch.nn.Parameter(torch.eye(dim_x, dim_x))
-        best_reg = 0
-        best_err = 1e6
-
-        # Penalty regularization parameter is an important hyperparameter. Grid search is performed to find the optimal hyperparameter. # CHosen parameters 1e-3
-        for reg in [0.95]:
-            self.reg = reg
-            self.train()
-
-            error = 0
-            for inputs, targets in self.all_loader:
-                bias = torch.ones(inputs.size(0), 1)
-                if self.cuda:
-                    inputs = inputs.cuda()
-                    targets = targets.cuda()
-                    bias = bias.cuda()
-                # Concatenating a vector of 1's to account for bias in linear classification
-                inputs = torch.cat((bias, inputs), 1) 
-                pred = self.phi(inputs) @ self.w
-                if self.args["output_data_regime"] == "real-valued":
-                    error = (pred - targets).pow(2).mean().item()
-                elif self.args["output_data_regime"] == "binary":
-                    error = BCEWithLogitsLoss()(pred.squeeze(), targets.squeeze()).detach()
-                elif self.args["output_data_regime"] == "multi-class":
-                    targets = targets.squeeze().long()
-                    error = CrossEntropyLoss()(pred, targets).detach()
-                    
-                error += error
-            
-            if args["verbose"]:
-                print("IRM (reg={:.3f}) has {:.3f} training error.".format(
-                        reg, error))
-
-            if error < best_err:
-                if args["verbose"]:
-                    print("\tnew best model:")
-                    print("\terror:", error)
-                    print("\treg:", reg)
-                best_err = error
-                best_reg = reg
-                best_phi = copy.deepcopy(self.phi)
-
-        self.phi = best_phi
-        self.reg = best_reg'''
         self.reg = 0.95
         self.train()
 
@@ -354,7 +293,7 @@ class LinearInvariantRiskMinimization(object):
                 'method': "Linear IRM",
                 'features': self.feature_names,
                 'coefficients': coefficients,
-                'feature_gradients' : feature_gradients,
+                #'feature_gradients' : feature_gradients,
                 'pvals': None,
                 "test_logits" : self.test_logits.squeeze().numpy().tolist(),
                 'test_acc': test_acc.numpy().squeeze().tolist(),
