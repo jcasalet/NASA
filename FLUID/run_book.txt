@@ -243,6 +243,7 @@ IMPORTANT: If you stop/restarted any of the AWS nodes during this process, they 
 
 ON ALL NODES (and in any order) EXCEPT THE BRIDGE NODE perform steps 1 & 2 
 
+
 1 Login as fluid and clean up from previous runs... clear workspace, kill active containers 
 $ su - fluid
 $ docker stop $(docker ps -a -q)
@@ -260,9 +261,9 @@ ONLY ON THE BRIDGE NODE perform step 3.
 3. Start bridge node syncing (after having started all the other containers)
 
 $ su - fluid
-$ pkill mysync.sh
+$ pkill oursync.sh
 $ cd scripts
-$ ./mysync.sh 
+$ ./oursync.sh $HOSTNAME
 
 4. Monitor standard output for completion and get results. You'll get your prompt back on agg-earth, colab-earth, and colab-iss after job is complete.
 

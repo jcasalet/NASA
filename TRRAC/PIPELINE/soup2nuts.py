@@ -37,9 +37,9 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              oro_thresholds_per_metakey=False,
-                              oro_metakey = 'dataset',
-                              sample_subsets=['Flight', 'Ground', 'Vivarium','Basal'],
+                              oro_thresholds_per_metakey=True,
+                              oro_metakey = 'study',
+                              sample_subsets=['Flight', 'Ground', 'Vivarium'],
                               covariate_list= ['libprep'],
                               target='oro_thresh',
                               zero_count_percent = 0.8,
@@ -54,7 +54,7 @@ def main():
                               gene_filter='protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['merge_zscore','merge_std','merge_norm','zscore_merge','std_merge','norm_merge'],
+                              xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
                               xform_all=None,
                               filter_mask=[], #['filterGenesByType']
                               norm_all=False,
@@ -740,6 +740,7 @@ class RNASeqData():
         for i in range(len(meta_df)):
             key = meta_df.iloc[i]['sample']
             counter = 0
+            value = ''
             for e in covariate_list:
                 if counter == 0:
                     value = str(meta_df.iloc[i][e])

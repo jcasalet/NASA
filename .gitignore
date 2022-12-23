@@ -1,0 +1,15 @@
+crispv1/results
+crispv1/data
+crispv1/experiment_configs
+crispv1/dataio/__pycache__
+crispv1/utils/__pycache__
+crispv1/models/__pycache__
+ICA/precise-db/LOG_RESULTS/
+ICA/precise-db/genes.json
+ICA/precise-db/get_results.py
+ICA/precise-db/scripts/A.csv
+ICA/precise-db/scripts/ORIG/
+ICA/precise-db/scripts/S.csv
+ICA/precise-db/scripts/component_stats.csv
+ICA/precise-db/scripts/tmp/
+
