@@ -5,8 +5,8 @@
 # File generation defaults to 1 file every 10 seconds, but can be altered with a numeric parameter (e.g. fluid_commstest 20 = every 20 seconds)
 # File generation continues until the user presses any key.
 
-# FLUID_HOME=/home/fluid     # Use this to require that this script ONLY run under the "fluid" user account
-FLUID_HOME=~    # Use this to test this script under any user account (e.g. ec2-user)
+FLUID_HOME=/home/fluid     # Use this to require that this script ONLY run under the "fluid" user account
+# FLUID_HOME=~    # Use this to test this script under any user account (e.g. ec2-user)
 
 TO_BRIDGE_FROM_COLABSHIM=$FLUID_HOME/TO_BRIDGE_FROM_COLABSHIM   # this will be a symbolic link and used to simulate comms failure for data being downlinked from the ISS
 TO_BRIDGE_FROM_TDS=$FLUID_HOME/TO_BRIDGE_FROM_TDS   # this will be a symbolic link and used to simulate comms failure for data being uplinked to the ISS
