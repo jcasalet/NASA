@@ -50,7 +50,7 @@ RUN conda install cudatoolkit=10.1
 
 # openfl:
 WORKDIR /home/fluid
-RUN git clone --branch fluid https://github.com/intel/openfl.git
+RUN git clone --branch fluid_rebase https://github.com/intel/openfl.git
 RUN pip install /home/fluid/openfl/.
 
 # ssh keys
