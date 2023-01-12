@@ -29,8 +29,7 @@ update_plans_iss() {
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_ISS_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_ISS_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
-	#sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
-	sed -i 's/.*disable_tls.*/    tls: false/' ~/crisp/fl_plan/plan.yaml
+	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
@@ -71,8 +70,7 @@ update_plans_earth() {
 	sed -i "s/.*agg_addr.*/    agg_addr: $AGG_EARTH_HOST/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*agg_port.*/    agg_port: $AGG_EARTH_PORT/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*disable_client_auth.*/    disable_client_auth: true/" ~/crisp/fl_plan/plan.yaml
-	#sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
-	sed -i 's/.*disable_tls.*/    tls: false/' ~/crisp/fl_plan/plan.yaml
+	sed -i 's/.*disable_tls.*/    disable_tls: true/' ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*collaborator_count.*/    collaborator_count: 2/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*best_state_path.*/    best_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_best_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
