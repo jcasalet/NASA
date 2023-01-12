@@ -223,7 +223,7 @@ WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
 WORKSPACE_EARTH_AGG_DIR=/data/WORKSPACE
 WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
 WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
-ROUNDS=2
+ROUNDS=10
 AGG_ISS_HOST=agg-iss
 AGG_ISS_PORT=8888
 AGG_EARTH_HOST=agg-earth
@@ -263,11 +263,21 @@ ONLY ON THE BRIDGE NODE perform step 3.
 $ su - fluid
 $ pkill oursync.sh
 $ cd scripts
-$ ./oursync.sh $HOSTNAME
+$ ./oursync.sh $(hostname) start
 
-4. Monitor standard output for completion and get results. You'll get your prompt back on agg-earth, colab-earth, and colab-iss after job is complete.
+ONLY ON THE TDS NODE perform step 4.
 
-5. Upon completion, retrieve results from agg-earth 
+4. Start tds node syncing (after having started all other containers)
+
+$ su - fluid
+$ pkill oursync.sh
+$ cd scripts
+$ ./oursync.sh $(hostname) start
+
+
+5. Monitor standard output for completion and get results. You'll get your prompt back on agg-earth, colab-earth, and colab-iss after job is complete.
+
+6. Upon completion, retrieve results from agg-earth 
 
 $ su - fluid
 $ cp ~/scripts/get_results* ~/crisp
