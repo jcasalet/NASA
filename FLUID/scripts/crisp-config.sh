@@ -8,3 +8,6 @@ export AGG_ISS_HOST=agg-iss
 export AGG_ISS_PORT=8888
 export AGG_EARTH_HOST=agg-earth
 export AGG_EARTH_PORT=8888
+export DATA_PATH=/home/fluid/data
+export SCRIPT_PATH=/home/fluid/scripts
+export IMAGE_NAME=fluid

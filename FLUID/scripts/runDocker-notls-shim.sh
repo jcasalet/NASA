@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 #configure the paths and IP addresses of the FLUID network
-source ./fluid-network.sh
+source ./crisp-config.sh
 
 
 get_ip_addrs() {
