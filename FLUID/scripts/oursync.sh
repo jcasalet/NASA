@@ -62,15 +62,15 @@ then
 	while true
 	do
 		# get stuff from colab-shim
-		rsync -a fluid@colab-shim:${WORKSPACE_PATH}/response_path/ ${TO_TDS_FROM_BRIDGE}/
-		rsync -a fluid@colab-shim:${WORKSPACE_PATH}/request_path/ ${TO_TDS_FROM_BRIDGE}/
+		rsync -a fluid@colab-shim:${WORKSPACE_PATH}/response_path/ ${TO_TDS_FROM_BRIDGE}/response_path/
+		rsync -a fluid@colab-shim:${WORKSPACE_PATH}/request_path/ ${TO_TDS_FROM_BRIDGE}/request_path/
 
 		# then push that to tds
 		rsync -a ${TO_TDS_FROM_BRIDGE}/ fluid@tds:${TO_TDS_FROM_BRIDGE}/
 
 		# get stuff from tds and push to colab-shim
-		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@colab-shim:${WORKSPACE_PATH}/request_path/
-		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@colab-shim:${WORKSPACE_PATH}/response_path
+		rsync -a ${TO_BRIDGE_FROM_TDS}/request_path/ fluid@colab-shim:${WORKSPACE_PATH}/request_path/
+		rsync -a ${TO_BRIDGE_FROM_TDS}/response_path/ fluid@colab-shim:${WORKSPACE_PATH}/response_path
 		sleep 5 
 	done
 
@@ -104,12 +104,12 @@ then
 		rsync -a fluid@bridge:${TO_TDS_FROM_BRIDGE}/ ${TO_TDS_FROM_BRIDGE}/
 
 		# and push it to ISS
-		rsync -a ${TO_TDS_FROM_BRIDGE}/ fluid@agg-iss:${WORKSPACE_PATH}/request_path/
-		rsync -a ${TO_TDS_FROM_BRIDGE}/ fluid@agg-iss:${WORKSPACE_PATH}/response_path/
+		rsync -a ${TO_TDS_FROM_BRIDGE}/request_path/ fluid@agg-iss:${WORKSPACE_PATH}/request_path/
+		rsync -a ${TO_TDS_FROM_BRIDGE}/response_path/ fluid@agg-iss:${WORKSPACE_PATH}/response_path/
 
 		# get stuff from ISS
-		rsync -a fluid@agg-iss:${WORKSPACE_PATH}/response_path/ ${TO_BRIDGE_FROM_TDS}/
-		rsync -a fluid@agg-iss:${WORKSPACE_PATH}/request_path/ ${TO_BRIDGE_FROM_TDS}/
+		rsync -a fluid@agg-iss:${WORKSPACE_PATH}/response_path/ ${TO_BRIDGE_FROM_TDS}/response_path/
+		rsync -a fluid@agg-iss:${WORKSPACE_PATH}/request_path/ ${TO_BRIDGE_FROM_TDS}/request_path/
 
 		# and push it to bridge
 		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@bridge:${TO_BRIDGE_FROM_TDS}/
@@ -118,4 +118,5 @@ then
 	done
 
 fi
+
 
