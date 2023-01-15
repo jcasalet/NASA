@@ -12,7 +12,7 @@ COMMS_DOWN=_COMMS_DOWN   # directory name post_fix to append to enable symbolic 
 WORKSPACE_PATH=/home/fluid/data/WORKSPACE/workspace
 
 this_proc=$(basename $0 .sh)
-HOSTNAME=$(hostname)
+MYHOSTNAME=$(hostname)
 OPERATION=$1
 
 if [ $MYHOSTNAME != "bridge" -a $MYHOSTNAME != "tds" ]
