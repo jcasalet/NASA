@@ -10,22 +10,29 @@ COMMS_UP=_COMMS_UP   # directory name post_fix to append to enable symbolic link
 COMMS_DOWN=_COMMS_DOWN   # directory name post_fix to append to enable symbolic link switching
 
 WORKSPACE_PATH=/home/fluid/data/WORKSPACE/workspace
-
 this_proc=$(basename $0 .sh)
-MYHOSTNAME=$(hostname)
-OPERATION=$1
+
+if [ $# -ne 2 ]
+then
+	echo "usage: $this_proc bridge|tds start|continue"
+	exit 1
+fi
+
+MYHOSTNAME=$1
+OPERATION=$2
 
 if [ $MYHOSTNAME != "bridge" -a $MYHOSTNAME != "tds" ]
 then
-	echo "$this_proc can only be run on the bridge node or the tds node"
+	echo "usage: $this_proc bridge|tds start|continue"
 	exit 1
 fi
 
 if [ $OPERATION != "start" -a $OPERATION != "continue" ]
 then
-	echo "usage: $this_proc start|continue"
+	echo "usage: $this_proc bridge|tds start|continue"
 	exit 1
 fi
+
 
 idempotentize() {
 	d=$1
