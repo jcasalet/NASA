@@ -87,11 +87,15 @@ def streamlit_results(config):
                 else:
                     if type(method_dict['coefficients']) == list and len(method_dict['coefficients']) == 1:
                         coef_stdev = statistics.pstdev(method_dict['coefficients'][0])
+                        coef_mean = statistics.mean(method_dict['coefficients'][0])
+                        my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients'][0]]
+
                     else:
                         coef_stdev = statistics.pstdev(method_dict['coefficients'])
-                    coef_mean = statistics.mean(method_dict['coefficients'])
-                    if coef_stdev != 0:
+                        coef_mean = statistics.mean(method_dict['coefficients'])
                         my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients']]
+
+                    if coef_stdev != 0:
                         coefs['coefficient'] = my_coefs
                     else:
                         coefs['coefficient'] = method_dict['coefficients']

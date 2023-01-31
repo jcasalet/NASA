@@ -190,18 +190,19 @@ class TorchInvariantCausalPrediction(object):
             self.test()
         else:
             print("No accepted sets found, please consider decreasing {alpha} or try non-linear ICP")
+            self.test()
 
     def test(self):
-        return
-#         test_targets = self.y_test
-#         test_logits = self.model.predict(self.x_test[:, self.selected_features]).cpu().numpy()
-#         test_probs = self.model.predict_proba(self.x_test[:, self.selected_features]).cpu().numpy()
+        test_targets = self.y_test
+        self.test_logits = self.model.predict(self.x_test[:, self.selected_features]).cpu().numpy()
+        test_probs = self.model.predict_proba(self.x_test[:, self.selected_features]).cpu().numpy()
 
-#         conf_matrix = confusion_matrix(y_true=self.y_test, y_pred=test_logits)
-#         self.conf_matric = conf_matrix
-#         self.test_targets = torch.Tensor(test_targets).squeeze()
-#         self.test_logits = torch.Tensor(test_logits).squeeze()
-#         self.test_probs = torch.Tensor(test_probs)
+        conf_matrix = confusion_matrix(y_true=self.y_test, y_pred=self.test_logits)
+        self.conf_matric = conf_matrix
+        self.test_targets = torch.Tensor(test_targets).squeeze()
+        self.test_logits = torch.Tensor(self.test_logits).squeeze()
+        self.test_probs = torch.Tensor(test_probs)
+        return
 
     def coef_(self):
         if self.model:
@@ -213,31 +214,31 @@ class TorchInvariantCausalPrediction(object):
     def results(self):
 
         if self.intersection_found or self.defining_set_found:
-#             test_nll = self.mean_nll(self.test_logits, self.test_targets)
-#             test_acc = self.mean_accuracy(self.test_logits, self.test_targets)
-#             test_acc_std = self.std_accuracy(self.test_logits, self.test_targets)
-#             test_nll = None#self.mean_nll(self.test_logits, self.test_targets)
-#             test_acc = np.zeros(1)#self.mean_accuracy(self.test_logits, self.test_targets)
-#             test_acc_std = np.zeros(1)#self.std_accuracy(self.test_logits, self.test_targets)
+            #test_nll = self.mean_nll(self.test_logits, self.test_targets)
+            #test_acc = self.mean_accuracy(self.test_logits, self.test_targets)
+            #test_acc_std = self.std_accuracy(self.test_logits, self.test_targets)
+            #test_nll = None#self.mean_nll(self.test_logits, self.test_targets)
+            #test_acc = np.zeros(1)#self.mean_accuracy(self.test_logits, self.test_targets)
+            #test_acc_std = np.zeros(1)#self.std_accuracy(self.test_logits, self.test_targets)
 
             return {
 
                 "solution": self.intersection_found or self.defining_set_found,
                 "intersection": self.intersection_found,
-#                 "test_acc": test_acc.numpy().squeeze().tolist(),
-#                 "test_nll": test_nll,
-#                 "test_probs": self.test_probs,
-#                 "test_labels": self.test_targets,
-                "feature_coeffients": self.coef_(),
+                "test_acc": self.mean_accuracy(self.test_logits, self.test_targets).numpy().squeeze().tolist(),
+                "test_nll": self.mean_nll(self.test_logits, self.test_targets),
+                "test_probs": self.test_probs,
+                "test_labels": self.test_targets,
+                "feature_coeffients": self.coef_()[0],
                 "selected_features": np.array(self.full_feature_set)[self.selected_features],
                 "selected_feature_indices": self.selected_features,
                 "to_bucket": {
                     'method': 'Linear ICP',
                     'features': np.array(self.full_feature_set)[self.selected_features].tolist(),
-                    'coefficients': np.array(self.coef_()).tolist(),
+                    'coefficients': np.array(self.coef_()).tolist()[0],
                     'pvals': np.array(self.p_value).tolist(),
-#                     'test_acc': test_acc.numpy().squeeze().tolist(),
-#                     'test_acc_std': test_acc_std.numpy().squeeze().tolist()
+                    'test_acc': self.mean_accuracy(self.test_logits, self.test_targets).numpy().squeeze().tolist(),
+                    'test_acc_std': self.std_accuracy(self.test_logits, self.test_targets).numpy().squeeze().tolist()
                 }
             }
         else:

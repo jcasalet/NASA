@@ -177,9 +177,11 @@ def run(config, alfa=0):
     # Several methods in CRISP are not compatible with large numbers of features,
     # as such we perform feature reduction using Non-Linear Invaraint Risk Minimization
 
-    if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
+    if "ICP" in selected_models or "NLICP" in selected_models:
 
-        from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
+        #from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
+        from models.LinearInvariantRiskMinimization import LinearInvariantRiskMinimization
+
         from models.CausalNex import CausalNexClass
 
         # Setup Linear and Non-Linear IRM args
@@ -200,24 +202,28 @@ def run(config, alfa=0):
         FRIRM_args.update(FRIRM_options)
 
         print('Running IRM (Feature Reduction Mode)')
-        IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
+        #IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
+        IRM_NN = LinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
         irm_results_dict = IRM_NN.results()
         if config['verbose']:
             print(irm_results_dict)
 
         # Extract top weighted features to use for remaining methods requiring reduced feature set
         to_bucket = irm_results_dict['to_bucket']
-        to_bucket['method'] = 'Non Linear IRM (Feature Reduction Mode)'
+        #to_bucket['method'] = 'Non Linear IRM (Feature Reduction Mode)'
+        to_bucket['method'] = 'Linear IRM (Feature Reductionn Mode)'
         to_bucket_results.append(to_bucket)
 
-        print("Finished Non Linear IRM")
+        #print("Finished Non Linear IRM")
+        print("Finished Linear IRM FRM")
 
         coefs = pd.DataFrame()
         coefs['feature'] = to_bucket['features']
         coefs['coefficient'] = to_bucket['coefficients']
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
-        keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
+        #keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
+        keep_columns_LIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
         
         # Define the CRISP coefficients
         csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
@@ -236,7 +242,8 @@ def run(config, alfa=0):
         sorted_coefs = coefs.sort_values('sort', ascending=False)
         keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
         
-        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
+        #join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
+        join_keep_columns(keep_columns_CSNX, keep_columns_LIRM, alfa)
         
 
         keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
@@ -260,40 +267,6 @@ def run(config, alfa=0):
                      'features': reduced_test_dataset.predictor_columns}
         to_bucket_results.append(to_bucket)
 
-    #####################################################################################
-    ################################# DECONFOUNDER ######################################
-    if "DCF" in selected_models:
-        print("Running Deconfounder")
-        #from models.Deconfounder import Deconfounder
-        from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
-
-        # Deconfounder args
-        dcf_options = ensemble_options.get('DCF', {})
-        dcf_args = {
-            "minP": 0.1,
-            "maxP": 0.9,
-            "minFeatures": 1,
-            "minAccuracy": 0.5,
-            "seed": 0,
-            "verbose": 1,
-            "target": data_config['targets'],
-            "output_pvals": True,
-            "output_data_regime": "binary"
-        }
-        dcf_args.update(dcf_options)
-
-        # If we wish to output p vals for each feature, then use reduced feature set
-        if dcf_args["output_pvals"] and (original_dimensionality > 500):
-            dcf_args["columns"] = reduced_test_dataset.predictor_columns
-            dcf = Deconfounder(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, dcf_args)
-        else:
-            dcf_args["columns"] = test_dataset.predictor_columns
-            dcf = Deconfounder(environment_datasets, val_dataset, test_dataset, dcf_args)
-
-        dcf_results_dict = dcf.predictor_results()
-        print("Finished DCF")
-        to_bucket = dcf_results_dict['to_bucket']
-        to_bucket_results.append(to_bucket)
 
 
     #####################################################################################
@@ -497,7 +470,10 @@ def run(config, alfa=0):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            coefs['coefficient'] = method_dict['coefficients']
+            if 'coefficients' in method_dict and len(method_dict['coefficients']) == 1 and len(method_dict['coefficients'][0]) == len(method_dict['features']):
+                coefs['coefficient'] = method_dict['coefficients'][0]
+            else:
+                coefs['coefficient'] = method_dict['coefficients']
             coefs['pvals'] = method_dict['pvals']
 
             fname = config['results_directory'] + method + '_features.pdf'
