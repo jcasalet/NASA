@@ -21,7 +21,7 @@ At present CRISP is suitable for binary classification of tabulated data, with c
 Ensure you have a working version of 3.7 (Not currently compatible with 3.8+). We recommend using Python from the [Anaconda Python distribution](https://www.continuum.io/downloads) for a quicker and more reliable experience. However, if you have Python already installed that will probably work fine too.
 
 ```sh
-git clone https://gitlab.com/frontierdevelopmentlab/astronaut-health/crisp
+git clone https://github.com/jcasalet/NASA 
 ```
  
 ```sh
