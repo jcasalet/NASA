@@ -180,7 +180,7 @@ def run(config, alfa=0):
     if "ICP" in selected_models or "NLICP" in selected_models or "DCF" in selected_models:
 
         from models.NonLinearInvariantRiskMinimization import NonLinearInvariantRiskMinimization
-        #from models.CausalNex import CausalNexClass
+        from models.CausalNex import CausalNexClass
 
         # Setup Linear and Non-Linear IRM args
         FRIRM_options = ensemble_options.get('FRIRM', {})
@@ -194,9 +194,8 @@ def run(config, alfa=0):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight": 10000.0,
-            "cuda": True,
-            "hidden_dim":  256,
-            "output_data_regime": "binary"
+            "cuda": False,
+            "hidden_dim":  256
         }
         FRIRM_args.update(FRIRM_options)
 
@@ -218,8 +217,7 @@ def run(config, alfa=0):
         coefs['coefficient'] = to_bucket['coefficients']
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
-
-        '''keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
+        keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
         
         # Define the CRISP coefficients
         csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
@@ -237,9 +235,8 @@ def run(config, alfa=0):
         coefs['sort'] = coefs['coefficient'].abs()
         sorted_coefs = coefs.sort_values('sort', ascending=False)
         keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
-        #keep_columns_CSNX = [] 
         
-        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)'''
+        join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
         
 
         keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
@@ -267,8 +264,8 @@ def run(config, alfa=0):
     ################################# DECONFOUNDER ######################################
     if "DCF" in selected_models:
         print("Running Deconfounder")
-        from models.Deconfounder import Deconfounder
-        #from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
+        #from models.Deconfounder import Deconfounder
+        from models.TorchMultiClassDeconfounder import TorchMultiClassDeconfounder as Deconfounder
 
         # Deconfounder args
         dcf_options = ensemble_options.get('DCF', {})
@@ -305,26 +302,21 @@ def run(config, alfa=0):
     # run linear and nonlinear ICP
     if "ICP" in selected_models:
         from models.TorchLinearInvariantCausalPrediction import TorchInvariantCausalPrediction
-        #from models.LinearInvariantCausalPrediction import InvariantCausalPrediction
         # Set up ICP args
         ICP_options = ensemble_options.get('ICP', {})
         ICP_args = {
             "max_set_size": 2,
             "alpha": 0.05,
             "seed": 12,
-            "verbose": 1,
-            "output_data_regime": "binary",
-            "cuda": True
+            "verbose": 1
         }
         ICP_args.update(ICP_options)
         ICP_args["target"] = config["data_options"]["targets"]
-        #ICP_args["output_data_regime"] = config["data_options"]["output_data_regime"]
-        ICP_args["output_data_regime"] = "binary" 
+        ICP_args["output_data_regime"] = config["data_options"]["output_data_regime"]
         ICP_args["columns"] = config["data_options"]["predictors"]
 
         # Initialise Linear ICP and run (train and test called internally)
         ICPmod = TorchInvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
-        #ICPmod = InvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
         # Get results on test_dataset
         ICP_results_dict = ICPmod.results()
         icp_solution = ICP_results_dict['solution']
@@ -354,9 +346,7 @@ def run(config, alfa=0):
             "seed": 12,
             "verbose": 1,
             "method": "MLP",
-            "hidden_dim": 256,
-            "output_data_regime": "binary",
-            "cuda": True
+            "hidden_dim": 256
         }
         NLICP_args.update(NLICP_options)
         print('running nonlinear ICP')
@@ -398,8 +388,7 @@ def run(config, alfa=0):
             "n_iterations": 1000,
             "seed": 0,
             "lr": 0.001,
-            "cuda": True,
-            "output_data_regime": "binary"
+            "cuda": False
         }
         LIRM_args.update(LIRM_options)
 
@@ -442,8 +431,7 @@ def run(config, alfa=0):
             "lr": 0.001,
             "penalty_anneal_iters": 100,
             "penalty_weight":  10000.0,
-            "cuda": True,
-            "output_data_regime": "binary"
+            "cuda": False
         }
         IRM_args.update(IRM_options)
 
@@ -509,7 +497,6 @@ def run(config, alfa=0):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            print('method = ', method)
             coefs['coefficient'] = method_dict['coefficients']
             coefs['pvals'] = method_dict['pvals']
 
