@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from scipy.stats import f as fdist
 from scipy.stats import ttest_ind
-from models.TorchModelZoo_2 import TorchLinearRegressionModule, TorchLogisticRegressionModule
+from models.TorchModelZoo import TorchLinearRegressionModule, TorchLogisticRegressionModule
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import confusion_matrix, r2_score
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
