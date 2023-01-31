@@ -1,4 +1,4 @@
-from my_synthetic_generator import synthetic_generator
+from synthetic.synthetic_generator import synthetic_generator
 from synthetic.synthetic_generator import synthetic_generator_nonlinear
 from synthetic.synthetic_generator import synthetic_generator_signed_nonlinear
 
