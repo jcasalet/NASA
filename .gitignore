@@ -1,6 +1,4 @@
 crispv1/results
-crispv1/data
-crispv1/experiment_configs
 crispv1/dataio/__pycache__
 crispv1/utils/__pycache__
 crispv1/models/__pycache__
