@@ -472,7 +472,7 @@ def run(config, alfa=0):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
-            if 'coefficients' in method_dict and len(method_dict['coefficients']) == 1 and not method_dict['coefficients'][0] is None:
+            if 'coefficients' in method_dict and not method_dict['coefficients'] is None and len(method_dict['coefficients']) == 1:
                 coefs['coefficient'] = method_dict['coefficients'][0]
             else:
                 coefs['coefficient'] = method_dict['coefficients']
