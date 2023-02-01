@@ -60,7 +60,8 @@ We provide a template configuration json in /experiment_configs/ that should be 
         "environments": ["<environment_split>"],
         "exclude": ["<keys_to_exclude>"],
         "remove_keys": ["<subject_key>", "<any_others_to_remove>"],
-        "merge_keys": ["<not_used_here>"]
+        "merge_keys": ["<not_used_here>"],
+	"output_data_regime": "binary"
     },
     "feature_selection_options": {
         "max_features": 20,
@@ -96,6 +97,9 @@ streamlit run streamlit_main.py
 Users are free to use CRISP on their own data but should take care to perform suitable data processing as described in the paper. We have performed validation on synthetic datasets that may or may not be a suitable fit for custom data, and as such results are not guaranteed with custom data.
 
 Custom data should be normalised for continuous data, one-hot encoded for categorical data and target variables should be binarised. The variable chosen for 'environment' splitting is best suited to binary but does support categorical data, however from emperical results we have found that two environments is sufficient.
+
+### Resource Requirements
+CRISP is CPU-bound and supports running some of the tensorflow routines on either GPU or CPU.  RAM and disk storage requirements are minimal.  The synthetic example can easily run on a laptop with 8GB of RAM and 1 CPU core.  Running all CRISP ensemble models on a transcriptomic dataset of 100 samples and 10,000 genes takes roughly 3 hours on a system with 8 GPUs.  On a system with 64 CPU cores, the same workload takes roughly 16 hours to finish.
 
 ### Model Zoo
 Several methods (IRM, Linear IRM, ICP, Non-Linear ICP) rely on PyTorch models defined in 'models/TorchModelZoo.py', and are selected within each method by a field 'method' passed in the config to each method's configuration object. At present this defaults to the MLP defined in TorchModelZoo, but can be replaced with any model specified by user, and the user is free to replace the MLP class with whichever architecutre they wish, or add additional options themselves (this will require adding to the init function of each method that uses models defined in the TorchModelZoo.py)

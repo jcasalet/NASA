@@ -274,7 +274,8 @@ def run(config, alfa=0):
     icp_solution = False
     # run linear and nonlinear ICP
     if "ICP" in selected_models:
-        from models.TorchLinearInvariantCausalPrediction import TorchInvariantCausalPrediction
+        #from models.TorchLinearInvariantCausalPrediction import TorchInvariantCausalPrediction
+        from models.LinearInvariantCausalPrediction import InvariantCausalPrediction
         # Set up ICP args
         ICP_options = ensemble_options.get('ICP', {})
         ICP_args = {
@@ -289,7 +290,8 @@ def run(config, alfa=0):
         ICP_args["columns"] = config["data_options"]["predictors"]
 
         # Initialise Linear ICP and run (train and test called internally)
-        ICPmod = TorchInvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
+        #ICPmod = TorchInvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
+        ICPmod = InvariantCausalPrediction(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, ICP_args)
         # Get results on test_dataset
         ICP_results_dict = ICPmod.results()
         icp_solution = ICP_results_dict['solution']

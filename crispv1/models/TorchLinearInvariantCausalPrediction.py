@@ -181,7 +181,7 @@ class TorchInvariantCausalPrediction(object):
             self.coefficients = torch.zeros(dim)
 
         if self.selected_features:
-           # self.model = TorchLogisticRegressionModule(x_all[:, self.selected_features].shape[1], y_all.shape[1], bias=False)
+            self.model = TorchLogisticRegressionModule(x_all[:, self.selected_features].shape[1], y_all.shape[1], bias=False)
             if self.args["output_data_regime"] == "real-valued":
                 self.model = TorchLinearRegressionModule(x_all[:, self.selected_features].shape[1], 1, device=self.device)
             else:
