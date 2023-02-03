@@ -82,6 +82,7 @@ def streamlit_results(config):
                 coefs['feature'] = method_dict['features']
                 #coefs['coefficient'] = method_dict['coefficients']
 
+                # JC fix for methods which return singleton list (ie a list with one element -- a list)
                 if method_dict['coefficients'] is None:
                     coefs['coefficient'] = method_dict['coefficients']
                 else:

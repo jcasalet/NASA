@@ -76,9 +76,7 @@ class NonLinearInvariantCausalPrediction(object):
             # get p-value
             p_value = self.leveneAndWilcoxTest(res_all, e_all)
 
-            # TODO JC change to less than, right?
             if p_value > self.alpha:
-            #if p_value < self.alpha:
                 self.accepted_subsets.append(set(subset))
                 self.accepted_p_values.append(p_value)
                 if args["verbose"]:

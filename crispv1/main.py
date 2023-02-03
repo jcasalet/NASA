@@ -472,6 +472,7 @@ def run(config, alfa=0):
             print('Processing', method)
             coefs = pd.DataFrame()
             coefs['feature'] = method_dict['features']
+            # JC hack for singleton list of coefs -- already fixed in LICP/remove here?
             if 'coefficients' in method_dict and not method_dict['coefficients'] is None and len(method_dict['coefficients']) == 1:
                 coefs['coefficient'] = method_dict['coefficients'][0]
             else:

@@ -40,7 +40,6 @@ class LinearInvariantRiskMinimization(object):
 
         # Start testing procedure
         self.test(self.test_loader)
-        #print(self.error_env_list)
 
     def compute_penalty(losses, dummy_w):
         # g1 is the even indices, g2 is the odd indices
@@ -100,7 +99,6 @@ class LinearInvariantRiskMinimization(object):
                     
                 err_env.append(error_e.item()/count_e)
                 
-                #penalty += torch.autograd.grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
                 penalty += torch.autograd.grad(outputs=error_e, inputs=self.w, create_graph=True)[0].pow(2).mean()
                 error += error_e
 
@@ -186,8 +184,6 @@ class LinearInvariantRiskMinimization(object):
 
        # if self.args["output_data_regime"] == "real-valued":
         #    sig = torch.nn.Identity()
-        #else:
-            # ??
         sig = torch.nn.Sigmoid()
 
         with torch.no_grad():
@@ -240,11 +236,9 @@ class LinearInvariantRiskMinimization(object):
             if self.args["output_data_regime"] == "multi-class":
                 targets = targets.squeeze().long()
 
-            # JC
             pred = self.phi(inputs) @ self.w
-            #pred = self.phi(inputs) @ self.w
 
-            # JC
+            # JC fixed bug - don't take sigmoid here
             loss = criterion(pred, targets)
             #loss = criterion(sig(pred), targets)
             loss.backward()
