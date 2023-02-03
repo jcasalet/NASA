@@ -22,7 +22,7 @@ import math
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-R_SCRIPTS_DIR='/Users/jcasalet/Desktop/CODES/NASA/TRRAC/PIPELINE/R_SCRIPTS/'
+R_SCRIPTS_DIR= '/PIPELINE/R_SCRIPTS/'
 
 def main():
     parser = argparse.ArgumentParser()
