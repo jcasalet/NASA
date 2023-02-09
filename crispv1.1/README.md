@@ -16,6 +16,9 @@ CRISP is an ensemble of causal inference methods and interactive results visuali
 
 At present CRISP is suitable for binary classification of tabulated data, with continous, binary or categorical (one-hot encoded) variables.
 
+
+## This repository was forked from the NASA FDL 2020 Astronaut Health Team code repository.  The changes made to this code base are described at the end of this document.
+
 ## Installation
 
 Ensure you have a working version of 3.7 (Not currently compatible with 3.8+). We recommend using Python from the [Anaconda Python distribution](https://www.continuum.io/downloads) for a quicker and more reliable experience. However, if you have Python already installed that will probably work fine too.
