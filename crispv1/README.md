@@ -115,4 +115,9 @@ We would like to thank the following for their implementations that guided ours:
 
 
 ### Updates included in this release:
-1. Change the weights of the coefficients of the features of each ensemble model to be on the same scale.  Here we use the [MinMaxScaler method from scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) package to scale weights to the unit interval [0, 1].
+1. Change the weights of the coefficients of the features of each ensemble model to be on the same scale.  Here we use the [MinMaxScaler method from scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) package to scale weights. 
+
+2. Change the feature coefficients of the Linear IRM module to be on the unit interval [0, 1].
+
+3. Add the [CausalNex](https://causalnex.readthedocs.io/en/latest/) module to the learning ensemble and use it for feature reduction.
+
