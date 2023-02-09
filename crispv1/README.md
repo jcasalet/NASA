@@ -69,7 +69,7 @@ We provide a template configuration json in /experiment_configs/ that should be 
         "seed": 12
     },
     "ensemble_options": {
-        "models": ["ERM", "RF", "ICP", "IRM", "DCF", "ITE", "LIRM", "NLICP"]
+        "models": ["ERM", "RF", "ICP", "IRM", "LIRM", "NLICP"]
     }
 }
 ```
@@ -112,3 +112,7 @@ We would like to thank the following for their implementations that guided ours:
 - Non-Linear Invariant Causal Prediction: https://github.com/christinaheinze/nonlinearICP-and-CondIndTests
 - Invariant Risk Minimisation: https://github.com/facebookresearch/InvariantRiskMinimization
 - Linear Invariant Risk Minimisation:
+
+
+### Updates included in this release:
+1. Change the weights of the coefficients of the features of each ensemble model to be on the same scale.  Here we use the [MinMaxScaler method from scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) package to scale weights to the unit interval [0, 1].
