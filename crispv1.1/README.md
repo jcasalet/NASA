@@ -42,29 +42,23 @@ We provide tooling to generate synthetic SEM datasets that mirror properties of 
 python setup_synthetic.py
 ```
 
-### 2. Create Experiment configuration json file
+### 2. Create experiment configuration JSON file
 
-We provide a template configuration json in /experiment_configs/ that should be updated to provide a unique experiment name, and path to the data file to be used (.pickle). Specify the target variable column name, custom choice of predictor variables (or 'All' to use everything), choice of 'enviroment' split variable. Please provide a 'subject_keys' variable that will be used to split data into train/val/test sets on with samples with matching 'subject_keys' variable only appearing in one of train/val/test.
+We provide a template configuration JSON in /experiment_configs/ that should be updated to provide a unique experiment name, and path to the data file (in python pickle format) to be used. Specify the target variable column name, custom choice of predictor variables (or 'All' to use everything), choice of 'enviroment' split variable. Please provide a 'subject_keys' variable that will be used to split data into train/val/test sets on with samples with matching 'subject_keys' variable only appearing in one of train/val/test.
 
 ```json
 {
-    "name": "Example Experiment for AH casual ensemble",
-    "short_name": "<unique_experiment_name>",
-    "bucket_project": "<bucket_project>",
-    "bucket_name": "<bucket_name>",
-    "bucket_path": "<bucket_path>",
+    "name": "Example synthetic",
+    "short_name": "example",
     "verbose": 1,
     "test_val_split": [0.1, 0.1],
-    "per_variant_experiment": false,
     "data_options": {
-        "dataset_fp": "<path_to_dataset>",
-        "subject_keys": "<subject_key>",
-        "targets": ["<target_variable_column_name>"],
+        "dataset_fp": "data/synthetic/full_fw_synthetic_sem_n_causal_5_0.pickle",
+        "subject_keys": "Subj_ID",
+        "targets": ["Target"],
         "predictors": "All",
-        "environments": ["<environment_split>"],
-        "exclude": ["<keys_to_exclude>"],
-        "remove_keys": ["<subject_key>", "<any_others_to_remove>"],
-        "merge_keys": ["<not_used_here>"],
+        "environments": ["env_split"],
+        "exclude": ["Subj_ID"],
 	"output_data_regime": "binary"
     },
     "feature_selection_options": {
@@ -83,7 +77,7 @@ Custom model parameters can be overriden in the config file -- see template conf
 ### 3. Train CRISP ensemble of models
 
 ```sh
-python main.py --experiment_config experiment_configs/<path_to_config>
+python main.py --experiment_config experiment_configs/synthetic_example.json
 ```
 
 ### 4. Visualise results using streamlit frontend
