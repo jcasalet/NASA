@@ -17,7 +17,8 @@ CRISP is an ensemble of causal inference methods and interactive results visuali
 At present CRISP is suitable for binary classification of tabulated data, with continous, binary or categorical (one-hot encoded) variables.
 
 
-## This repository was forked from the NASA FDL 2020 Astronaut Health Team code repository.  The changes made to this code base are described at the end of this document.
+## NOTE
+This repository was forked from the NASA FDL 2020 Astronaut Health Team code repository.  The changes made to this code base are described at the end of this document.
 
 ## Installation
 
@@ -96,18 +97,18 @@ streamlit run streamlit_main.py
 ```
 
 
-### Custom Data
+## Custom Data
 Users are free to use CRISP on their own data but should take care to perform suitable data processing as described in the paper. We have performed validation on synthetic datasets that may or may not be a suitable fit for custom data, and as such results are not guaranteed with custom data.
 
 Custom data should be normalised for continuous data, one-hot encoded for categorical data and target variables should be binarised. The variable chosen for 'environment' splitting is best suited to binary but does support categorical data, however from emperical results we have found that two environments is sufficient.
 
-### Resource Requirements
+## Resource Requirements
 CRISP is CPU-bound and supports running some of the tensorflow routines on either GPU or CPU.  RAM and disk storage requirements are minimal.  The synthetic example can easily run on a laptop with 8GB of RAM and 1 CPU core.  Running all CRISP ensemble models on a transcriptomic dataset of 100 samples and 10,000 genes takes roughly 3 hours on a system with 8 GPUs.  On a system with 64 CPU cores, the same workload takes roughly 16 hours to finish.
 
-### Model Zoo
+## Model Zoo
 Several methods (IRM, Linear IRM, ICP, Non-Linear ICP) rely on PyTorch models defined in 'models/TorchModelZoo.py', and are selected within each method by a field 'method' passed in the config to each method's configuration object. At present this defaults to the MLP defined in TorchModelZoo, but can be replaced with any model specified by user, and the user is free to replace the MLP class with whichever architecutre they wish, or add additional options themselves (this will require adding to the init function of each method that uses models defined in the TorchModelZoo.py)
 
-### References
+## References
 We would like to thank the following for their implementations that guided ours:
 
 - Deconfounder: https://github.com/blei-lab/deconfounder_tutorial 
@@ -117,7 +118,7 @@ We would like to thank the following for their implementations that guided ours:
 - Linear Invariant Risk Minimisation:
 
 
-### Updates included in this release:
+## Updates included in this release:
 1. Change the weights of the coefficients of the features of each ensemble model to be on the same scale.  Here we use the [MinMaxScaler method from scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) package to scale weights. 
 
 2. Change the feature coefficients of the Linear IRM module to be on the unit interval [0, 1].
