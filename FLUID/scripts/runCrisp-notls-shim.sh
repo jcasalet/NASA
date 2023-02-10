@@ -109,7 +109,7 @@ update_plans_earth() {
 
 	cp -r ~/crisp/fl_plan/* plan/
 	cp -r ~/crisp/fl_src/* src/
-	fx plan initialize -a $AGG_EARTH_HOST 
+	fx plan initialize -a $AGG_EARTH_HOST
 }
 
 activate_conda() {

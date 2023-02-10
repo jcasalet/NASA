@@ -4,16 +4,6 @@
 source ./crisp-config.sh
 
 
-get_ip_addrs() {
-
-	export AGG_EARTH_IP=$(grep agg-earth /etc/hosts | awk '{print $1}')	
-	export AGG_ISS_IP=$(grep agg-iss /etc/hosts | awk '{print $1}')	
-	export COLAB_EARTH_IP=$(grep colab-earth /etc/hosts | awk '{print $1}')	
-	export COLAB_ISS_IP=$(grep colab-iss /etc/hosts | awk '{print $1}')	
-	export COLAB_SHIM_IP=$(grep colab-shim /etc/hosts | awk '{print $1}')	
-
-
-}
 
 
 create_network() {
@@ -47,23 +37,35 @@ process_args() {
 
 ROLE=$(process_args $@)
 echo my role in runDocker: $ROLE
-#create_network $MYNET
+create_network $MYNET
 
 case $ROLE in
 	agg-iss)
-		HOSTNAME=agg-iss
+		export HOSTNAME=agg-iss
+		export IP=$AGG_ISS_IP
+		RUNDOCKER_OPTS="-p ${AGG_ISS_PORT}:${AGG_ISS_PORT}"
+		export DATA_PATH=$AGG_ISS_DATA_PATH
 		;;
 	agg-earth)
-		HOSTNAME=agg-earth
+		export HOSTNAME=agg-earth
+		export IP=$AGG_EARTH_IP
+		RUNDOCKER_OPTS="-p ${AGG_EARTH_PORT}:${AGG_EARTH_PORT}"
+		export DATA_PATH=$AGG_EARTH_DATA_PATH
 		;;
 	colab-iss)
-		HOSTNAME=colab-iss
+		export HOSTNAME=colab-iss
+		export IP=$COLAB_ISS_IP
+		export DATA_PATH=$COLAB_ISS_DATA_PATH
 		;;
 	colab-shim)
-		HOSTNAME=colab-shim
+		export HOSTNAME=colab-shim
+		export IP=$COLAB_SHIM_IP
+		export DATA_PATH=$COLAB_SHIM_DATA_PATH
 		;;
 	colab-earth)
-		HOSTNAME=colab-earth
+		export HOSTNAME=colab-earth
+		export IP=$COLAB_EARTH_IP
+		export DATA_PATH=$COLAB_EARTH_DATA_PATH
 		;;
 	root)
 		docker run -it --rm --user 0:0 $IMAGE_NAME /bin/bash
@@ -76,8 +78,11 @@ esac
 
 echo about to run container with role = $ROLE
 
-get_ip_addrs
 
 #docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart always  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
 
-docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart no  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
+# docker run -p 8888:8888 -h ${HOSTNAME}  --user=fluid:fluid  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart no  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
+
+#docker run -p 8888:8888 -h ${HOSTNAME}  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --restart no  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
+
+docker run $RUNDOCKER_OPTS -h ${HOSTNAME}  -v ${DATA_PATH}:/data:rw  -v ${SCRIPT_PATH}:/scripts:ro  --add-host agg-iss:$AGG_ISS_IP --add-host agg-earth:$AGG_EARTH_IP --add-host colab-iss:$COLAB_ISS_IP --add-host colab-shim:$COLAB_SHIM_IP --add-host colab-earth:$COLAB_EARTH_IP --ip $IP --network $MYNET  --restart no  $IMAGE_NAME /scripts/runCrisp-notls-shim.sh -r $ROLE 
