@@ -47,14 +47,15 @@ def main():
                               low_count_percent = 0.8,
                               high_mean_threshold = 0,
                               top_n_var = 0,
-                              amplify = {'n':0, 'var':10, 'seed':23},
+                              amplify = {'n':10, 'var':10, 'seed':23},
                               stack_xformations = True,
                               env='append', # env, append, xformation
                               verbose_R = False,
                               gene_filter= None, #'protein_coding',
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
-                              xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
+                              #xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
+                              xformations=['merge_zscore', 'merge_std'],
                               xform_all=None,
                               filter_mask=[], #['filterGenesByType']
                               norm_all=False,
