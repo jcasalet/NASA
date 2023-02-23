@@ -10,6 +10,8 @@ export COLAB_SHIM_DATA_PATH=/home/fluid/data/COLAB_SHIM
 export SCRIPT_PATH=/home/fluid/EBC/AGG/scripts
 
 export IMAGE_NAME=fluid
+export USER_NAME=fluid
+export GROUP_NAME=fluid
 
 export WORKSPACE_ISS_AGG_DIR=/data/WORKSPACE
 export WORKSPACE_ISS_COLAB_DIR=/data/WORKSPACE
