@@ -140,6 +140,8 @@ def get_ensemble_results(to_bucket_results):
             coefs_2d = []
             if method_dict['coefficients'] is None:
                 coefs['coefficient'] = method_dict['coefficients']
+            elif isinstance(method_dict['coefficients'], float):
+                coefs['coefficient'] = [method_dict['coefficients']]
             else:
                 for c in method_dict['coefficients']:
                     coefs_2d.append([c])
@@ -300,14 +302,15 @@ def get_method_intersections(results_dict, top_k=50):
             else:
                 if type(method_dict['coefficients']) == list and len(method_dict['coefficients']) == 1:
                     _coefs = method_dict['coefficients'][0]
+                elif isinstance(method_dict['coefficients'], float):
+                    _coefs = [method_dict['coefficients']]
                 else:
                     _coefs = method_dict['coefficients']
                 coef_stdev = statistics.pstdev(_coefs)
                 coef_mean = statistics.mean(_coefs)
-                my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients']]
 
                 if coef_stdev != 0:
-                    coefs['coefficient'] = my_coefs
+                    coefs['coefficient'] = [(n - coef_mean) / coef_stdev if n else 1 for n in _coefs]
                 else:
                     coefs['coefficient'] = method_dict['coefficients']
 

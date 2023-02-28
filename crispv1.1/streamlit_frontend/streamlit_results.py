@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 import traceback
 import statistics
+import sys
 
 from utils.gcp_helpers import get_json_from_bucket
 from utils.plotting import get_test_accuracy_figure, get_method_intersections, plot_sankey_for_results, get_corr_matrix, \
@@ -60,6 +61,7 @@ def streamlit_results(config):
         except Exception as e:
             tb = traceback.format_exc()
             print('Caught exception ', e, tb)
+            sys.exit(1)
 
         # Individual method plots
 
@@ -90,6 +92,11 @@ def streamlit_results(config):
                         coef_stdev = statistics.pstdev(method_dict['coefficients'][0])
                         coef_mean = statistics.mean(method_dict['coefficients'][0])
                         my_coefs = [(n - coef_mean) / coef_stdev if n else 1 for n in method_dict['coefficients'][0]]
+
+
+                    elif isinstance(method_dict['coefficients'], float):
+                        coef_stdev = 0
+                        my_coefs = [method_dict['coefficients']]
 
                     else:
                         coef_stdev = statistics.pstdev(method_dict['coefficients'])
