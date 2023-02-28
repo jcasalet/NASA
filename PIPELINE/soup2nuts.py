@@ -17,7 +17,7 @@ import math
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-R_SCRIPTS_DIR= '/PIPELINE/R_SCRIPTS/'
+R_SCRIPTS_DIR= '/Users/jcasalet/Desktop/CODES/NASA/PIPELINE/R_SCRIPTS/'
 
 def main():
     parser = argparse.ArgumentParser()
@@ -32,36 +32,36 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              target_thresholds_per_metakey= None, # 'study',
+                              target_thresholds_per_metakey= 'study', # 'study', None
                               target_threshold = 0.5,
-                              sample_subsets_metakey = None, #'group',
-                              sample_subsets= None, #['Flight', 'Ground', 'Vivarium'],
-                              covariate_list= [], #['libprep'],
+                              sample_subsets_metakey = 'group', #'group', None
+                              sample_subsets= ['Flight', 'Ground', 'Vivarium'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
+                              covariate_list= ['libprep'], #['libprep'], []
                               target='threshold',
                               env_key='env',
-                              target_metakey_name= 'target', #'oro positivity (%)', #target
-                              sample_key = 'subj_id', #'sample', #'subj_id'
-                              feature_key = 'feature', #'gene', #'feature',
+                              target_metakey_name= 'oro positivity (%)', #'oro positivity (%)', #target
+                              sample_key = 'sample', #'sample', #'subj_id'
+                              feature_key = 'gene', #'gene', #'feature',
                               zero_count_percent = 0.8,
                               low_count_threshold = 50,
                               low_count_percent = 0.8,
                               high_mean_threshold = 0,
-                              top_n_var = 0,
-                              amplify = {'n':10, 'var':10, 'seed':23},
+                              top_n_var = 5000,
+                              amplify = {'n':0, 'var': 0, 'seed': 0}, #{'n':10, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              env='append', # env, append, xformation
-                              verbose_R = False,
-                              gene_filter= None, #'protein_coding',
+                              env='append', # env, append, xformation, None
+                              verbose_R = True,
+                              gene_filter= 'protein_coding', #'protein_coding', None
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
                               #xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
-                              xformations=['merge_zscore', 'merge_std'],
+                              xformations=['merge_norm'],
                               xform_all=None,
-                              filter_mask=[], #['filterGenesByType']
+                              filter_mask=['filterGenesByType'], #['filterGenesByType'], []
                               norm_all=False,
                               filterCount=100000000,
                               splitInHalf = False,
-                              callApplyFilter=False #True
+                              callApplyFilter=True #True, False
                               )
 
 
@@ -768,7 +768,9 @@ class RNASeqData():
                 sample = expr_df.iloc[i][self.sample_key]
                 if self.env_key in meta_df.columns:
                     meta_env = meta_df[meta_df[self.sample_key] == sample][self.env_key].values[0]
-                    if env == 'append':
+                    if env == 'env':
+                        env_dict[sample] = str(meta_env)
+                    elif env == 'append':
                         env_dict[sample] += ':' + str(meta_env)
                     elif env == 'xformation':
                         env_dict[sample] = meta_env
