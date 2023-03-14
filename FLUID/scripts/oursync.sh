@@ -6,11 +6,11 @@ TO_ISS_FROM_TDS=/data/work/fluid/project/release/TO_ISS
 TO_TDS_FROM_ISS=/data/work/fluid/project/release/TO_TDS
 AGG_ISS_WORKSPACE_PATH=/home/ec2-user/data/AGG_ISS/WORKSPACE/workspace
 COLAB_SHIM_WORKSPACE_PATH=/home/ec2-user/data/COLAB_SHIM/WORKSPACE/workspace
-COLAB_SHIM=3.89.108.98
+COLAB_SHIM=54.226.73.143
 #TDS=192.48.188.134
-TDS=44.207.6.238
+TDS=54.210.26.155
 BRIDGE=52.5.52.204
-AGG_ISS=3.89.108.98
+AGG_ISS=54.226.73.143
 SLEEP_INTERVAL=5
 
 #######################################
@@ -101,13 +101,17 @@ then
 	while true
 	do
 		# pull responses from TDS 
+		echo "pull from tds"
 		rsync -a fluid@${TDS}:${TO_ISS_FROM_TDS}/ ${TO_TDS_FROM_BRIDGE}/
 		# and push responses to ISS
+		echo "push to iss"
 		rsync -a ${TO_TDS_FROM_BRIDGE}/ fluid@${AGG_ISS}:${AGG_ISS_WORKSPACE_PATH}/response_path
 
 		# pull requests from ISS 
-		rsync -a fluid@${AGG_ISS}:${AGG_ISS_WORKSPACE_PATH}/request_path/ ${TO_BRIDGE_FROM_TDS}/ 
+		echo "pull from iss"
+		rsync -a  fluid@${AGG_ISS}:${AGG_ISS_WORKSPACE_PATH}/request_path/ ${TO_BRIDGE_FROM_TDS}/ 
 		# and push requests to TDS
+		echo "push to tds"
 		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@${TDS}:${TO_TDS_FROM_ISS}/
 		sleep $SLEEP_INTERVAL
 	done
