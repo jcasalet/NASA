@@ -2,6 +2,8 @@
 
 TO_TDS_FROM_BRIDGE=/home/fluid/TO_TDS_FROM_BRIDGE
 TO_BRIDGE_FROM_TDS=/home/fluid/TO_BRIDGE_FROM_TDS
+TO_ISS_FROM_TDS=/data/work/fluid/project/release/TO_ISS
+TO_TDS_FROM_ISS=/data/work/fluid/project/release/TO_TDS
 AGG_ISS_WORKSPACE_PATH=/home/ec2-user/data/AGG_ISS/WORKSPACE/workspace
 COLAB_SHIM_WORKSPACE_PATH=/home/ec2-user/data/COLAB_SHIM/WORKSPACE/workspace
 COLAB_SHIM=3.89.108.98
@@ -61,7 +63,7 @@ then
 	do
 		ssh fluid@${COLAB_SHIM} [ -d $COLAB_SHIM_WORKSPACE_PATH ] 
 		colabshim_running=$(echo $?)
-		ssh fluid@${TDS} [ -d $TO_TDS_FROM_BRIDGE -a -d $TO_BRIDGE_FROM_TDS ]
+		ssh fluid@${TDS} [ -d $TO_ISS_FROM_TDS -a -d $TO_TDS_FROM_ISS ]
 		tds_running=$(echo $?)
 		if [ $colabshim_running == 0 -a $tds_running == 0 ]
 		then
@@ -76,13 +78,13 @@ then
 	while true
 	do
 		# pull requests from tds 
-		rsync -a fluid@${TDS}:${TO_BRIDGE_FROM_TDS}/ ${TO_BRIDGE_FROM_TDS}/ 
+		rsync -a fluid@${TDS}:${TO_TDS_FROM_ISS}/ ${TO_BRIDGE_FROM_TDS}/ 
 		# and push requests to colab-shim
 		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@${COLAB_SHIM}:${COLAB_SHIM_WORKSPACE_PATH}/request_path
 		# pull responses from colab-shim
 		rsync -a fluid@${COLAB_SHIM}:${COLAB_SHIM_WORKSPACE_PATH}/response_path/ ${TO_TDS_FROM_BRIDGE}/
 		# and push responses to tds 
-		rsync -a  ${TO_TDS_FROM_BRIDGE}/ fluid@${TDS}:${TO_TDS_FROM_BRIDGE}/
+		rsync -a  ${TO_TDS_FROM_BRIDGE}/ fluid@${TDS}:${TO_ISS_FROM_TDS}/
 
 		sleep $SLEEP_INTERVAL 
 	done
@@ -99,14 +101,14 @@ then
 	while true
 	do
 		# pull responses from TDS 
-		rsync -a fluid@${TDS}:${TO_TDS_FROM_BRIDGE}/ ${TO_TDS_FROM_BRIDGE}/
+		rsync -a fluid@${TDS}:${TO_ISS_FROM_TDS}/ ${TO_TDS_FROM_BRIDGE}/
 		# and push responses to ISS
 		rsync -a ${TO_TDS_FROM_BRIDGE}/ fluid@${AGG_ISS}:${AGG_ISS_WORKSPACE_PATH}/response_path
 
 		# pull requests from ISS 
 		rsync -a fluid@${AGG_ISS}:${AGG_ISS_WORKSPACE_PATH}/request_path/ ${TO_BRIDGE_FROM_TDS}/ 
 		# and push requests to TDS
-		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@${TDS}:${TO_BRIDGE_FROM_TDS}/
+		rsync -a ${TO_BRIDGE_FROM_TDS}/ fluid@${TDS}:${TO_TDS_FROM_ISS}/
 		sleep $SLEEP_INTERVAL
 	done
 
