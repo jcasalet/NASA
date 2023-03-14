@@ -13,6 +13,7 @@ from scipy.stats import boxcox
 from sklearn.preprocessing import MinMaxScaler
 from itertools import compress
 import math
+import statistics
 
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -32,11 +33,11 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              target_thresholds_per_metakey= 'study', # 'study', None
-                              target_threshold = 0.5,
+                              target_thresholds_per_metakey= None, #None, #'study' None
+                              target_threshold = 'median', #'median', # 'mean', 18.0,  mandatory to set when target_thresholds_per_metakey is None (use 0.5 for binary data)
                               sample_subsets_metakey = 'group', #'group', None
-                              sample_subsets= ['Flight', 'Ground', 'Vivarium'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
-                              covariate_list= ['libprep'], #['libprep'], []
+                              sample_subsets= ['Flight', 'Ground', 'Vivarium', 'Basal'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
+                              covariate_list= ['libprep'], #['strain', 'libprep']
                               target='threshold',
                               env_key='env',
                               target_metakey_name= 'oro positivity (%)', #'oro positivity (%)', #target
@@ -46,21 +47,21 @@ def main():
                               low_count_threshold = 50,
                               low_count_percent = 0.8,
                               high_mean_threshold = 0,
-                              top_n_var = 5000,
+                              top_n_var = 0,
                               amplify = {'n':0, 'var': 0, 'seed': 0}, #{'n':10, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              env='append', # env, append, xformation, None
-                              verbose_R = True,
+                              env='append', # env, append, xformation, None, flt_v_all
+                              verbose_R = False,
                               gene_filter= 'protein_coding', #'protein_coding', None
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
                               #xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
-                              xformations=['merge_norm'],
+                              xformations=['merge_std', 'merge_clr', 'merge_boxcox', 'merge_zscore', 'merge_log'],
                               xform_all=None,
                               filter_mask=['filterGenesByType'], #['filterGenesByType'], []
                               norm_all=False,
                               filterCount=100000000,
-                              splitInHalf = False,
+                              splitInHalf = True,
                               callApplyFilter=True #True, False
                               )
 
@@ -96,7 +97,7 @@ class RNASeqData():
                  rnaSeqFileList=None,
                  metaFileList=None,
                  target_thresholds_per_metakey=None,
-                 target_threshold=0.5,
+                 target_threshold=None,
                  middle50_samples=False,
                  RScriptPath='/usr/local/bin/Rscript',
                  sample_subsets_metakey=None,
@@ -717,7 +718,7 @@ class RNASeqData():
         df.columns = cols
         return df
 
-    def add_threshold(self, df, meta_df, target_key, threshold=18):
+    def add_threshold(self, df, meta_df, target_key, threshold):
         # create  threshold dictionary with arbitrary threshold
         threshold_dict = dict()
         threshold_dict_raw = dict()
@@ -729,7 +730,14 @@ class RNASeqData():
                 meta_key = meta_df.iloc[i][self.target_thresholds_per_metakey]
                 thresh = self.target_thresholds_per_metakey_dict[meta_key]
             else:
-                thresh = threshold
+                if threshold == 'mean':
+                    thresholds = list(meta_df[target_key])
+                    thresh = statistics.mean(thresholds)
+                elif threshold == 'median':
+                    thresholds = list(meta_df[target_key])
+                    thresh = statistics.median(thresholds)
+                elif isinstance(threshold, float):
+                    thresh = threshold
             if math.ceil(val) < thresh:
                 threshold_dict[key] = 0
                 threshold_dict_raw[key_raw] = 0
@@ -781,6 +789,11 @@ class RNASeqData():
                             env_dict[sample] += ':' + str(meta_env)
                         else:
                             env_dict[sample] = ':' + str(env_dict[sample])
+                    elif env == 'flt_v_all':
+                        if meta_df[meta_df[self.sample_key] == sample]['group'].values[0].upper() == 'FLIGHT':
+                            env_dict[sample] = 'flight'
+                        else:
+                            env_dict[sample] = 'ground'
 
         # join env dictionary to data frame
         expr_df[self.env_key] = expr_df[self.sample_key].map(env_dict)
