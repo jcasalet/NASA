@@ -491,8 +491,8 @@ def train(dataset, cat_covs, num_covs, z_dim, epochs, batch_size, gen, disc, sco
         gen_losses.reset_states()
         disc_losses.reset_states()
 
-        if patience == 0:
-            break
+        #if patience == 0:
+        #    break
 
 
 
