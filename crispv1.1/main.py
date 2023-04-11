@@ -221,7 +221,7 @@ def run(config, alfa=0.5):
         print("Finished Linear IRM FRM")
 
 
-        if config['causalnex_frm']:
+        if 'causalnex_frm' in config and config['causalnex_frm']:
             # Define the CRISP coefficients
             csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
             csnx_results_dict = csnx.results()
