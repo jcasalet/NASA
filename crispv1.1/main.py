@@ -8,7 +8,7 @@ from utils.vm_helpers import save_dict_to_json
 from utils.joining_reductions import join_keep_columns
 
 
-def run(config, alfa=0):
+def run(config, alfa=0.5):
     ############################ LOAD CHOSEN DATASET ###################################
     environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
 
@@ -200,23 +200,17 @@ def run(config, alfa=0):
             "hidden_dim":  256
         }
         FRIRM_args.update(FRIRM_options)
-
         print('Running IRM (Feature Reduction Mode)')
         #IRM_NN = NonLinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
         IRM_NN = LinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, FRIRM_args)
         irm_results_dict = IRM_NN.results()
         if config['verbose']:
             print(irm_results_dict)
-
         # Extract top weighted features to use for remaining methods requiring reduced feature set
         to_bucket = irm_results_dict['to_bucket']
         #to_bucket['method'] = 'Non Linear IRM (Feature Reduction Mode)'
         to_bucket['method'] = 'Linear IRM (Feature Reductionn Mode)'
         to_bucket_results.append(to_bucket)
-
-        #print("Finished Non Linear IRM")
-        print("Finished Linear IRM FRM")
-
         coefs = pd.DataFrame()
         coefs['feature'] = to_bucket['features']
         coefs['coefficient'] = to_bucket['coefficients']
@@ -224,29 +218,33 @@ def run(config, alfa=0):
         sorted_coefs = coefs.sort_values('sort', ascending=False)
         #keep_columns_NLIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
         keep_columns_LIRM = list(sorted_coefs['feature'][0:selection_config['max_features']])
-        
-        # Define the CRISP coefficients
-        csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
-        csnx_results_dict = csnx.results()
-        
-        to_bucket = csnx_results_dict['to_bucket']
-        to_bucket['method'] = 'CausalNex (Feature Reduction Mode)'
-        to_bucket_results.append(to_bucket)
+        print("Finished Linear IRM FRM")
 
-        print("Finished Non Linear IRM")
 
-        coefs = pd.DataFrame()
-        coefs['feature'] = to_bucket['features']
-        coefs['coefficient'] = to_bucket['coefficients']
-        coefs['sort'] = coefs['coefficient'].abs()
-        sorted_coefs = coefs.sort_values('sort', ascending=False)
-        keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
-        
-        #join_keep_columns(keep_columns_CSNX, keep_columns_NLIRM, alfa)
-        join_keep_columns(keep_columns_CSNX, keep_columns_LIRM, alfa)
-        
+        if config['causalnex_frm']:
+            # Define the CRISP coefficients
+            csnx = CausalNexClass(environment_datasets, val_dataset, test_dataset, {})
+            csnx_results_dict = csnx.results()
 
-        keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
+            to_bucket = csnx_results_dict['to_bucket']
+            to_bucket['method'] = 'CausalNex (Feature Reduction Mode)'
+            to_bucket_results.append(to_bucket)
+
+            print("Finished CausalNex")
+
+            coefs = pd.DataFrame()
+            coefs['feature'] = to_bucket['features']
+            coefs['coefficient'] = to_bucket['coefficients']
+            coefs['sort'] = coefs['coefficient'].abs()
+            sorted_coefs = coefs.sort_values('sort', ascending=False)
+            keep_columns_CSNX = list(sorted_coefs['feature'][0:selection_config['max_features']])
+
+            #join_keep_columns(keep_columns_CSNX, keep_columns_LIRM, alfa)
+            keep_columns = join_keep_columns(keep_columns_CSNX, keep_columns_LIRM, alfa)
+
+        else:
+            keep_columns = list(sorted_coefs['feature'][0:selection_config['max_features']])
+
         removed_columns = [c for c in test_dataset.predictor_columns if c not in keep_columns]
 
         save_dict_to_json({'Non Linear IRM Feature Selection columns removed': removed_columns},
