@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from models.TorchModelZoo import MLP, MLP2
+from models.TorchModelZoo import MLP, MLP1, MLP2
 
 
 class NonLinearInvariantRiskMinimization(object):
