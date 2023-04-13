@@ -33,7 +33,7 @@ def run(config):
 
 
     ############################# Correlation to Target Ranking #########################
-    from utils.CorrelationToTarget import CorrelationToTarget
+    '''from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
     # Calculate correlations of each feature to target variable and save to file system/cloud storage
     tg_corr = CorrelationToTarget(environment_datasets, val_dataset, test_dataset, ct_args)
@@ -92,7 +92,7 @@ def run(config):
     original_dimensionality = len(selected_feature_list)
     config['data_options']['predictors'] = selected_feature_list
     # Reinitialise datasets without highly correlated feature pairs
-    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
+    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)'''
 
     #####################################################################################
     ############################# TRAIN SELECTED MODELS #################################
@@ -183,7 +183,7 @@ def run(config):
         FRIRM_options = ensemble_options.get('FRIRM', {})
         FRIRM_args = {
             # Flag for model to use in Non-Linear IRM ['NN': MLP, 'DNN': Deeper MLP]
-            "NN_method": "NN",
+            "NN_method": "FRM",
             "verbose": 1,
             "n_iterations": 1000,
             "seed":  0,
@@ -257,6 +257,8 @@ def run(config):
         dcf_args.update(dcf_options)
 
         # If we wish to output p vals for each feature, then use reduced feature set
+        # JC hack
+        original_dimensionality = len(config['data_options']['predictors'])
         if dcf_args["output_pvals"] and (original_dimensionality > 500):
             dcf_args["columns"] = reduced_test_dataset.predictor_columns
             dcf = Deconfounder(reduced_environment_datasets, reduced_val_dataset, reduced_test_dataset, dcf_args)
