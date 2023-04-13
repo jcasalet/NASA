@@ -34,7 +34,7 @@ class MLP(torch.nn.Module):
 
 class MLP1(torch.nn.Module):
     def __init__(self, flags, input_dim, output_dim):
-        super(MLP, self).__init__()
+        super(MLP1, self).__init__()
         lin1 = torch.nn.Linear(input_dim, flags['hidden_dim'], bias=True)
         lin2 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
         lin3 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
