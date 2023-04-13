@@ -33,7 +33,7 @@ def run(config):
 
 
     ############################# Correlation to Target Ranking #########################
-    '''from utils.CorrelationToTarget import CorrelationToTarget
+    from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
     # Calculate correlations of each feature to target variable and save to file system/cloud storage
     tg_corr = CorrelationToTarget(environment_datasets, val_dataset, test_dataset, ct_args)
@@ -92,7 +92,7 @@ def run(config):
     original_dimensionality = len(selected_feature_list)
     config['data_options']['predictors'] = selected_feature_list
     # Reinitialise datasets without highly correlated feature pairs
-    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)'''
+    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
 
     #####################################################################################
     ############################# TRAIN SELECTED MODELS #################################
