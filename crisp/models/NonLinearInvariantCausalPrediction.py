@@ -160,9 +160,11 @@ class NonLinearInvariantCausalPrediction(object):
                         self.selected_features = list(best_def_set)
 
             # test consensus model and return results
-            self.test(loader=self.test_loader)
+            #self.test(loader=self.test_loader)
         else:
             print('no accepted sets found for nonlinear ICP')
+        # putting self.test here in case no accepted sets found - test() generates test_logits
+        self.test(loader=self.test_loader)
 
     def leveneAndWilcoxTest(self, residuals, e_all):
         residuals = np.array(residuals)
