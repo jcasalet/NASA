@@ -23,11 +23,19 @@ class NonLinearInvariantRiskMinimization(object):
             self.model = MLP(self.args, self.input_dim, self.output_dim)
             if self.cuda:
                 self.model.cuda()
-        if method == 'DNN':
+        elif method == 'DNN':
             print('NLIRM using deep MLP2')
             self.input_dim = environment_datasets[0].get_feature_dim()
             self.output_dim = environment_datasets[0].get_output_dim()
             self.model = MLP2(self.args, self.input_dim, self.output_dim)
+            self.model.train() # self.model.eval() to turn dropout off
+            if self.cuda:
+                self.model.cuda()
+        elif method == 'FRM':
+            print('NLIRM using deep MLP1')
+            self.input_dim = environment_datasets[0].get_feature_dim()
+            self.output_dim = environment_datasets[0].get_output_dim()
+            self.model = MLP1(self.args, self.input_dim, self.output_dim)
             self.model.train() # self.model.eval() to turn dropout off
             if self.cuda:
                 self.model.cuda()
