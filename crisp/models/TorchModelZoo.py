@@ -37,15 +37,12 @@ class MLP1(torch.nn.Module):
         super(MLP1, self).__init__()
         lin1 = torch.nn.Linear(input_dim, flags['hidden_dim'], bias=True)
         lin2 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
-        lin3 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
-        lin4 = torch.nn.Linear(flags['hidden_dim'], flags['hidden_dim'], bias=True)
-        lin5 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
+        lin3 = torch.nn.Linear(flags['hidden_dim'], output_dim, bias=True)
 
-        for lin in [lin1, lin2, lin3, lin4, lin5]:
+        for lin in [lin1, lin2, lin3]:
             torch.nn.init.xavier_uniform_(lin.weight)
             torch.nn.init.zeros_(lin.bias)
-        self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), lin2, torch.nn.ReLU(True), lin3, torch.nn.ReLU(True),
-                                         lin4, torch.nn.ReLU(True), lin5)
+        self._main = torch.nn.Sequential(lin1, torch.nn.ReLU(True), lin2, torch.nn.ReLU(True), lin3)
         self.input_dim = input_dim
         self.output_dim = output_dim
 
