@@ -2,6 +2,7 @@
     "name": "Synthetic example",
     "short_name": "example",
     "verbose": 1,
+    "causalnex_frm": 1, 
     "test_val_split": [0.1, 0.1],
     "data_options": {
         "dataset_fp": "data/synthetic/full_fw_synthetic_sem_n_causal_5_0.pickle",
@@ -18,6 +19,6 @@
         "seed": 12
     },
     "ensemble_options": {
-        "models": ["ERM", "RF", "ICP", "IRM", "LIRM", "NLICP"]
+        "models": ["ICP", "IRM", "LIRM"]
     }
 }

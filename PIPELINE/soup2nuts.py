@@ -36,8 +36,8 @@ def main():
                               target_thresholds_per_metakey= 'study', #None, #'study' None
                               target_threshold = 'median', #'median', # 'mean', 18.0,  mandatory to set when target_thresholds_per_metakey is None (use 0.5 for binary data)
                               sample_subsets_metakey = 'group', #'group', None
-                              sample_subsets= ['Flight', 'Ground', 'Vivarium'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
-                              covariate_list= ['libprep'], #['strain', 'libprep']
+                              sample_subsets= ['Flight', 'Ground', 'Vivarium', 'Basal'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
+                              covariate_list= ['dataset'], #['strain', 'libprep']
                               target='threshold',
                               env_key='env',
                               target_metakey_name= 'oro positivity (%)', #'oro positivity (%)', #target
@@ -50,18 +50,18 @@ def main():
                               top_n_var = 0,
                               amplify = {'n':0, 'var': 0, 'seed': 0}, #{'n':10, 'var':10, 'seed':23},
                               stack_xformations = True,
-                              env='xformation', # env, append, xformation, None, flt_v_all
+                              env='append', # env, append, xformation, None, flt_v_all
                               verbose_R = False,
                               gene_filter= 'protein_coding', #'protein_coding', None
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
                               #xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
-                              xformations=['merge_norm', 'merge_std', 'merge_clr', 'merge_boxcox', 'merge_log', 'merge_sqrt'],
+                              xformations=['merge_zscore', 'merge_std', 'merge_clr', 'merge_boxcox', 'merge_log', 'merge_sqrt'],
                               xform_all=None,
                               filter_mask=[],  #['filterGenesByType'], #['filterGenesByType'], []
                               norm_all=False,
                               filterCount=100000000,
-                              splitInHalf = True,
+                              splitInHalf = False,
                               callApplyFilter=True #True, False
                               )
 
@@ -791,9 +791,9 @@ class RNASeqData():
                             env_dict[sample] = ':' + str(env_dict[sample])
                     elif env == 'flt_v_all':
                         if meta_df[meta_df[self.sample_key] == sample]['group'].values[0].upper() == 'FLIGHT':
-                            env_dict[sample] = 'flight'
+                            env_dict[sample] = str(meta_env) + ':flight'
                         else:
-                            env_dict[sample] = 'ground'
+                            env_dict[sample] = str(meta_env) + ':ground'
 
         # join env dictionary to data frame
         expr_df[self.env_key] = expr_df[self.sample_key].map(env_dict)

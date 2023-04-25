@@ -20,6 +20,6 @@
         "seed": 12
     },
     "ensemble_options": {
-        "models": ["ERM", "RF", "ICP", "IRM", "DCF", "ITE", "LIRM", "NLICP"]
+        "models": ["NLICP"]
     }
 }

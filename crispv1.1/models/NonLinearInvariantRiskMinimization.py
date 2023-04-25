@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from models.TorchModelZoo import MLP, MLP2#, MLP3
+from models.TorchModelZoo import MLP, MLP2, MLP3
 import math
 
 
