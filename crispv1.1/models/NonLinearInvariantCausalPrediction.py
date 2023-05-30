@@ -166,10 +166,12 @@ class NonLinearInvariantCausalPrediction(object):
 
             # test consensus model and return results
             self.test(loader=self.test_loader)
+            self.validate(loader=self.val_loader)
         else:
             print('no accepted sets found for nonlinear ICP')
             print('but JC trying to run test in order to instantiate self.test_logits')
             self.test(loader=self.test_loader)
+            self.validate(loader=self.val_loader)
 
     def leveneAndWilcoxTest(self, residuals, e_all):
         residuals = np.array(residuals)
@@ -292,18 +294,59 @@ class NonLinearInvariantCausalPrediction(object):
                 else:
                     test_targets.append(targets.squeeze().unsqueeze(0))
                     test_logits.append(outputs.squeeze().unsqueeze(0))
-                    #test_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    test_probs.append(sig(outputs).squeeze().unsqueeze(0))
                     # TODO JC we already did sigmoid so removing it here ...
-                    test_probs = test_logits
+                    #test_probs = test_logits
 
         self.test_targets = torch.cat(test_targets, dim=1)
         self.test_logits = torch.cat(test_logits, dim=1)
         self.test_probs = torch.cat(test_probs, dim=1)
 
+    def validate(self, loader):
+
+        validate_targets = []
+        validate_logits = []
+        validate_probs = []
+
+        sig = torch.nn.Sigmoid()
+
+        with torch.no_grad():
+            for i, (inputs, targets) in enumerate(loader):
+                if self.cuda:
+                    if self.feature_mask:
+                        inputs, targets = inputs[:, self.feature_mask].cuda(), targets.cuda()
+                    else:
+                        inputs, targets = inputs.cuda(), targets.cuda()
+                else:
+                    if self.feature_mask:
+                        inputs, targets = inputs[:, self.feature_mask], targets
+
+                outputs = self.model(inputs)
+
+                if self.cuda:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    validate_logits.append(outputs.cpu().squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).cpu().squeeze().unsqueeze(0))
+                else:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    validate_logits.append(outputs.squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    # TODO JC if we already did sigmoid in MLP, then remove it here ...
+                    #validate_probs = validate_logits
+
+        self.validate_targets = torch.cat(validate_targets, dim=1)
+        self.validate_logits = torch.cat(validate_logits, dim=1)
+        self.validate_probs = torch.cat(validate_probs, dim=1)
+
+
+
     def results(self):
         test_nll = self.mean_nll(self.test_logits, self.test_targets)
         test_acc = self.mean_accuracy(self.test_probs, self.test_targets)
         test_acc_std = self.std_accuracy(self.test_probs, self.test_targets)
+        validate_nll = self.mean_nll(self.validate_logits, self.validate_targets)
+        validate_acc = self.mean_accuracy(self.validate_probs, self.validate_targets)
+        validate_acc_std = self.std_accuracy(self.validate_probs, self.validate_targets)
         if len(self.selected_features):
             overall_sties, sties, npcorr = self.get_sensitivities()
             overall_sties = overall_sties.squeeze().tolist()
@@ -318,6 +361,11 @@ class NonLinearInvariantCausalPrediction(object):
             "test_nll": test_nll,
             "test_probs": self.test_probs,
             "test_labels": self.test_targets,
+            "validate_acc": validate_acc.numpy().squeeze().tolist(),
+            "validate_acc_std": validate_acc_std.numpy().squeeze().tolist(),
+            "validate_nll": validate_nll,
+            "validate_probs": self.validate_probs,
+            "validate_labels": self.validate_targets,
             "feature_coeffients": None,
             "selected_p_value": self.selected_p_value,
             "selected_features": np.array(self.full_feature_set)[self.selected_features],
@@ -329,6 +377,8 @@ class NonLinearInvariantCausalPrediction(object):
                 'pvals': self.selected_p_value,
                 'test_acc': test_acc.numpy().squeeze().tolist(),
                 'test_acc_std': test_acc_std.numpy().squeeze().tolist(),
+                'validate_acc': validate_acc.numpy().squeeze().tolist(),
+                'validate_acc_std': validate_acc_std.numpy().squeeze().tolist(),
                 'coefficient_correlation_matrix': npcorr if len(self.selected_features) > 0 else None,
                 'test_data_sensitivities': sties if len(self.selected_features) > 0 else None
             }

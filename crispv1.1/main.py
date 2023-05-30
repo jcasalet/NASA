@@ -120,11 +120,18 @@ def run(config, alfa=0.5):
         erm = EmpericalRiskMinimization(environment_datasets, val_dataset, test_dataset, ERM_args)
         # Get results of ERM on test set
         erm_results_dict = erm.results()
+        # JC
+        erm_validation_results_dict = erm.validation_results()
         if config['verbose']:
             print(erm_results_dict)
+            # JC
+            print(erm_validation_results_dict)
         print("Finished ERM")
         to_bucket = erm_results_dict['to_bucket']
         to_bucket_results.append(to_bucket)
+        # JC
+        to_bucket_val = erm_validation_results_dict['to_bucket_val']
+        to_bucket_results.append(to_bucket_val)
     #####################################################################################
 
     #####################################################################################
@@ -165,11 +172,16 @@ def run(config, alfa=0.5):
         rf = RandomForest(environment_datasets, val_dataset, test_dataset, RF_args)
         # Get results of RF on test set
         rf_results_dict = rf.results()
+        # JC
+        rf_validation_results_dict = rf.validation_results()
         if config['verbose']:
             print(rf_results_dict)
+            print(rf_validation_results_dict)
         print("Finished RF")
         to_bucket = rf_results_dict['to_bucket']
+        to_bucket_validate = rf_validation_results_dict['to_bucket_val']
         to_bucket_results.append(to_bucket)
+        to_bucket_results.append(to_bucket_validate)
 
     #####################################################################################
     ############################# FEATURE REDUCTION 2 ###################################
@@ -294,6 +306,7 @@ def run(config, alfa=0.5):
         ICP_results_dict = ICPmod.results()
         icp_solution = ICP_results_dict['solution']
 
+
         ICP_results_dict['original_feature_indices'] = keep_columns_indices_to_original_features[
             ICP_results_dict['selected_feature_indices']]
 
@@ -376,9 +389,15 @@ def run(config, alfa=0.5):
 
         IRM_Red = LinearInvariantRiskMinimization(environment_datasets, val_dataset, test_dataset, LIRM_args)
         feat_red_irm_results_dict = IRM_Red.results()
+        irm_validation_results_dict = IRM_Red.validation_results()
+
         to_bucket = feat_red_irm_results_dict['to_bucket']
         to_bucket['method'] = 'Linear IRM'
         to_bucket_results.append(to_bucket)
+
+        # JC
+        to_bucket_validate = irm_validation_results_dict['validate_to_bucket']
+        to_bucket_results.append(to_bucket_validate)
 
         print("Finished Linear IRM")
 
@@ -422,6 +441,8 @@ def run(config, alfa=0.5):
 
         to_bucket = irm_results_dict['to_bucket']
         to_bucket_results.append(to_bucket)
+
+
 
         print("Finished IRM")
 

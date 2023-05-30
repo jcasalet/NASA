@@ -37,6 +37,10 @@ class InvariantCausalPrediction(object):
         x_test, y_test = test_environment.get_all()
         self.x_test, self.y_test = x_test.numpy(), y_test.numpy()
 
+        # set up validation set
+        x_validate, y_validate = val_environment.get_all()
+        self.x_validate, self.y_validate = x_validate.numpy(), y_validate.numpy()
+
         # Train ICP
 
         x_all = []
@@ -160,6 +164,7 @@ class InvariantCausalPrediction(object):
             self.model = LogisticRegression(penalty='l1', solver='liblinear').fit(x_all[:, self.selected_features],
                                                                                   y_all.astype('int'))
             self.test()
+            self.validate()
         else:
             print("No accepted sets found, please consider decreasing {alpha} or try non-linear ICP")
 
@@ -174,6 +179,18 @@ class InvariantCausalPrediction(object):
         self.test_logits = torch.Tensor(test_logits).squeeze()
         self.test_probs = torch.Tensor(test_probs)
 
+    def validate(self):
+        validate_targets = self.y_test
+        validate_logits = self.model.predict(self.x_validate[:, self.selected_features])
+        validate_probs = self.model.predict_proba(self.x_validate[:, self.selected_features])
+
+        conf_matrix = confusion_matrix(y_true=self.y_validate, y_pred=validate_logits)
+        self.conf_matric = conf_matrix
+        self.validate_targets = torch.Tensor(validate_targets).squeeze()
+        self.validate_logits = torch.Tensor(validate_logits).squeeze()
+        self.validate_probs = torch.Tensor(validate_probs)
+
+
     def coef_(self):
         if self.model:
             return self.model.coef_[0]
@@ -187,6 +204,11 @@ class InvariantCausalPrediction(object):
             test_acc = self.mean_accuracy(self.test_logits, self.test_targets)
             test_acc_std = self.std_accuracy(self.test_logits, self.test_targets)
 
+            validate_nll = self.mean_nll(self.validate_logits, self.validate_targets)
+            validate_acc = self.mean_accuracy(self.validate_logits, self.validate_targets)
+            validate_acc_std = self.std_accuracy(self.validate_logits, self.validate_targets)
+
+
             return {
 
                 "solution": self.intersection_found or self.defining_set_found,
@@ -195,6 +217,10 @@ class InvariantCausalPrediction(object):
                 "test_nll": test_nll,
                 "test_probs": self.test_probs,
                 "test_labels": self.test_targets,
+                "validate_acc": validate_acc.numpy().squeeze().tolist(),
+                "validate_nll": validate_nll,
+                "validate_probs": self.validate_probs,
+                "validate_labels": self.validate_targets,
                 "feature_coeffients": self.coef_(),
                 "selected_features": np.array(self.full_feature_set)[self.selected_features],
                 "selected_feature_indices": self.selected_features,
@@ -204,7 +230,9 @@ class InvariantCausalPrediction(object):
                     'coefficients': np.array(self.coef_()).tolist(),
                     'pvals': np.array(self.p_value).tolist(),
                     'test_acc': test_acc.numpy().squeeze().tolist(),
-                    'test_acc_std': test_acc_std.numpy().squeeze().tolist()
+                    'test_acc_std': test_acc_std.numpy().squeeze().tolist(),
+                    "validate_acc": validate_acc.numpy().squeeze().tolist(),
+                    "validate_acc_std": validate_acc_std.numpy().squeeze().tolist()
                 }
             }
         else:
@@ -215,6 +243,10 @@ class InvariantCausalPrediction(object):
                 "test_nll": 1e9,
                 "test_probs": None,
                 "test_labels": None,
+                "validate_acc": 0,
+                "validate_nll": 1e9,
+                "validate_probs": None,
+                "validate_labels": 0,
                 "feature_coeffients": self.coef_(),
                 "selected_features": None,
                 "selected_feature_indices": None,
@@ -224,7 +256,9 @@ class InvariantCausalPrediction(object):
                     'coefficients': None,
                     'pvals': None,
                     'test_acc': None,
-                    'test_acc_std': None
+                    'test_acc_std': None,
+                    "validate_acc": None,
+                    "validate_acc-std": None
                 }
             }
 

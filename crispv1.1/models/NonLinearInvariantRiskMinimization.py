@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from models.TorchModelZoo import MLP, MLP2, MLP3
+from models.TorchModelZoo import MLP, MLP2
 import math
 
 
@@ -34,14 +34,7 @@ class NonLinearInvariantRiskMinimization(object):
             self.model.train() # self.model.eval() to turn dropout off
             if self.cuda:
                 self.model.cuda()
-        if method == 'SDNN':
-            print('NLIRM using deep MLP3')
-            self.input_dim = environment_datasets[0].get_feature_dim()
-            self.output_dim = environment_datasets[0].get_output_dim()
-            self.model = MLP3(self.args, self.input_dim, self.output_dim)
-            self.model.train() # self.model.eval() to turn dropout off
-            if self.cuda:
-                self.model.cuda()
+
 
         # Initialise Dataloaders (combine all environment datasets to as train)
         self.batch_size = args.get('batch_size', 256)
@@ -74,6 +67,7 @@ class NonLinearInvariantRiskMinimization(object):
 
         self.train()
         self.test()
+        self.validate()
 
     def get_sensitivities(self):
         sties = np.zeros(shape=(self.input_dim,))
@@ -191,16 +185,55 @@ class NonLinearInvariantRiskMinimization(object):
         self.test_probs = torch.cat(test_probs, dim=1)
     #         print('Finished Testing')
 
+    def validate(self):
+
+        validate_targets = []
+        validate_logits = []
+        validate_probs = []
+
+        sig = torch.nn.Sigmoid()
+
+        with torch.no_grad():
+            for i, (inputs, targets) in enumerate(self.val_loader):
+                if self.cuda:
+                    inputs = inputs.cuda()
+
+                outputs = self.model(inputs)
+
+                if self.cuda:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    validate_logits.append(outputs.cpu().squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).cpu().squeeze().unsqueeze(0))
+                    print('using cuda')
+                else:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    validate_logits.append(outputs.squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).squeeze().unsqueeze(0))
+                    print('not using cuda')
+
+        self.validate_targets = torch.cat(validate_targets, dim=1)
+        self.validate_logits = torch.cat(validate_logits, dim=1)
+        self.validate_probs = torch.cat(validate_probs, dim=1)
+    #         print('Finished Testing')
+
+
     def results(self):
         test_nll = self.mean_nll(self.test_logits, self.test_targets)
         test_acc = self.mean_accuracy(self.test_logits, self.test_targets)
         test_acc_std = self.std_accuracy(self.test_logits, self.test_targets)
+        validate_nll = self.mean_nll(self.validate_logits, self.validate_targets)
+        validate_acc = self.mean_accuracy(self.validate_logits, self.validate_targets)
+        validate_acc_std = self.std_accuracy(self.validate_logits, self.validate_targets)
 
         return {
             "test_acc": test_acc.numpy().squeeze().tolist(),
             "test_nll": test_nll,
             "test_probs": self.test_probs,
             "test_labels": self.test_targets,
+            "validate_acc": validate_acc.numpy().squeeze().tolist(),
+            "validate_nll": validate_nll,
+            "validate_probs": self.validate_probs,
+            "validate_labels": self.validate_targets,
             "feature_coeffients": self.model.linear.weight.data
                 [0].detach().numpy().squeeze().tolist() if self.method == "Linear" else None,
             "to_bucket": {
@@ -210,7 +243,9 @@ class NonLinearInvariantRiskMinimization(object):
                     [0].detach().numpy().squeeze().tolist() if self.method == "Linear" else self.get_sensitivities().squeeze().tolist(),
                 'pvals': None,
                 'test_acc': test_acc.numpy().squeeze().tolist(),
-                'test_acc_std': test_acc_std.numpy().squeeze().tolist()
+                'test_acc_std': test_acc_std.numpy().squeeze().tolist(),
+                'validate_acc': validate_acc.numpy().squeeze().tolist(),
+                'validate_acc_std': validate_acc_std.numpy().squeeze().tolist()
             }
         }
 

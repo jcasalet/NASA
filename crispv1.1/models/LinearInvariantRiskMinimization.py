@@ -34,12 +34,16 @@ class LinearInvariantRiskMinimization(object):
             train_loaders.append(dl)
         self.train_loaders = train_loaders
         self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        self.val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
 
         self.reg = 0.95
         self.train()
 
         # Start testing procedure
         self.test(self.test_loader)
+
+        # JC
+        self.validate(self.val_loader)
 
     def compute_penalty(losses, dummy_w):
         # g1 is the even indices, g2 is the odd indices
@@ -209,7 +213,42 @@ class LinearInvariantRiskMinimization(object):
         self.test_probs = torch.cat(test_probs, dim=1)
 
     #         print('Finished Testing')
-    
+
+    def validate(self, loader):
+
+        validate_targets = []
+        validate_logits = []
+        validate_probs = []
+
+        # if self.args["output_data_regime"] == "real-valued":
+        #    sig = torch.nn.Identity()
+        sig = torch.nn.Sigmoid()
+
+        with torch.no_grad():
+            for i, (inputs, targets) in enumerate(self.val_loader):
+                inputs = torch.cat((torch.ones(inputs.size(0), 1), inputs), 1)  ##
+                if self.cuda:
+                    inputs = inputs.cuda()
+
+                outputs = self.phi(inputs) @ self.w
+
+                if self.cuda:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    validate_logits.append(outputs.cpu().squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).cpu().squeeze().unsqueeze(0))
+                else:
+                    validate_targets.append(targets.squeeze().unsqueeze(0))
+                    # JC
+                    validate_logits.append(outputs.squeeze().unsqueeze(0))
+                    validate_probs.append(sig(outputs).squeeze().unsqueeze(0))
+
+        self.validate_targets = torch.cat(validate_targets, dim=1)
+        self.validate_logits = torch.cat(validate_logits, dim=1)
+        self.validate_probs = torch.cat(validate_probs, dim=1)
+
+    #         print('Finished validating')
+
+
     def get_input_gradients(self):
         sig = torch.nn.Sigmoid()
 
@@ -296,6 +335,47 @@ class LinearInvariantRiskMinimization(object):
                 #'sensitivities': self.get_sensitivities().tolist()
             }
         }
+
+
+    def validation_results(self):
+        validate_nll = self.mean_nll(self.validate_logits.squeeze(), self.validate_targets.squeeze())
+        validate_acc = self.mean_accuracy(self.validate_logits.squeeze(), self.validate_targets.squeeze())
+        validate_acc_std = self.std_accuracy(self.validate_logits.squeeze(), self.validate_targets.squeeze())
+        coefficients = self.solution().detach().cpu().numpy().squeeze()[1:].tolist()
+        if self.cuda:
+            feature_gradients=None
+        else:
+            feature_gradients = self.get_input_gradients().cpu().numpy().tolist()
+
+        if self.args["output_data_regime"] == "multi-class":
+            npcorr = None
+        else:
+            npcorr = self.get_corr_mat()
+
+        print('validation accuracy: ', validate_acc.numpy().squeeze().tolist())
+        return {
+            "validate_logits" : self.validate_logits.squeeze().numpy().tolist(),
+            "validate_acc": validate_acc.numpy().squeeze().tolist(),
+            "validate_nll": validate_nll.item(),
+            "validate_probs": self.validate_probs.squeeze().numpy().tolist(),
+            "validate_labels": self.validate_targets.squeeze().numpy().tolist(),
+            "feature_coeffients": self.solution().detach().cpu().numpy().squeeze()[1:].tolist(),
+            "val_loss_over_time" : [x.tolist() for x in self.loss_per_iteration],
+            'val_acc_over_time': [x.tolist() for x in self.acc_per_iteration],
+            'validate_to_bucket': {
+                'method': "Linear IRM",
+                'features': self.feature_names,
+                'coefficients': coefficients,
+                #'feature_gradients' : feature_gradients,
+                'pvals': None,
+                "validate_logits" : self.validate_logits.squeeze().numpy().tolist(),
+                'validate_acc': validate_acc.numpy().squeeze().tolist(),
+                'validate_acc_std': validate_acc_std.item(),# ,.numpy().squeeze().tolist(),
+                'coefficient_correlation_matrix': None,
+                #'sensitivities': self.get_sensitivities().tolist()
+            }
+        }
+
 
     def mean_nll(self, logits, y):
         if self.args["output_data_regime"] == "multi-class":
