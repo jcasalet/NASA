@@ -263,7 +263,10 @@ class InvariantCausalPrediction(object):
             }
 
     def mean_nll(self, logits, y):
-        return torch.nn.functional.binary_cross_entropy_with_logits(logits, y)
+        if logits.size(dim=0) != y.size(dim=0):
+            return None
+        else:
+            return torch.nn.functional.binary_cross_entropy_with_logits(logits, y)
 
     def mean_accuracy(self, logits, y):
         preds = (logits > 0.).float()
