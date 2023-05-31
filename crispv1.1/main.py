@@ -34,7 +34,7 @@ def run(config, alfa=0.5):
 
 
     ############################# Correlation to Target Ranking #########################
-    from utils.CorrelationToTarget import CorrelationToTarget
+    '''from utils.CorrelationToTarget import CorrelationToTarget
     ct_args = {'max_features': selection_config.get('max_features', 25)}
     # Calculate correlations of each feature to target variable and save to file system/cloud storage
     tg_corr = CorrelationToTarget(environment_datasets, val_dataset, test_dataset, ct_args)
@@ -94,7 +94,7 @@ def run(config, alfa=0.5):
     original_dimensionality = len(selected_feature_list)
     config['data_options']['predictors'] = selected_feature_list
     # Reinitialise datasets without highly correlated feature pairs
-    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)
+    environment_datasets, val_dataset, test_dataset = get_datasets_for_experiment(config)'''
 
     #####################################################################################
     ############################# TRAIN SELECTED MODELS #################################
@@ -202,7 +202,7 @@ def run(config, alfa=0.5):
             # Flag for model to use in Non-Linear IRM ['NN': MLP, 'DNN': Deeper MLP]
             "NN_method": "NN",
             "verbose": 1,
-            "n_iterations": 1000,
+            "n_iterations": 10,
             "seed":  0,
             "l2_regularizer_weight": 0.001,
             "lr": 0.001,
@@ -449,20 +449,20 @@ def run(config, alfa=0.5):
     #####################################################################################
     ############################ SAVE RESULTS TO BUCKET #################################
 
-    save_dict_to_json({'zero std columns removed': zero_var_columns},
+    '''save_dict_to_json({'zero std columns removed': zero_var_columns},
                       config['results_directory'] + 'zero_std_columns.json')
 
-    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')
+    column_pairs_df.to_csv(config['results_directory'] + 'correlation_pairs.csv')'''
 
     save_dict_to_json({"results": to_bucket_results}, config['results_directory'] + 'results_for_bucket.json')
 
     if config['use_cloud']:
-        save_json_to_bucket({"zero std columns removed": zero_var_columns},
+        '''save_json_to_bucket({"zero std columns removed": zero_var_columns},
                             config['bucket_path'] + config['bucket_exp_path'] + 'zero_var_columns.json', config['bucket_project'],
                             config['bucket_name'])
 
         save_dataframe_to_bucket(column_pairs_df, config['bucket_path'] + config['bucket_exp_path'] + 'correlation_pairs.csv',
-                                 config['bucket_project'], config['bucket_name'])
+                                 config['bucket_project'], config['bucket_name'])'''
 
         save_json_to_bucket({"results": to_bucket_results}, config['bucket_path'] + config['bucket_exp_path'] + 'results.json',
                             config['bucket_project'], config['bucket_name'])

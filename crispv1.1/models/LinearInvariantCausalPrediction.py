@@ -180,7 +180,7 @@ class InvariantCausalPrediction(object):
         self.test_probs = torch.Tensor(test_probs)
 
     def validate(self):
-        validate_targets = self.y_test
+        validate_targets = self.y_validate
         validate_logits = self.model.predict(self.x_validate[:, self.selected_features])
         validate_probs = self.model.predict_proba(self.x_validate[:, self.selected_features])
 
