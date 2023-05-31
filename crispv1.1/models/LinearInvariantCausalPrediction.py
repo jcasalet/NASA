@@ -270,11 +270,17 @@ class InvariantCausalPrediction(object):
 
     def mean_accuracy(self, logits, y):
         preds = (logits > 0.).float()
-        return ((preds - y).abs() < 1e-2).float().mean()
+        if preds.size(dim=0) != y.size(dim=0):
+            return None
+        else:
+            return ((preds - y).abs() < 1e-2).float().mean()
 
     def std_accuracy(self, logits, y):
         preds = (logits > 0.).float()
-        return ((preds - y).abs() < 1e-2).float().std()
+        if preds.size(dim=0) != y.size(dim=0):
+            return None
+        else:
+            return ((preds - y).abs() < 1e-2).float().std()
 
     def mean_var_test(self, x, y):
         pvalue_mean = ttest_ind(x, y, equal_var=False).pvalue
