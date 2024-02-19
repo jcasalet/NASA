@@ -170,9 +170,9 @@ $ ssh bridge(** say 'yes' to prompt)
 $ exit (** now you're on colab-shim, so you want to exit to get back to the bridge)
 $ ssh bridge (** note you should not be prompted this time)
 $ exit
-$ ssh agg-shim (** say 'yes' to prompt)
-$ exit (** now you're on agg-shim, so you want to exit to get back to the tds)
-$ ssh agg-shim (** note you should not be prompted this time)
+$ ssh colab-shim (** say 'yes' to prompt) 
+$ exit (** now you're on colab-shim, so you want to exit to get back to the tds)
+$ ssh colab-shim (** note you should not be prompted this time)
 $ exit
 
 16. Start the docker daemon (ON ALL NODES EXCEPT BRIDGE and TDS)
@@ -263,6 +263,7 @@ ONLY ON THE BRIDGE NODE perform step 3.
 $ su - fluid
 $ pkill oursync.sh
 $ cd scripts
+$ vi oursync.sh (update IPs for COLAB_SHIM, TDS, BRIDGE, and AGG_ISS
 $ ./oursync.sh $(hostname) start
 
 ONLY ON THE TDS NODE perform step 4.
@@ -272,6 +273,7 @@ ONLY ON THE TDS NODE perform step 4.
 $ su - fluid
 $ pkill oursync.sh
 $ cd scripts
+$ vi oursync.sh (update IPs for COLAB_SHIM, TDS, BRIDGE, and AGG_ISS
 $ ./oursync.sh $(hostname) start
 
 

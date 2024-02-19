@@ -33,14 +33,15 @@ def main():
                               metaFileList=args.meta,
                               inputDir=args.idir,
                               outputDir=args.odir,
-                              target_thresholds_per_metakey= 'study', #None, #'study' None
+                              target_thresholds_per_metakey= None, #None, #'study' None
                               target_threshold = 'median', #'median', # 'mean', 18.0,  mandatory to set when target_thresholds_per_metakey is None (use 0.5 for binary data)
-                              sample_subsets_metakey = 'group', #'group', None
-                              sample_subsets= ['Flight', 'Ground', 'Vivarium', 'Basal'], #['Flight', 'Ground', 'Vivarium', 'Basal'], None
-                              covariate_list= ['dataset'], #['strain', 'libprep']
+                              sample_subsets_metakey = None, #'group', None
+                              sample_subsets= None, #['Space Flight', 'Ground Control'], ['Flight', 'Ground', 'Vivarium', 'Basal'], None
+                              covariate_list= ['factor'], #['strain', 'libprep', 'factor']
+                              normalizing_factor='factor',
                               target='threshold',
                               env_key='env',
-                              target_metakey_name= 'oro positivity (%)', #'oro positivity (%)', #target
+                              target_metakey_name= 'threshold', #'oro positivity (%)', #target, thresh
                               sample_key = 'sample', #'sample', #'subj_id'
                               feature_key = 'gene', #'gene', #'feature',
                               zero_count_percent = 0.8,
@@ -51,12 +52,13 @@ def main():
                               amplify = {'n':0, 'var': 0, 'seed': 0}, #{'n':10, 'var':10, 'seed':23},
                               stack_xformations = True,
                               env='append', # env, append, xformation, None, flt_v_all
-                              verbose_R = False,
+                              verbose_R = True,
                               gene_filter= 'protein_coding', #'protein_coding', None
                               filterFile = None, # '/Users/jcasalet/Desktop/RESEARCH/LIVER/DATA/JC/BIOMART/lipid-go-mart-export.tsv'
                               filterFileColumn = None, #'Gene_name'
                               #xformations = ['merge_boxcox','merge_zscore','merge_std','merge_clr','merge_log','merge_sqrt'],
-                              xformations=['merge_zscore', 'merge_std', 'merge_clr', 'merge_boxcox', 'merge_log', 'merge_sqrt'],
+                              xformations=['merge_norm', 'merge_boxcox', 'merge_clr', 'merge_sqrt'],
+                              #xformations=['merge_zscore', 'merge_std', 'merge_norm', 'norm_merge', 'std_merge', 'zscore_merge'],
                               xform_all=None,
                               filter_mask=[],  #['filterGenesByType'], #['filterGenesByType'], []
                               norm_all=False,
@@ -103,6 +105,7 @@ class RNASeqData():
                  sample_subsets_metakey=None,
                  sample_subsets=None,
                  covariate_list=None,
+                 normalizing_factor=None,
                  target=None,
                  target_metakey_name=None,
                  sample_key = None,
@@ -135,6 +138,7 @@ class RNASeqData():
         self.target_thresholds_per_metakey=target_thresholds_per_metakey
         self.middle50_samples = middle50_samples
         self.covariate_list = covariate_list
+        self.normalizing_factor = normalizing_factor
         self.sample_subsets = sample_subsets
         self.sample_subsets_metakey = sample_subsets_metakey
         self.target = target
@@ -349,7 +353,9 @@ class RNASeqData():
         metaFile = self.outputDir + '/temp-meta.csv'
         self.save_expr(df, inputFile)
         self.save_meta(meta, metaFile)
-        cmd = ['/usr/local/bin/R', '-f', R_SCRIPTS_DIR + '/normalize.R', '--args', inputFile, metaFile, outputFile]
+        print('target: ', self.target)
+        print('normalizing factor: ', self.normalizing_factor)
+        cmd = ['/usr/local/bin/R', '-f', R_SCRIPTS_DIR + '/normalize.R', '--args', inputFile, metaFile, outputFile, self.target, self.normalizing_factor]
         self.callR(cmd)
         df = pd.read_csv(outputFile, sep=',', header=0)
         if self.feature_key in df.columns and 'Unnamed: 0' in df.columns:

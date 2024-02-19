@@ -15,21 +15,21 @@ SLEEP_INTERVAL=5
 
 #######################################
 # run bridge on bridge
-# run cnc on cnc (for testing purposes)
+# run tds on tds (for testing purposes)
 #######################################
 
 if [ $# -ne 2 ]
 then
-	echo "usage: $0 bridge|cnc start|continue"
+	echo "usage: $0 bridge|tds start|continue"
 	exit 1
 fi
 
 MYHOSTNAME=$1
 OPERATION=$2
 
-if [ $MYHOSTNAME != "bridge" -a $MYHOSTNAME != "cnc" ]
+if [ $MYHOSTNAME != "bridge" -a $MYHOSTNAME != "tds" ]
 then
-	echo "usage: $0 bridge|cnc start|continue"
+	echo "usage: $0 bridge|tds start|continue"
 	exit 1
 fi
 
@@ -90,7 +90,7 @@ then
 	done
 
 
-elif [ $MYHOSTNAME == "cnc" ]
+elif [ $MYHOSTNAME == "tds" ]
 then
 	TS=$(date +%s)
 	mkdir -p ~/DONE/$TS
