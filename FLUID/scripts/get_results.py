@@ -61,7 +61,8 @@ def main():
 
 	featureDict = dict()
 	features = header.split(',')
-	for i in range(numFeatures): 
+	#for i in range(numFeatures): 
+	for i in range(len(coefficients)):
 		feature = features[i]
 		# tensor([-0.1322], grad_fn=<SelectBackward0>) 
 		featureDict[feature] = coefficients[i].item()
