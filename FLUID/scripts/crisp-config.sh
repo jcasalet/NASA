@@ -1,13 +1,15 @@
 #export DATA_PATH=/data/work/fluid/project/release/data
+export DATA_PATH=/Users/jcasalet/Desktop/CODES/NASA/FLUID/data
 #export SCRIPT_PATH=/data/work/fluid/project/release/scripts
+export SCRIPT_PATH=/Users/jcasalet/Desktop/CODES/NASA/FLUID/scripts
 
-export AGG_ISS_DATA_PATH=/home/fluid/data/AGG_ISS
-export AGG_EARTH_DATA_PATH=/home/fluid/data/AGG_EARTH
-export COLAB_ISS_DATA_PATH=/home/fluid/data/COLAB_ISS
-export COLAB_EARTH_DATA_PATH=/home/fluid/data/COLAB_EARTH
-export COLAB_SHIM_DATA_PATH=/home/fluid/data/COLAB_SHIM
+#export AGG_ISS_DATA_PATH=/home/fluid/data/AGG_ISS
+#export AGG_EARTH_DATA_PATH=/home/fluid/data/AGG_EARTH
+#export COLAB_ISS_DATA_PATH=/home/fluid/data/COLAB_ISS
+#export COLAB_EARTH_DATA_PATH=/home/fluid/data/COLAB_EARTH
+#export COLAB_SHIM_DATA_PATH=/home/fluid/data/COLAB_SHIM
 
-export SCRIPT_PATH=/home/fluid/EBC/AGG/scripts
+#export SCRIPT_PATH=/home/fluid/EBC/AGG/scripts
 
 export IMAGE_NAME=fluid
 export USER_NAME=fluid
@@ -20,6 +22,8 @@ export WORKSPACE_EARTH_COLAB_SHIM_DIR=/data/WORKSPACE
 export WORKSPACE_EARTH_COLAB_REAL_DIR=/data/WORKSPACE
 
 export ROUNDS=2
+
+export EPOCHS=3
 
 export AGG_EARTH_HOST=agg-earth
 export AGG_ISS_HOST=agg-iss

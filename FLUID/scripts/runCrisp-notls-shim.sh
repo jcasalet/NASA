@@ -36,6 +36,7 @@ update_plans_iss() {
 	/usr/bin/sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_ISS_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	/usr/bin/sed -i "s/.*rounds_to_train.*/    rounds_to_train: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
         /usr/bin/sed -i "s/.*db_store_rounds.*/    db_store_rounds: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
+        /usr/bin/sed -i "s/.*num_epochs.*/      num_epochs: $EPOCHS/" ~/crisp/fl_plan/plan.yaml
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
@@ -77,6 +78,8 @@ update_plans_earth() {
 	/usr/bin/sed -i "s/.*init_state_path.*/    init_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_init_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	/usr/bin/sed -i "s/.*last_state_path.*/    last_state_path: ${WORKSPACE_EARTH_AGG_DIR}\/crisp_last_.pbuf/" ~/crisp/fl_plan/plan.yaml
 	/usr/bin/sed -i "s/.*rounds_to_train.*/    rounds_to_train: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
+        /usr/bin/sed -i "s/.*db_store_rounds.*/    db_store_rounds: $ROUNDS/" ~/crisp/fl_plan/plan.yaml
+        /usr/bin/sed -i "s/.*num_epochs.*/      num_epochs: $EPOCHS/" ~/crisp/fl_plan/plan.yaml
 	
 	cat ~/crisp/fl_plan/plan.yaml
 	
