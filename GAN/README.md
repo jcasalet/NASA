@@ -130,7 +130,7 @@ $ mkdir /tmp/gan-out
 
 ```console
 $ python GAN/gen_fake_expr.py \
--ie examples/data/expr_permuted__reduced_25000_10_0.9__expanded_50_10.0.csv  \
+-ie examples/data/expr_permuted__reduced__a_0.9_s_0_d_10_n_25000__expanded_50_10.0.csv \
 -im examples/data/meta_permuted__expanded_50_10.0.csv \
 -od  /tmp/gan-out  \
 -umf examples/data/meta.json \
