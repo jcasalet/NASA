@@ -3,6 +3,8 @@ import sys
 import operator
 import argparse
 from pybiomart import Server
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def transpose_df(df, cur_index_col, new_index_col):
@@ -101,6 +103,28 @@ def filterGenesByType(df, sample_key, feature_key, gene_type='protein_coding', i
 	df = df.loc[:, df.columns.notna()]
 	return df
 
+def filter_cvs(df, coef_var=0.5):
+	# df is genes X samples
+	# calculate coefficient of variation
+	cvs=list()
+	for i in range(len(df)):
+		m=np.mean(df.iloc[i][1:])
+		sd=np.std(df.iloc[i][1:])
+		cvs.append(sd/m)
+
+	'''# plot hist of dist of coev of variation
+	fig, axs = plt.subplots()
+	axs.hist(cvs, bins=20)
+	plt.show()'''
+
+	# keep genes with cv > coef_var
+	indices = list()
+	for i in range(len(cvs)):
+		if cvs[i] > coef_var:
+			indices.append(i)
+
+	return df.iloc[indices]
+
 def findMostVaried(df, n, key):
 	# df is genes X samples
 	# calculate var, sort cols into n highest vars, drop shape[1]-n cols
@@ -142,8 +166,9 @@ def removeDeltaDiff(df, delta):
 
 def parse_args():
 	parser = argparse.ArgumentParser()
+	parser.add_argument('-c', '--coef_var', help='coefficient of variation threshold', default=0.0)
 	parser.add_argument('-e', '--expr_file', help='expression file', default=None)
-	parser.add_argument('-n', '--num', help='number to reduce to', default=None)
+	parser.add_argument('-n', '--num', help='number to reduce to', default=0)
 	parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
 	parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
 	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=0)
@@ -157,6 +182,7 @@ def main():
 	delta = int(args.delta)
 	alpha = float(int(args.alpha)/100)
 	sigma = int(args.sigma)
+	coef_var = float(args.coef_var)
 	sep=','
 	key = args.key
 
@@ -182,6 +208,9 @@ def main():
 
 	df,indices = findMostVaried(df, n, key)
 	print('after reducing by n most varied: ', str(n), df.shape)
+
+	df = filter_cvs(df, coef_var)
+	print('after reducing by coef_var : ', str(coef_var), df.shape)
 
 	if 'index' in list(df.columns):
 		df.drop(columns=['index'], inplace=True)

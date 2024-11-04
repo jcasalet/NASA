@@ -73,7 +73,7 @@ $ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 25000 -d 10 -a
 
 3. Run the `wc` command to determine number of genes after reduction. 
 ```console
-$ wc -l examples/data/expr_permuted__reduced_25000_10_0.9.csv 
+$ wc -l examples/data/expr_permuted__reduced__a_0.9_s_0_d_10_n_25000.csv
 ```
 
 ## Increase the number of technical replicates  
@@ -93,7 +93,7 @@ $ wc -l examples/data/meta_permuted.csv
 
 ```console
 $ python utils/statistically_technical_replicate.py \
--e examples/data/expr_permuted__reduced_25000_10_0.9.csv \
+-e examples/data/expr_permuted__reduced__a_0.9_s_0_d_10_n_25000.csv \
 -m examples/data/meta_permuted.csv \
 -n 50 \
 -v 10 \
