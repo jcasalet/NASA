@@ -5,6 +5,22 @@ import argparse
 from pybiomart import Server
 import numpy as np
 import matplotlib.pyplot as plt
+import mygene
+
+
+def convertIdsToNames(df, outputDir, feature_key='gene', sample_key='sample'):
+
+	genes = list(df[feature_key])
+	mg=mygene.MyGeneInfo()
+	ginfo = mg.querymany(genes, scopes='ensembl.gene')
+	for g in ginfo:
+		if not 'symbol' in g:
+			# drop gene?
+			continue
+		else:
+			df.loc[df['gene'] == g['query'], 'gene'] = g['symbol']
+
+	return df
 
 
 def transpose_df(df, cur_index_col, new_index_col):
@@ -62,17 +78,17 @@ def callR(cmd):
 		print('error in callR: exiting')
 		sys.exit(1)
 
-def convertIdsToNames(df, outputDir, feature_key='gene', sample_key='sample'):
+'''def convertIdsToNames(df, outputDir, feature_key='gene', sample_key='sample'):
 	input_to_R = outputDir + '/expr_input.csv'
 	output_from_R = outputDir + '/expr_output.csv'
 	save_expr(inputDF=df, fileName=input_to_R, transpose=True, dropCols=[], cur_index_col=sample_key,
 				   new_index_col=feature_key)
 	R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/convert_id_to_gene.R', '--args', input_to_R, output_from_R]
 	callR(R_cmd)
-	return read_expr(output_from_R)
+	return read_expr(output_from_R)'''
 
 
-def filterGenesByType(df, sample_key, feature_key, gene_type='protein_coding', id='id'):
+def filterGenesByType(df, sample_key, feature_key, gene_type=None, id='id'):
 	gene_types = {'ribozyme', 'protein_coding', 'rRNA', 'TEC', 'IG_D_pseudogene', 'snRNA', 'IG_LV_gene', 'pseudogene',
 				  'IG_J_gene', 'transcribed_unitary_pseudogene', 'processed_pseudogene', 'IG_V_gene', 'Mt_tRNA',
 				  'TR_J_pseudogene', 'miRNA', 'Mt_rRNA', 'sRNA', 'IG_C_pseudogene', 'IG_C_gene', 'TR_J_gene',
@@ -80,6 +96,8 @@ def filterGenesByType(df, sample_key, feature_key, gene_type='protein_coding', i
 				  'TR_V_gene', 'misc_RNA', 'TR_D_gene', 'translated_unprocessed_pseudogene',
 				  'transcribed_unprocessed_pseudogene', 'unprocessed_pseudogene', 'unitary_pseudogene',
 				  'IG_V_pseudogene', 'scaRNA', 'TR_C_gene', 'IG_D_gene', 'snoRNA'}
+	if gene_type is None:
+		return df
 	if not gene_type in gene_types:
 		print('gene_type: ' + str(gene_type) + ' not recognized')
 		sys.exit(1)
@@ -87,25 +105,29 @@ def filterGenesByType(df, sample_key, feature_key, gene_type='protein_coding', i
 	dataset = (server.marts['ENSEMBL_MART_ENSEMBL'].datasets['mmusculus_gene_ensembl'])
 	gene_info = dataset.query(attributes=['ensembl_gene_id', 'external_gene_name', 'gene_biotype'])
 
+	df = transpose_df(df, cur_index_col=feature_key, new_index_col='sample')
 	if id == 'id':
 		filter_genes = list(
 			gene_info[(gene_info['Gene type'] == gene_type) & (gene_info['Gene type'] != 'Mt_rRNA')]['Gene stable ID'])
 		filter_columns = [sample_key] + filter_genes
-		df = df[df.columns.intersection(filter_columns)]
+		cols_set = set(df.columns)
+		df = df[cols_set.intersection(filter_columns)]
 		new_columns = list(df.drop(columns=[sample_key]))
 		# gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene name'])
 		gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene stable ID'])
 		df.columns = [sample_key] + gene_names
 	elif id == feature_key:
-		filter_genes = list(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
-		filter_columns = [sample_key] + filter_genes
-		df = df[df.columns.intersection(filter_columns)]
-	df = df.loc[:, df.columns.notna()]
-	return df
+		filter_genes = set(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
+		genes_set = set(df.drop(columns=['sample']).columns)
+		df = df[['sample'] + list(genes_set.intersection(filter_genes))]
+	#df = df.loc[:, df.columns.notna()]
+	return transpose_df(df, cur_index_col='sample', new_index_col='gene')
 
 def filter_cvs(df, coef_var=0.5):
 	# df is genes X samples
 	# calculate coefficient of variation
+	if coef_var == 0:
+		return df
 	cvs=list()
 	for i in range(len(df)):
 		m=np.mean(df.iloc[i][1:])
@@ -133,7 +155,7 @@ def findMostVaried(df, n, key):
 		return df, None
 	if 'index' in df.columns:
 		df.reset_index(drop=True, inplace=True)
-	sdList = df.std(axis=1)
+	sdList = df.drop(columns=['gene']).std(axis=1)
 	sdDict = {k: v for v, k in enumerate(sdList)}
 	sdDictSorted = sorted(sdDict.items(), key=operator.itemgetter(0), reverse=True) 
 	topN = sdDictSorted[0:n]
@@ -145,24 +167,31 @@ def findSumGTSigma(df, sigma):
 	if sigma == 0:
 		return df, None
 	# first find min sum and print that to stdout
-	df.reset_index(drop=True, inplace=True)
-	cSums = df.sum(axis=1)
+	#df.reset_index(drop=True, inplace=True)
+	df = transpose_df(df, cur_index_col='gene', new_index_col='sample')
+	cSums = df.drop(columns=['sample']).sum(axis=1)
 	cList = list()
-	for index, s in cSums.iteritems():
+	for index, s in cSums.items():
 		if s > sigma:
 			cList.append(index)
 	temp = df.iloc[cList]
-	return temp, cList
+	return transpose_df(temp, cur_index_col='sample', new_index_col='gene'), cList
 
 def removeAlphaZeros(df, alpha):
 	if alpha == 0:
 		return df
 	return df[(df == 0).sum(axis='columns') <= int(alpha * len(df.columns))]
 
-def removeDeltaDiff(df, delta):
+def remove_delta_diff(df, delta):
 	if delta == 0:
 		return df
-	return df[df.max(axis=1) - df.min(axis=1) > delta]
+	df = transpose_df(df, cur_index_col = 'gene', new_index_col = 'sample')
+	samples = list(df['sample'])
+	df.drop(columns=['sample'], inplace=True)
+	genes = list(df.columns)
+	df = df[df.max(axis=1) - df.min(axis=1) > delta]
+	df['sample'] = samples
+	return transpose_df(df[['sample'] + genes], cur_index_col='sample', new_index_col='gene')
 
 def parse_args():
 	parser = argparse.ArgumentParser()
@@ -188,6 +217,7 @@ def main():
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 	print('original size: ', str(df.shape))
+	
 
 	df = convertIdsToNames(df=df, outputDir='/tmp')
 	print('dims after converting to names: ', df.shape)
@@ -195,15 +225,13 @@ def main():
 	df = filterGenesByType(df, key, feature_key='gene', gene_type='protein_coding', id='gene')
 	print('after reducing by removing non-protein-coding genes: ', df.shape)
 
-	df = transpose_df(df, cur_index_col='sample', new_index_col='gene')
-
 	df = removeAlphaZeros(df, alpha)
 	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), df.shape)
 
 	df, cList = findSumGTSigma(df, sigma)
 	print('after reducing by sum to sigma: ', str(sigma), df.shape)
 
-	df = removeDeltaDiff(df, delta)
+	df = remove_delta_diff(df, delta)
 	print('after reducing by removing when (max - min) is at most delta: ', str(delta), df.shape)
 
 	df,indices = findMostVaried(df, n, key)
@@ -212,16 +240,14 @@ def main():
 	df = filter_cvs(df, coef_var)
 	print('after reducing by coef_var : ', str(coef_var), df.shape)
 
-	if 'index' in list(df.columns):
-		df.drop(columns=['index'], inplace=True)
-	outputFileName = exprFile.split('.csv')[0] + "__reduced_" +  \
+	output_file_name = exprFile.split('.csv')[0] + "__reduced_" +  \
 					 "_a_" + str(alpha) + \
 					 "_s_" + str(sigma) +  \
 					 "_d_" + str(delta) + \
 					 "_n_" + str(n)  + \
 					 ".csv"
 
-	df.to_csv(outputFileName, sep=',', index=None)
+	df.to_csv(output_file_name, sep=',', index=None)
 
     
 if __name__ == "__main__":

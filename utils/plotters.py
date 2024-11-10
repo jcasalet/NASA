@@ -24,9 +24,15 @@ def pcaPlot(pca, df, info_df, variable, title, gen_dir, use_meta_cols, use_palet
     else:
         ax = sns.scatterplot(x=pcaDF['PC 1'], y=pcaDF['PC 2'], hue=pcaDF[variable], s=100)
 
-    ax.set_xlabel('PC 1 ' + '(' + str(round(pca.explained_variance_ratio_[0]*100, 1)) + '% variance)', fontsize=15)
-    ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=15)
+    ax.set_xlabel('PC 1 ' + '(' + str(round(pca.explained_variance_ratio_[0]*100, 1)) + '% variance)', fontsize=16)
+    ax.set_ylabel('PC 2 ' + '(' + str(round(pca.explained_variance_ratio_[1]*100, 1)) + '% variance)', fontsize=16)
+    #ax.tick_params(axis='x',  labelsize=10)
+    #ax.tick_params(axis='y',  labelsize=10)
+    plt.xticks([])
+    plt.yticks([])
+
     ax.set_title(title, fontsize=20)
+    plt.legend(fontsize=15)
     #plt.show()
     if gen_dir is None:
         gen_dir = '.'
@@ -67,9 +73,11 @@ def main():
     expr_df = pd.read_csv(options.input_expr, index_col=0)
     if 'env' in expr_df.columns:
         expr_df.drop(columns=['env'], inplace=True)
-    if 'oro_thresh' in expr_df.columns:
-        expr_df.drop(columns=['oro_thresh'])
-    if not 'Gnai3' in expr_df.columns:
+    if 'target' in expr_df.columns:
+        expr_df.drop(columns=['target'])
+
+    # pca expects rows to be samples and columns to be genes
+    if len(expr_df.columns) < len(expr_df):
         x=expr_df.T
     else:
         x=expr_df
@@ -81,6 +89,7 @@ def main():
 
 
     info_df = pd.read_csv(options.input_meta, header=0, sep=',')
+
 
     myPlot(x, info_df, options.output_dir, use_meta_cols)
 

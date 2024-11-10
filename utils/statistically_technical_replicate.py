@@ -9,7 +9,7 @@ import math
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--expr', help='expression file anme', default=None, required=True)
+    parser.add_argument('-e', '--expr', help='expression file name', default=None, required=True)
     parser.add_argument('-m', '--meta', help='meta file name', default=None, required=True)
     parser.add_argument('-n', '--num', help='number of times more data', default=1)
     parser.add_argument('-v', '--var', help='variance of noise', default=0.1)
@@ -44,7 +44,7 @@ def get_variance_dict(df, var):
     # assumed gene x sample
     maxVar = 0
     minVar = 1000
-    gene_var_list = list(df.var(axis=1))
+    gene_var_list = list(df.drop(columns=['gene']).var(axis=1))
     gene_var_dict=dict()
     for i in range(len(gene_var_list)):
         gene = df.iloc[i]['gene']
@@ -82,13 +82,15 @@ def process_samples_subset(q, samples, expr_samples_df, expr_df_T, meta_df, n, v
             new_sample = sample + '_' + str(threadID) + '_' + str(myRand)
             #new_sample = sample + '_' + str((i+1) * n * threadID)
             noised_expr_row.rename(index={sample: new_sample}, inplace=True)
-            temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
+            #temp_expr_df = temp_expr_df.append(noised_expr_row, ignore_index=False)
+            temp_expr_df = pd.concat([temp_expr_df, noised_expr_row])
 
             # add new sample to meta data
             meta_row = meta_df[meta_df[key] == sample]
             new_meta_row = meta_row.copy(deep=True)
             new_meta_row[key] = new_sample
-            temp_meta_df = temp_meta_df.append(new_meta_row, ignore_index=True)
+            #temp_meta_df = temp_meta_df.append(new_meta_row, ignore_index=True)
+            temp_meta_df = pd.concat([temp_meta_df, new_meta_row])
     #return expr_df_T, meta_df
     results['expr_df_T'] = temp_expr_df
     results['meta_df'] = temp_meta_df
@@ -144,8 +146,10 @@ def main():
     results = dict()
     for i in range(numProcs):
         results.update(q.get())
-        expr_df_T = expr_df_T.append(results['expr_df_T'], ignore_index=False )
-        meta_df = meta_df.append(results['meta_df'], ignore_index=False)
+        #expr_df_T = expr_df_T.append(results['expr_df_T'], ignore_index=False )
+        expr_df_T = pd.concat([expr_df_T, results['expr_df_T']])
+        #meta_df = meta_df.append(results['meta_df'], ignore_index=False)
+        meta_df = pd.concat([meta_df, results['meta_df']])
 
     for i in range(numProcs):
         print('joining thread: ', str(i))
