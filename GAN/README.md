@@ -61,15 +61,15 @@ wc -l examples/data/expr_permuted.csv
 
 2. Run the `reduceDim.py` script. The options are described below:
 * `-n` option specifies the number of genes with the highest variance to keep
-* `-c` option specifies the difference threshold between the highest and lowest expression level below which genes should be removed
-* `-a` option specifies the percentage threshold (out of 100) of genes with zero expression above which genes should be removed
+* `-c` option specifies the coefficient of variation below which genes are removed 
+* `-a` option specifies the percentage threshold (out of 100) of genes with zero expression above which genes are removed
 * `-e` option specifies the input expression file.
-* `-t` option specifies gene type (may be one of the following:
+* `-t` option specifies gene type, may be one of the following:
 
 {'ribozyme', 'protein_coding', 'rRNA', 'TEC', 'IG_D_pseudogene', 'snRNA', 'IG_LV_gene', 'pseudogene', 'IG_J_gene', 'transcribed_unitary_pseudogene', 'processed_pseudogene', 'IG_V_gene', 'Mt_tRNA', 'TR_J_pseudogene', 'miRNA', 'Mt_rRNA', 'sRNA', 'IG_C_pseudogene', 'IG_C_gene', 'TR_J_gene', 'IG_pseudogene', 'transcribed_processed_pseudogene', 'scRNA', 'lncRNA', 'TR_V_pseudogene', 'TR_V_gene', 'misc_RNA', 'TR_D_gene', 'translated_unprocessed_pseudogene', 'transcribed_unprocessed_pseudogene', 'unprocessed_pseudogene', 'unitary_pseudogene', 'IG_V_pseudogene', 'scaRNA', 'TR_C_gene', 'IG_D_gene', 'snoRNA'}
 
 ```console
-python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 1000 -a 90 -t protein_coding
+python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 1000 -a 90 -t protein_coding -c 1.5
 ```
 
 3. Run the `wc` command to determine number of genes after reduction. 
