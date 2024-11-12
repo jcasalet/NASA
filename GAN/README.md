@@ -35,8 +35,6 @@ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 2. Run the `permuteSamples.py` script.  
 * `-e` option specifies the expression data file 
 * `-m` option specifies the metadata file
-* `-mk` option specifies the metadata key 
-* `-ek` option specifies the expression data key 
 
 ```console
 python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv -mk Sample -ek gene
