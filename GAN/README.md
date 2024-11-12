@@ -74,7 +74,7 @@ python utils/reduceDim.py -e examples/data/expr_permuted.csv -n 1000 -a 90 -t pr
 
 3. Run the `wc` command to determine number of genes after reduction. 
 ```console
-wc -l examples/data/expr_permuted__reduced__a_0.9_n_1000_t_protein_coding.csv
+wc -l examples/data/expr_permuted__reduced__t_protein_coding_a_0.9_c_1.5_n_1000.csv
 ```
 
 ## Increase the number of technical replicates  
