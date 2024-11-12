@@ -16,7 +16,6 @@ def parse_args():
     parser.add_argument('-cn', '--colName', help='column name to replicate', default=None)
     parser.add_argument('-cv', '--colVal', help='column value to replicate', default=None)
     parser.add_argument("-nc", "--ncpu", help="Number of processes. Default=cpu_count()", default=cpu_count())
-    parser.add_argument("-k", "--key", help="metadata key Default=SAMPLE ID", default='SAMPLE ID')
     parser.add_argument("-s", "--seed", help="Seed for random number generator.", default=23)
 
     return parser.parse_args()
@@ -106,7 +105,7 @@ def main():
     colVal = options.colVal
     seed = int(options.seed)
     random.seed(seed)
-    key = options.key
+    key = 'sample'
 
     numProcs = int(options.ncpu)
 

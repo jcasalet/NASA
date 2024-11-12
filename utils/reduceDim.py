@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 import mygene
 
 
-def convertIdsToNames(df, outputDir, feature_key='gene', sample_key='sample'):
-
-	genes = list(df[feature_key])
+def convertIdsToNames(df):
+	genes = list(df['gene'])
 	mg=mygene.MyGeneInfo()
 	ginfo = mg.querymany(genes, scopes='ensembl.gene')
 	for g in ginfo:
@@ -78,17 +77,8 @@ def callR(cmd):
 		print('error in callR: exiting')
 		sys.exit(1)
 
-'''def convertIdsToNames(df, outputDir, feature_key='gene', sample_key='sample'):
-	input_to_R = outputDir + '/expr_input.csv'
-	output_from_R = outputDir + '/expr_output.csv'
-	save_expr(inputDF=df, fileName=input_to_R, transpose=True, dropCols=[], cur_index_col=sample_key,
-				   new_index_col=feature_key)
-	R_cmd = ['/usr/local/bin/R', '-f', '/Users/jcasalet/convert_id_to_gene.R', '--args', input_to_R, output_from_R]
-	callR(R_cmd)
-	return read_expr(output_from_R)'''
 
-
-def filterGenesByType(df, sample_key, feature_key, gene_type=None, id='id'):
+def filterGenesByType(df, gene_type=None):
 	gene_types = {'ribozyme', 'protein_coding', 'rRNA', 'TEC', 'IG_D_pseudogene', 'snRNA', 'IG_LV_gene', 'pseudogene',
 				  'IG_J_gene', 'transcribed_unitary_pseudogene', 'processed_pseudogene', 'IG_V_gene', 'Mt_tRNA',
 				  'TR_J_pseudogene', 'miRNA', 'Mt_rRNA', 'sRNA', 'IG_C_pseudogene', 'IG_C_gene', 'TR_J_gene',
@@ -105,21 +95,10 @@ def filterGenesByType(df, sample_key, feature_key, gene_type=None, id='id'):
 	dataset = (server.marts['ENSEMBL_MART_ENSEMBL'].datasets['mmusculus_gene_ensembl'])
 	gene_info = dataset.query(attributes=['ensembl_gene_id', 'external_gene_name', 'gene_biotype'])
 
-	df = transpose_df(df, cur_index_col=feature_key, new_index_col='sample')
-	if id == 'id':
-		filter_genes = list(
-			gene_info[(gene_info['Gene type'] == gene_type) & (gene_info['Gene type'] != 'Mt_rRNA')]['Gene stable ID'])
-		filter_columns = [sample_key] + filter_genes
-		cols_set = set(df.columns)
-		df = df[cols_set.intersection(filter_columns)]
-		new_columns = list(df.drop(columns=[sample_key]))
-		# gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene name'])
-		gene_names = list(gene_info[gene_info['Gene stable ID'].isin(new_columns)]['Gene stable ID'])
-		df.columns = [sample_key] + gene_names
-	elif id == feature_key:
-		filter_genes = set(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
-		genes_set = set(df.drop(columns=['sample']).columns)
-		df = df[['sample'] + list(genes_set.intersection(filter_genes))]
+	df = transpose_df(df, cur_index_col='gene', new_index_col='sample')
+	filter_genes = set(gene_info[gene_info['Gene type'] == gene_type]['Gene name'])
+	genes_set = set(df.drop(columns=['sample']).columns)
+	df = df[['sample'] + list(genes_set.intersection(filter_genes))]
 	#df = df.loc[:, df.columns.notna()]
 	return transpose_df(df, cur_index_col='sample', new_index_col='gene')
 
@@ -147,7 +126,7 @@ def filter_cvs(df, coef_var=0.5):
 
 	return df.iloc[indices]
 
-def findMostVaried(df, n, key):
+def findMostVaried(df, n):
 	# df is genes X samples
 	# calculate var, sort cols into n highest vars, drop shape[1]-n cols
 	# first find range of var and print to stdout
@@ -195,57 +174,56 @@ def remove_delta_diff(df, delta):
 
 def parse_args():
 	parser = argparse.ArgumentParser()
+	parser.add_argument('-t', '--gene_type', help='type of gene to remove (coding or non-coding)', default=None)
 	parser.add_argument('-c', '--coef_var', help='coefficient of variation threshold', default=0.0)
 	parser.add_argument('-e', '--expr_file', help='expression file', default=None)
 	parser.add_argument('-n', '--num', help='number to reduce to', default=0)
-	parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
-	parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
+	#parser.add_argument('-d', '--delta', help='delta diff of expr vals max to min across samples', default=0)
+	#parser.add_argument('-s', '--sigma', help='sigma sum of expr vals across samples', default=0)
 	parser.add_argument('-a', '--alpha', help='alpha percentage of 0 expr value', default=0)
-	parser.add_argument('-k', '--key', help='name of key column', default='gene')
 	return parser.parse_args()
 
 def main():
 	args = parse_args()
 	exprFile = args.expr_file
 	n = int(args.num)
-	delta = int(args.delta)
+	#delta = int(args.delta)
 	alpha = float(int(args.alpha)/100)
-	sigma = int(args.sigma)
+	#sigma = int(args.sigma)
 	coef_var = float(args.coef_var)
+	gene_type = args.gene_type
 	sep=','
-	key = args.key
 
 	df = pd.read_csv(exprFile, sep=sep, header=0)
 	print('original size: ', str(df.shape))
-	
 
-	df = convertIdsToNames(df=df, outputDir='/tmp')
+	df = convertIdsToNames(df=df)
 	print('dims after converting to names: ', df.shape)
 
-	df = filterGenesByType(df, key, feature_key='gene', gene_type='protein_coding', id='gene')
+	df = filterGenesByType(df, gene_type=gene_type)
 	print('after reducing by removing non-protein-coding genes: ', df.shape)
 
 	df = removeAlphaZeros(df, alpha)
 	print('after reducing by removing when percentage zero is at least alpha: ', str(alpha), df.shape)
 
-	df, cList = findSumGTSigma(df, sigma)
-	print('after reducing by sum to sigma: ', str(sigma), df.shape)
+	#df, cList = findSumGTSigma(df, sigma)
+	#print('after reducing by sum to sigma: ', str(sigma), df.shape)
 
-	df = remove_delta_diff(df, delta)
-	print('after reducing by removing when (max - min) is at most delta: ', str(delta), df.shape)
-
-	df,indices = findMostVaried(df, n, key)
-	print('after reducing by n most varied: ', str(n), df.shape)
+	#df = remove_delta_diff(df, delta)
+	#print('after reducing by removing when (max - min) is at most delta: ', str(delta), df.shape)
 
 	df = filter_cvs(df, coef_var)
 	print('after reducing by coef_var : ', str(coef_var), df.shape)
 
+	df,indices = findMostVaried(df, n)
+	print('after reducing by n most varied: ', str(n), df.shape)
+
 	output_file_name = exprFile.split('.csv')[0] + "__reduced_" +  \
-					 "_a_" + str(alpha) + \
-					 "_s_" + str(sigma) +  \
-					 "_d_" + str(delta) + \
-					 "_n_" + str(n)  + \
-					 ".csv"
+						"_t_" + gene_type + \
+						"_a_" + str(alpha) + \
+						"_c_" + str(coef_var) + \
+					   	"_n_" + str(n)  + \
+					 	".csv"
 
 	df.to_csv(output_file_name, sep=',', index=None)
 
