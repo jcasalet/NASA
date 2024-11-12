@@ -94,7 +94,7 @@ wc -l examples/data/meta_permuted.csv
 
 ```console
 python utils/statistically_technical_replicate.py \
--e examples/data/expr_permuted__reduced__a_0.9_n_1000_t_protein_coding.csv \
+-e examples/data/expr_permuted__reduced__t_protein_coding_a_0.9_c_1.5_n_1000.csv \
 -m examples/data/meta_permuted.csv \
 -n 50 \
 -v 10 \
