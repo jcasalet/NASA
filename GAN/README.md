@@ -170,8 +170,8 @@ python utils/plotters.py \
 3. Examine the output to compare PCA plots
  
 ```console
-open /tmp/gan-out/libPrep*.png
-open /tmp/gan-out/mission*.png
+open /tmp/gan-out/*.png
+open /tmp/gan-out/*.png
 ```
 
 ## NOTES
