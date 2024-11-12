@@ -37,7 +37,7 @@ sed -n '2,2 p' examples/data/meta.csv | awk -F, '{print $1}'
 * `-m` option specifies the metadata file
 
 ```console
-python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv -mk Sample -ek gene
+python utils/permuteSamples.py -e examples/data/expr.csv -m examples/data/meta.csv 
 ```
 
 
