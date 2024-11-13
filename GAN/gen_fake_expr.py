@@ -658,7 +658,7 @@ def my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_cov
 
     # Function to save models
     def save_fn(models_dir=MODELS_DIR):
-        gen.save(models_dir + 'gen_liver.h5')
+        gen.save(models_dir + 'gen_best.h5')
 
 
     # Train model
@@ -878,7 +878,7 @@ def main():
         print('training!')
         my_train(CONFIG, cat_dicts, cat_covs, cat_covs_test, cat_covs_train, num_covs, num_covs_test, num_covs_train, x, \
              x_test, x_train, checkpoint_dir, gamma_list, options.output_dir, kappa, int(options.tf_version))
-        gen = tf.keras.models.load_model(options.output_dir + '/models/gen_liver.h5') # this is the one I just trained
+        gen = tf.keras.models.load_model(options.output_dir + '/models/gen_best.h5') # this is the one I just trained
         num_samples = int(options.num_samples)
         if num_samples == 0:
             num_samples = len(cat_covs)
